@@ -26,9 +26,9 @@ export function TopAppBar() {
     }, []);
 
     return (
-        <div className="flex w-screen h-fit justify-between items-center p-6 bg-card text-card-foreground border-border border-2">
+        <div className="flex w-screen h-fit justify-between items-center py-6 px-20 bg-card text-card-foreground border-border border-b-2">
             <nav>
-                <a className="text-xl font-bold" href="/">FRC Jockey</a>
+                <a className="text-4xl font-bold" href="/">FRC Jockey</a>
             </nav>
             <div className="flex gap-2">
                 <Select

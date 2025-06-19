@@ -45,7 +45,7 @@ const SettingsPage = () => {
   return (
     <>
       {/* Container for the settings buttons */}
-      <main className="flex flex-col h-screen w-full max-w-3/4 2xl:max-w-1/2 gap-4 p-4">
+      <main className="flex flex-col h-screen w-full max-w-3/4 2xl:max-w-1/2 gap-4 p-4 pt-12">
         <div className="flex w-full h-16 justify-between gap-2">
               <ProceedBackButton
                 nextPage={"/parse-data"}

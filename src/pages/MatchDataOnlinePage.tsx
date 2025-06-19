@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Scanner } from "@yudiel/react-qr-scanner";
 // import { toast } from "react-toastify";
-import SettingsBackButton from "../components/SettingsComponents/SettingsBackButton";
 import Button from "@/components/ui/Button";
+import NavigationButton from "@/components/NavigationButton";
 
 const MatchDataOnlinePage = () => {
   const navigate = useNavigate();
 
-  const [qrCodeMatchData, setQRCodeMatchData] = useState({}); // The URL to the match data
+  const [qrCodeMatchData, setQRCodeMatchData] = useState(""); // The URL to the match data
 
   const doneClick = async () => {
     const qrCodeMatchDataParsed = JSON.parse(qrCodeMatchData)
@@ -28,10 +28,10 @@ const MatchDataOnlinePage = () => {
         if (match.comp_level == "qm") {
           qualMatchesCleaned.push({
             matchNum: match["match_number"],
-            redAlliance: match.alliances.red.team_keys.map((team) =>
+            redAlliance: match.alliances.red.team_keys.map((team: string) =>
               team.replace("frc", "")
             ),
-            blueAlliance: match.alliances.blue.team_keys.map((team) =>
+            blueAlliance: match.alliances.blue.team_keys.map((team: string) =>
               team.replace("frc", "")
             ),
           });
@@ -57,17 +57,24 @@ const MatchDataOnlinePage = () => {
   };
 
   return (
-    <main className="h-full w-screen">
+    <main className="h-full w-screen overflow-none">
       {/* back button */}
-      <SettingsBackButton route={"/match-data"}/>
 
       {/* container */}
-      <div className="flex flex-col w-full h-full items-center justify-center">
-        <h1 className="text-white font-bold ~text-2xl/5xl text-center pb-4">
-          Scan QR Code To Load Match Suggestions
-        </h1>
-        <div className="flex w-full h-full gap-4 items-center justify-center">
-          <div className="w-1/2 h-full">
+      <div className="flex flex-col w-full h-full items-center">
+        <div className="grid grid-cols-3 items-center w-full">
+          <div className="items-center justify-center flex col-span-1">
+            <NavigationButton variant={"outline"} destination={"/match-data"} className="w-32 h-16">
+              Back
+            </NavigationButton>
+          </div>
+          <h1 className="col-span-1 text-primary font-bold ~text-2xl/5xl mx-auto text-center py-6">
+            Scan QR Code To Load Match Suggestions
+          </h1>
+        </div>
+
+        <div className="overflow-hidden flex flex-col items-center justify-center">
+          <div className="flex flex-1 items-center justify-center overflow-hidden pb-8">
             <Scanner
               components={{ finder: false }}
               styles={{ video: { borderRadius: "7.5%" } }}
@@ -83,7 +90,7 @@ const MatchDataOnlinePage = () => {
             />
           </div>
           <Button
-            className="flex w-fit h-16 items-center justify-center p-4 ~text-2xl/5xl text-center"
+            className="flex w-full h-16 items-center justify-center p-4 ~text-2xl/5xl text-center"
             onClick={() => doneClick()}
           >
             Submit

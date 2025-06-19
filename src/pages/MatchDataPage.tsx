@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 
 const MatchDataPage = () => {
   return (
-    <div className="w-full h-full">  
+    <div className="w-full h-full pt-12">  
       <div className="flex flex-col items-center justify-center w-full h-full gap-4">
         <h1 className="text-white font-bold ~text-2xl/5xl text-center p-2">
             Load Match Data

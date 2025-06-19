@@ -5,7 +5,7 @@ import NavigationButton from "./NavigationButton"
 export function BottomNav() {
 
     return (
-        <nav className="flex w-screen h-fit justify-between items-center py-4 px-24 bg-card text-card-foreground border-border border-2">
+        <nav className="flex w-screen h-fit justify-between items-center py-4 px-20 bg-card text-card-foreground border-border border-t-2">
             <NavigationButton variant={"ghost"} destination="/">
                 <div className="flex flex-col items-center">
                     <House className="size-8" />
