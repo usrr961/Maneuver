@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Scanner } from "@yudiel/react-qr-scanner";
 // import { toast } from "react-toastify";
 import Button from "@/components/ui/Button";
-import NavigationButton from "@/components/NavigationButton";
 
 const MatchDataOnlinePage = () => {
   const navigate = useNavigate();
@@ -57,24 +56,10 @@ const MatchDataOnlinePage = () => {
   };
 
   return (
-    <main className="h-full w-screen overflow-none">
-      {/* back button */}
-
-      {/* container */}
+    <main className="h-full w-full overflow-none">
       <div className="flex flex-col w-full h-full items-center">
-        <div className="grid grid-cols-3 items-center w-full">
-          <div className="items-center justify-center flex col-span-1">
-            <NavigationButton variant={"outline"} destination={"/match-data"} className="w-32 h-16">
-              Back
-            </NavigationButton>
-          </div>
-          <h1 className="col-span-1 text-primary font-bold ~text-2xl/5xl mx-auto text-center py-6">
-            Scan QR Code To Load Match Suggestions
-          </h1>
-        </div>
-
         <div className="overflow-hidden flex flex-col items-center justify-center">
-          <div className="flex flex-1 items-center justify-center overflow-hidden pb-8">
+          <div className="flex flex-1 items-center justify-center overflow-hidden py-8">
             <Scanner
               components={{ finder: false }}
               styles={{ video: { borderRadius: "7.5%" } }}

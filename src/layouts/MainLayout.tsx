@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { TopAppBar } from "@/components/TopAppBar";
 import { BottomNav } from "@/components/BottomNav";
+import Dashboard from "@/pages/Dashboard";
 //import MainLayoutPortraitWarning from "../components/MainLayoutComponents/MainLayoutPortraitWarning";
 
 // import "react-toastify/dist/ReactToastify.css";
@@ -25,9 +26,10 @@ const MainLayout = () => {
     <div className="flex bg-background h-screen w-screen flex-col justify-center items-center">
       {/* <ToastContainer />
       <MainLayoutPortraitWarning /> */}
-        <TopAppBar />
+        {/* <TopAppBar />
         <Outlet />
-        <BottomNav />
+        <BottomNav /> */}
+        <Dashboard />
     </div>
   );
 };

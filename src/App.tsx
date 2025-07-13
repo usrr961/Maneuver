@@ -16,6 +16,7 @@ import ParseDataPage from "@/pages/ParseDataPage";
 import MatchDataPage from "@/pages/MatchDataPage";
 import MatchDataOnlinePage from "@/pages/MatchDataOnlinePage";
 import MatchDataOfflinePage from "@/pages/MatchDataOfflinePage";
+import ClearDataPage from "@/pages/ClearDataPage";
 
 import Button from '@/components/ui/button'
 
@@ -28,13 +29,14 @@ function App() {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/match-data" element={<MatchDataPage />} />
         <Route path="/match-data/online" element={<MatchDataOnlinePage />} />
+        <Route path="/match-data/offline" element={<MatchDataOfflinePage />} /> 
+        <Route path="/clear-data" element={<ClearDataPage />} /> 
+        <Route path="/parse-data" element={<ParseDataPage />} />
 
         { /**
         <Route path="/game-start" element={<GameStartPage />} />
-        <Route path="/parse-data" element={<ParseDataPage />} />
         <Route path="/match-data" element={<MatchDataPage />} />
         <Route path="/match-data/online" element={<MatchDataOnlinePage />} />
-        <Route path="/match-data/offline" element={<MatchDataOfflinePage />} /> 
         */}
       </Route>
     )

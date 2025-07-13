@@ -13,7 +13,7 @@ interface NavigationButtonProps {
 
 const NavigationButton = ({
     destination,
-    className = "h-fit flex items-center gap-2",
+    className = "h-fit flex items-center",
     variant = "default",
     children,
 }: NavigationButtonProps) => {
