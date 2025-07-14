@@ -27,12 +27,7 @@ function App() {
         <Route path="/match-data" element={<MatchDataPage />} />
         <Route path="/clear-data" element={<ClearDataPage />} /> 
         <Route path="/parse-data" element={<ParseDataPage />} />
-
-        { /**
         <Route path="/game-start" element={<GameStartPage />} />
-        <Route path="/match-data" element={<MatchDataPage />} />
-        <Route path="/match-data/online" element={<MatchDataOnlinePage />} />
-        */}
       </Route>
     )
   );

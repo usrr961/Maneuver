@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation } from "react-router-dom";
-
-import ProceedBackButton from "../components/deprecated/ProceedBackButton";
-import GameStartSelectAlliance from "../components/GameStartComponents/GameStartSelectAlliance";
-import GameStartTextInput from "../components/GameStartComponents/GameStartTextInput";
-import GameStartSelectTeam from "../components/GameStartComponents/GameStartSelectTeam";
+import GameStartSelectAlliance from "@/components/GameStartComponents/GameStartSelectAlliance";
+import GameStartTextInput from "@/components/GameStartComponents/GameStartTextInput";
+import GameStartSelectTeam from "@/components/GameStartComponents/GameStartSelectTeam";
+import Button from "@/components/ui/button";
 
 /**
  * Renders a component representing the Game Start Page.
@@ -16,7 +15,6 @@ import GameStartSelectTeam from "../components/GameStartComponents/GameStartSele
 const GameStartPage = () => {
   const location = useLocation();
   const states = location.state;
-  console.log(states.inputs);
   
 
   // Initialize the state with the passed in state from the previous page, or null if no state was passed in
@@ -33,30 +31,24 @@ const GameStartPage = () => {
 
   return (
     <>
-      <div className="flex justify-center items-center h-fit w-screen p-3">
-        <div className="flex h-fit w-full justify-center gap-10">
-          <div className="flex flex-col h-full w-96 gap-6">
-            <div>
-              <GameStartTextInput
-                question="Match Number"
-                setTextValue={setMatchNumber}
-                defaultText={matchNumber}
-                numberOnly={true}
-              />
-            </div>
-            <div>
-              <GameStartSelectAlliance
-                currentAlliance={alliance}
-                setAlliance={setAlliance}
-              />
-            </div>
-            <div>
-              <GameStartTextInput
-                question="Scouter Initials"
-                setTextValue={setScouterInitials}
-                defaultText={scouterInitials}
-              />
-            </div>
+      <div className="flex justify-center items-center h-fit w-full px-4 pt-16">
+        <div className="flex flex-col h-fit w-full max-w-2/3 justify-center gap-4">
+          <div className="flex h-full w-full gap-6">
+            <GameStartTextInput
+              question="Match Number"
+              setTextValue={setMatchNumber}
+              defaultText={matchNumber}
+              numberOnly={true}
+            />
+            <GameStartSelectAlliance
+              currentAlliance={alliance}
+              setAlliance={setAlliance}
+            />
+            <GameStartTextInput
+              question="Scouter Initials"
+              setTextValue={setScouterInitials}
+              defaultText={scouterInitials}
+            />
           </div>
           <div className="flex flex-col h-full w-full gap-6">
             <div>
@@ -68,12 +60,20 @@ const GameStartPage = () => {
               />
             </div>
             <div className="flex justify-between">
-              <div className="flex w-full justify-left items-start lg:items-center lg:justify-center">
-                <h1 className="text-white text-5xl font-bold">
-                  Game Start
-                </h1>
+              <div className="flex w-full justify-left items-start">
+                <Button 
+                  className="w-full h-16 items-center justify-center p-4 text-2xl text-center"
+                  onClick={() => {
+                    localStorage.setItem("matchData", JSON.stringify([]));
+                    localStorage.setItem("matchNumber", matchNumber);
+                    localStorage.setItem("scouterInitials", scouterInitials);
+                    localStorage.setItem("selectTeam", selectTeam);
+                    localStorage.setItem("alliance", alliance);
+                  }}>
+                  Start Scouting
+                </Button>
               </div>
-              <div
+              {/* <div
                 className="flex flex-col h-full w-full gap-6">
                 <div>
                   <ProceedBackButton nextPage={`/`} back={true} />
@@ -90,7 +90,7 @@ const GameStartPage = () => {
                     }}
                   />
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

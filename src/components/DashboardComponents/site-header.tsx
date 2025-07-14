@@ -10,6 +10,7 @@ const PAGE_TITLES: Record<string, string> = {
     "/match-data": "Load Match Data",
     "/clear-data": "Clear Data",
     "/parse-data": "Parse Data",
+    "/game-start": "Game Start",
   // Add more routes as needed
 };
 

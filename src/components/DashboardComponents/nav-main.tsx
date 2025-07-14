@@ -101,7 +101,7 @@ export function NavMain({
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem className="flex items-center gap-2">
-          <SidebarMenuButton tooltip={"Scout"} onClick={() => proceedClick("/")}>
+          <SidebarMenuButton tooltip={"Scout"} onClick={() => proceedClick("/game-start")}>
             <Binoculars />
             <span>Scout</span>
           </SidebarMenuButton>
