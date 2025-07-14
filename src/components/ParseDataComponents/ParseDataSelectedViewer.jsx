@@ -1,6 +1,5 @@
-import React from "react"; // Imports the React library to create components
-
-// TODO: Replace with a shadcn scroll area or data table
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 /**
  * A component that displays a list of selected files, with the ability to remove
@@ -13,21 +12,21 @@ import React from "react"; // Imports the React library to create components
 const ParseDataSelectedViewer = ({ selectedFiles, setSelectedFiles }) => {
   return (
     <>
-      <div className="w-full max-w-1/2 h-full bg-[#929292] border-8 border-[#2B2B2B] rounded-xl overflow-y-scroll">
+      <ScrollArea className="w-full max-w-1/2 h-full border rounded-xl bg-accent">
         <ul>
           {/* Loops over each file in selectedFiles and creates a list item */}
           {selectedFiles.map((file, index) => (
             <li key={index}>
-              <div className="flex items-center justify-between border-b-2 border-[#2B2B2B]">
+              <div className="flex p-4 justify-between items-center">
                 {/* Displays the file name */}
-                <span style={{ fontSize: "2.5dvh", marginLeft: "0.64dvw" }}>
+                <span className="text-sm">
                   {file.name}
                 </span>
 
                 {/* Displays a clickable 'x' button for removing the file */}
                 <button
                   type="button"
-                  className="text-2xl mr-2 text-red-500 font-bold"
+                  className="flex text-2xl text-red-500 font-bold items-center"
                   onClick={() => {
                     // Filters out the clicked file from the list
                     setSelectedFiles(
@@ -40,8 +39,9 @@ const ParseDataSelectedViewer = ({ selectedFiles, setSelectedFiles }) => {
               </div>
             </li>
           ))}
+          <Separator />
         </ul>
-      </div>
+      </ScrollArea>
     </>
   );
 };

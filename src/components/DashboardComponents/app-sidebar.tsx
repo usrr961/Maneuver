@@ -15,6 +15,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Separator } from "../ui/separator"
+import ManeuverHorizontalLogo from "../../assets/Maneuver Wordmark Horizontal.png"
 
 const data = {
   user: {
@@ -29,12 +30,8 @@ const data = {
       icon: Settings,
       items: [
         {
-          title: "Scan Match Data QR Code",
-          url: "/match-data/online",
-        },
-        {
-          title: "Upload Match Data File",
-          url: "/match-data/offline",
+          title: "Load Match Data",
+          url: "/match-data",
         },
         {
           title: "Clear Data",
@@ -144,11 +141,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5 my-4"
+              className="data-[slot=sidebar-menu-button] h-fit"
             >
               <a href="#">
-                {/* <IconInnerShadowTop className="!size-5" /> */}
-                <span className="text-3xl text-primary font-semibold">Jockey</span>
+                <img
+                  src={ManeuverHorizontalLogo}
+                  className="row-span-4 scale-75 dark:invert"
+                />
               </a>
             </SidebarMenuButton>
             <Separator className="my-1" />

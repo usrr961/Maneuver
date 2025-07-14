@@ -1,4 +1,3 @@
-import React from "react";
 import ParseDataSelector from "@/components/ParseDataComponents/ParseDataSelector";
 
 const ParseDataPage = () => {

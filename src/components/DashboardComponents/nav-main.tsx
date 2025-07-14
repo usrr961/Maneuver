@@ -71,22 +71,22 @@ export function NavMain({
 
   return (
      <SidebarGroup>
-      <SidebarMenuItem className="flex items-center gap-2">
-            <div className="flex gap-2">
+      <SidebarMenuItem className="flex items-center pb-4">
+            <div className="flex w-full gap-2">
                 <Select
                     onValueChange={handlePlayerStationChange}
                 >
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full text-lg font-bold">
                         <SelectValue placeholder="Role" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="lead">Lead</SelectItem>
-                        <SelectItem value="red-1">Red 1</SelectItem>
-                        <SelectItem value="red-2">Red 2</SelectItem>
-                        <SelectItem value="red-3">Red 3</SelectItem>
-                        <SelectItem value="blue-1">Blue 1</SelectItem>
-                        <SelectItem value="blue-2">Blue 2</SelectItem>
-                        <SelectItem value="blue-3">Blue 3</SelectItem>
+                        <SelectItem className="text-lg" value="lead">Lead</SelectItem>
+                        <SelectItem className="text-lg" value="red-1">Red 1</SelectItem>
+                        <SelectItem className="text-lg" value="red-2">Red 2</SelectItem>
+                        <SelectItem className="text-lg" value="red-3">Red 3</SelectItem>
+                        <SelectItem className="text-lg" value="blue-1">Blue 1</SelectItem>
+                        <SelectItem className="text-lg" value="blue-2">Blue 2</SelectItem>
+                        <SelectItem className="text-lg" value="blue-3">Blue 3</SelectItem>
                     </SelectContent>
                 </Select>
                 <ModeToggle/>

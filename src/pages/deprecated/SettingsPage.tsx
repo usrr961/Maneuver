@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-//import { toast } from "react-toastify";
-
-import ProceedBackButton from "../components/ProceedBackButton";
+import { toast } from "sonner"
+import ProceedBackButton from "../../components/deprecated/ProceedBackButton";
 import Button from "@/components/ui/Button";
 import { Separator } from "@/components/ui/separator"
-import NavigationButton from "@/components/NavigationButton";
+import NavigationButton from "@/components/deprecated/NavigationButton";
 
 /**
  * A page for the user to access settings such as clearing match data, viewing match data, and getting match data.
@@ -25,11 +24,11 @@ const SettingsPage = () => {
     if (matchDataClearClicked) {
       localStorage.setItem("matchData", "");
       setMatchDataClearClicked(false);
-      //toast.success("Cleared Match Data");
+      toast.success("Cleared Match Data");
     } else if (scoutDataClearClicked) {
       localStorage.setItem("scoutingData", JSON.stringify({ data: [] }));
       setScoutDataClearClicked(false);
-      //toast.success("Cleared Scouting Data");
+      toast.success("Cleared Scouting Data");
     }
   }, [matchDataClearClicked, scoutDataClearClicked]);
 

@@ -4,21 +4,18 @@ import {
   RouterProvider,
   Route,
 } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ThemeProvider } from "@/components/theme-provider"
 
 import MainLayout from "@/layouts/MainLayout";
 
 import HomePage from "@/pages/HomePage";
 import GameStartPage from "@/pages/GameStartPage";
-import SettingsPage from "@/pages/SettingsPage";
+import SettingsPage from "@/pages/deprecated/SettingsPage";
 import ParseDataPage from "@/pages/ParseDataPage";
 import MatchDataPage from "@/pages/MatchDataPage";
-import MatchDataOnlinePage from "@/pages/MatchDataOnlinePage";
-import MatchDataOfflinePage from "@/pages/MatchDataOfflinePage";
 import ClearDataPage from "@/pages/ClearDataPage";
 
-import Button from '@/components/ui/button'
 
 
 function App() {
@@ -28,8 +25,6 @@ function App() {
         <Route index element={<HomePage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/match-data" element={<MatchDataPage />} />
-        <Route path="/match-data/online" element={<MatchDataOnlinePage />} />
-        <Route path="/match-data/offline" element={<MatchDataOfflinePage />} /> 
         <Route path="/clear-data" element={<ClearDataPage />} /> 
         <Route path="/parse-data" element={<ParseDataPage />} />
 

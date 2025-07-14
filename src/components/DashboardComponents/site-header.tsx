@@ -8,8 +8,6 @@ const PAGE_TITLES: Record<string, string> = {
     "/scout": "Scout",
     "/settings": "Settings",
     "/match-data": "Load Match Data",
-    "/match-data/online": "Match Data QR Scan",
-    "/match-data/offline": "Match Data File Upload",
     "/clear-data": "Clear Data",
     "/parse-data": "Parse Data",
   // Add more routes as needed

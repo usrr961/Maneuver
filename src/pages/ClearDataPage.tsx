@@ -1,13 +1,16 @@
 import Button from "@/components/ui/Button";
+import { toast } from "sonner";
 
 const ClearDataPage = () => {
 
   const handleClearMatchData = () => {
       localStorage.setItem("matchData", "");
+      toast.success("Cleared Match Data");
   };
 
   const handleClearScoutData = () => {
       localStorage.setItem("scoutingData", JSON.stringify({ data: [] }));
+      toast.success("Cleared Scouting Data");
   };
 
   return (

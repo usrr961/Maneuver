@@ -1,34 +1,141 @@
-//import { toast } from "react-toastify";
-// import "react-toastify/dist/ReactToastify.css";
-
-import NavigationButton from "@/components/NavigationButton";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Scanner } from "@yudiel/react-qr-scanner";
+import { toast } from "sonner"
+import Button from "@/components/ui/Button";
 import { Separator } from "@/components/ui/separator";
 
 const MatchDataPage = () => {
+  const navigate = useNavigate();
+  const [selectedData, setSelectedData] = useState("");
+
+  const [qrCodeMatchData, setQRCodeMatchData] = useState(""); // The URL to the match data
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files.item(0);
+
+    const getText = async () => {
+      try {
+        const text = await file.text();
+        
+        setSelectedData(JSON.stringify(JSON.parse(text).matches));
+        toast.success("Data Loaded");
+      } catch {
+        toast.error("Error In Loading");
+      }
+    };
+    getText();
+  };
+
+  const doneClick = async () => {
+    if (selectedData) {
+      localStorage.setItem("matchData", selectedData);
+    } else if (qrCodeMatchData) {
+      const qrCodeMatchDataParsed = JSON.parse(qrCodeMatchData)
+      try {
+        const headers = {
+          "X-TBA-Auth-Key": qrCodeMatchDataParsed.apiKey,
+        };
+        const res = await fetch(
+          `https://www.thebluealliance.com/api/v3/event/${qrCodeMatchDataParsed.eventKey}/matches/simple`,
+          { headers }
+        ); // Fetching the data from the URL
+        const fullData = await res.json();
+
+        const qualMatchesCleaned = [];
+
+        for (const match of fullData) {
+          if (match.comp_level == "qm") {
+            qualMatchesCleaned.push({
+              matchNum: match["match_number"],
+              redAlliance: match.alliances.red.team_keys.map((team: string) =>
+                team.replace("frc", "")
+              ),
+              blueAlliance: match.alliances.blue.team_keys.map((team: string) =>
+                team.replace("frc", "")
+              ),
+            });
+          }
+        }
+        
+        // Sort the match data by matchNum
+        qualMatchesCleaned.sort((a, b) => a.matchNum - b.matchNum);
+
+        localStorage.setItem("matchData", JSON.stringify(qualMatchesCleaned)); // Storing the data in local storage so it can be accessed if the website is refreshed
+
+        const matchDataStr = localStorage.getItem("matchData");
+        let fetchedMsg = "Match Data Fetched";
+        if (matchDataStr) {
+          const matchData = JSON.parse(matchDataStr);
+          if (Array.isArray(matchData) && matchData.length > 0 && matchData[0].redAlliance && matchData[0].redAlliance.length > 0) {
+            fetchedMsg += ": " + matchData[0].redAlliance[0];
+          }
+        }
+        toast.success(fetchedMsg); // Notifying the user that the data has been fetched
+        navigate("/"); // Navigating back to the home page
+      } catch (err) {
+        // If anything goes wrong, notify the user
+        toast.error("Invalid Data");
+        console.log(err);
+      }
+    };
+  };
   return (
-    <div className="w-full h-full pt-12">  
-      <div className="flex flex-col items-center justify-center w-full h-full gap-4">
-          <h2 className="font-bold ~text-1xl/4xl text-center p-2">
-            Are You Online (Using QR Code) or Offline (Using Match Schedule File)?
-          </h2>
-        <div className="flex flex-col max-w-3/4 2xl:max-w-1/2 w-full h-full gap-4 px-4">
-          <NavigationButton
-            variant={"default"}
-            destination={"/match-data/online"}
-            className="h-16"
-          >
-            Online (QR Code)
-          </NavigationButton>
-          <Separator />
-          <NavigationButton
+    <main className="h-full w-full overflow-none">
+      <input
+        type="file"
+        id="selectFiles"
+        accept=".json"
+        style={{ display: "none" }}
+        onChange={handleFileSelect}
+      />
+      <div className="flex flex-col w-full h-full items-center">
+        <div className="overflow-hidden flex flex-col items-center justify-center gap-4">
+          <h1 className="text-2xl font-bold p-4">Scan QR Code for Match Data</h1>
+          <div className="flex flex-1 items-center justify-center overflow-hidden">
+            <Scanner
+              components={{ finder: false }}
+              styles={{ video: { borderRadius: "7.5%" } }}
+              onScan={(result) => {
+                setQRCodeMatchData(result[0].rawValue); // If the QR code is found, set the URL
+                toast.success("QR Code is Scanned Successfully");
+              }}
+              onError={() =>
+                // If the QR code is not found, notify the user
+                toast.error("Invalid QR Code/User Canceled Prompt")
+              }
+            />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Scan the generated QR code to fetch match data from The Blue Alliance.
+          </p>
+          <div className="flex items-center justify-center gap-4 w-full max-w-md">
+            <Separator className="w-full" />
+            <p className="text-center text-xl font-bold">
+              OR
+            </p>
+            <Separator className="w-full" />
+          </div>
+          <Button
+            type="button"
             variant={"outline"}
-            destination={"/match-data/offline"}
-            className="h-16">
-            Offline (Match Schedule File)
-          </NavigationButton>
+            className="flex w-full h-16 items-center justify-center ~text-2xl/5xl text-center"
+            onClick={() => {
+              const input = document.getElementById("selectFiles");
+              if (input) input.click();
+            }}
+          >
+            Upload Match Data JSON
+          </Button>
+          <Button
+            className="flex w-full h-16 items-center justify-center ~text-2xl/5xl text-center mt-8"
+            onClick={() => doneClick()}
+          >
+            Submit
+          </Button>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

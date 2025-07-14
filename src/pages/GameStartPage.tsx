@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
-import ProceedBackButton from "../components/ProceedBackButton";
+import ProceedBackButton from "../components/deprecated/ProceedBackButton";
 import GameStartSelectAlliance from "../components/GameStartComponents/GameStartSelectAlliance";
 import GameStartTextInput from "../components/GameStartComponents/GameStartTextInput";
 import GameStartSelectTeam from "../components/GameStartComponents/GameStartSelectTeam";
