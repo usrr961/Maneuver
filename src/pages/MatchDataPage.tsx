@@ -4,6 +4,7 @@ import { Scanner } from "@yudiel/react-qr-scanner";
 import { toast } from "sonner"
 import Button from "@/components/ui/Button";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 const MatchDataPage = () => {
   const navigate = useNavigate();
@@ -81,7 +82,14 @@ const MatchDataPage = () => {
     };
   };
   return (
-    <main className="h-full w-full overflow-none">
+    <main
+      className={cn(
+        "h-full w-full overflow-none",
+        "[background-size:40px_40px]",
+        "[background-image:linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)]",
+        "dark:[background-image:linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)]",
+      )}
+    >
       <input
         type="file"
         id="selectFiles"
@@ -118,7 +126,7 @@ const MatchDataPage = () => {
           </div>
           <Button
             type="button"
-            variant={"outline"}
+            variant={"secondary"}
             className="flex w-full h-16 items-center justify-center ~text-2xl/5xl text-center"
             onClick={() => {
               const input = document.getElementById("selectFiles");
@@ -128,13 +136,14 @@ const MatchDataPage = () => {
             Upload Match Data JSON
           </Button>
           <Button
-            className="flex w-full h-16 items-center justify-center ~text-2xl/5xl text-center mt-8"
+            className="flex w-full h-16 items-center justify-center ~text-2xl/5xl text-center mt-4"
             onClick={() => doneClick()}
           >
             Submit
           </Button>
         </div>
       </div>
+      <div className="pointer-events-none absolute mt-7 top-[var(--header-height)] left-0 right-0 bottom-0 flex items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_70%,black)] dark:bg-black"></div>
     </main>
   );
 };

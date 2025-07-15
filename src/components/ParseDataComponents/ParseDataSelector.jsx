@@ -17,7 +17,7 @@ const ParseDataSelector = () => {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center h-screen gap-2 px-4 pb-16">
+      <div className="flex flex-col items-center justify-center h-screen w-full gap-2 px-4 pb-16">
         {/* Button for selecting files */}
         <ParseDataSelectButton
           selectedFiles={selectedFiles}

@@ -45,6 +45,7 @@ const ParseDataSelectButton = ({ selectedFiles, setSelectedFiles }) => {
       />
       {/* Visible button to trigger file selection */}
       <Button
+        variant={"secondary"}
         className="flex w-full max-w-1/2 h-16 items-center justify-center p-4 ~text-2xl/5xl text-center"
         onClick={() => document.getElementById("selectFiles").click()}
       >
