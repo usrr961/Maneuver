@@ -13,6 +13,7 @@ const PAGE_TITLES: Record<string, string> = {
     "/game-start": "Game Start",
     "/qr-transfer": "QR Data Transfer",
     "/json-transfer": "JSON Data Transfer",
+    "/match-strategy": "Match Strategy",
   // Add more routes as needed
 };
 

@@ -60,8 +60,14 @@ const data = {
     },
     {
       title: "Match Strategy",
-      url: "#",
+      url: "/match-strategy",
       icon: SquarePen,
+      items: [
+        {
+          title: "Match Strategy",
+          url: "/match-strategy",
+        },
+      ],
     },
   ],
   navClouds: [

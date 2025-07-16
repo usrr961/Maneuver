@@ -17,6 +17,7 @@ import MatchDataPage from "@/pages/MatchDataPage";
 import ClearDataPage from "@/pages/ClearDataPage";
 import QRDataTransferPage from "@/pages/QRDataTransferPage";
 import JSONDataTransferPage from "@/pages/JSONDataTransferPage";
+import MatchStrategyPage from "@/pages/MatchStrategyPage";
 
 
 
@@ -32,6 +33,7 @@ function App() {
         <Route path="/game-start" element={<GameStartPage />} />
         <Route path="/qr-transfer" element={<QRDataTransferPage />} />
         <Route path="/json-transfer" element={<JSONDataTransferPage />} />
+        <Route path="/match-strategy" element={<MatchStrategyPage />} />
         {/* Add more routes as needed */}
       </Route>
     )
