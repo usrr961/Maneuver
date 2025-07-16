@@ -44,7 +44,7 @@ const InitialSelectAlliance = ({ currentAlliance, setAlliance }: InitialSelectAl
 
   return (
     <>
-      <Card className="w-full h-full flex flex-col items-start justify-center">
+      <Card className="w-full flex flex-col items-start justify-center">
         <CardHeader className="w-full text-2xl font-bold items-start">
           <CardTitle>Select Alliance</CardTitle>
         </CardHeader>

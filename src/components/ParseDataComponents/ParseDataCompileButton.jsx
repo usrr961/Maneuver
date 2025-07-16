@@ -75,7 +75,7 @@ const ParseDataCompileButton = ({ selectedFiles, setSelectedFiles }) => {
     <>
       {/* The button to compile and download the CSV */}
       <Button
-        className="flex w-full max-w-1/2 h-16 items-center justify-center p-4 ~text-2xl/5xl text-center"
+        className="flex w-full max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl h-16 items-center justify-center p-4 ~text-2xl/5xl text-center"
         onClick={convertJSONToCSV}
       >
         Compile And Download

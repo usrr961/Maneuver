@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 const ParseDataSelectedViewer = ({ selectedFiles, setSelectedFiles }) => {
   return (
     <>
-      <ScrollArea className="w-full max-w-1/2 h-full border rounded-xl bg-accent">
+      <ScrollArea className="w-full max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl h-full min-h-fit border rounded-xl bg-accent">
         <ul>
           {/* Loops over each file in selectedFiles and creates a list item */}
           {selectedFiles.map((file, index) => (

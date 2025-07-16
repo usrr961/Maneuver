@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Settings, SquarePen } from "lucide-react"
+import { Settings, SquarePen, Download } from "lucide-react"
 
 import { NavDocuments } from "@/components/DashboardComponents/nav-documents"
 import { NavMain } from "@/components/DashboardComponents/nav-main"
@@ -40,6 +40,21 @@ const data = {
         {
           title: "Parse Data",
           url: "/parse-data",
+        }
+      ]
+    },
+    {
+      title: "Dump Data",
+      url: "#",
+      icon: Download,
+      items: [
+        {
+          title: "USB Export",
+          url: "/parse-data",
+        },
+        {
+          title: "QR Transfer",
+          url: "/qr-transfer",
         }
       ]
     },

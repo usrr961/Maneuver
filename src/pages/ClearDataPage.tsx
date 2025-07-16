@@ -17,29 +17,28 @@ const ClearDataPage = () => {
   return (
     <div
       className={cn(
-        "h-full w-full overflow-none items-center justify-center",
+        "min-h-screen w-full flex justify-center",
         "[background-size:40px_40px]",
         "[background-image:linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)]",
         "dark:[background-image:linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)]",
       )}
     >
-      <div className="overflow-hidden flex flex-col items-center justify-center gap-4 py-16">
+      <div className="flex flex-col gap-4 py-16">
         <Button
           type="button"
-          className="flex w-full max-w-1/2 h-16 items-center justify-center p-4 ~text-2xl/5xl text-center"
+          className="flex w-full max-w-sm lg:max-w-lg h-16 items-center justify-center p-4 text-xl text-center whitespace-normal break-words px-6"
           onClick={() => handleClearMatchData()}
         >
           Clear Match Schedule Data
         </Button>
         <Button
           type="button"
-          className="flex w-full max-w-1/2 h-16 items-center justify-center p-4 ~text-2xl/5xl text-center"
+          className="flex w-full max-w-sm lg:max-w-lg h-16 items-center justify-center p-4 text-xl text-center whitespace-normal break-words px-6"
           onClick={() => handleClearScoutData()}
         >
           Clear Collected Scouting Data
         </Button>
       </div>
-      <div className="pointer-events-none absolute mt-7 top-[var(--header-height)] left-0 right-0 bottom-0 flex items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_70%,black)] dark:bg-black"></div>
     </div>
   );
 };

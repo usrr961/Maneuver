@@ -12,9 +12,9 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       manifest: {
-        name: 'FRC Jockey',
-        short_name: 'FRC Jockey',
-        description: "'FRC Jockey is a FRC scouting app designed to streamline data collection.",
+        name: 'Maneuver',
+        short_name: 'Maneuver',
+        description: "Maneuver is a FRC scouting app designed to streamline data collection.",
         theme_color: '#3A3B3E',
         icons: [
           {

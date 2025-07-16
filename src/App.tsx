@@ -15,6 +15,7 @@ import SettingsPage from "@/pages/deprecated/SettingsPage";
 import ParseDataPage from "@/pages/ParseDataPage";
 import MatchDataPage from "@/pages/MatchDataPage";
 import ClearDataPage from "@/pages/ClearDataPage";
+import QRDataTransferPage from "./pages/QRDataTransferPage";
 
 
 
@@ -28,6 +29,8 @@ function App() {
         <Route path="/clear-data" element={<ClearDataPage />} /> 
         <Route path="/parse-data" element={<ParseDataPage />} />
         <Route path="/game-start" element={<GameStartPage />} />
+        <Route path="/qr-transfer" element={<QRDataTransferPage />} />
+        {/* Add more routes as needed */}
       </Route>
     )
   );

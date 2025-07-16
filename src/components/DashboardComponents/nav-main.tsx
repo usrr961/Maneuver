@@ -106,12 +106,6 @@ export function NavMain({
             <span>Scout</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
-        <SidebarMenuItem className="flex items-center gap-2">
-          <SidebarMenuButton tooltip={"Dump Data"} onClick={() => proceedClick("/")}>
-            <Download />
-            <span>Dump Data</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
         {items.map((item) => (
           <Collapsible
             key={item.title}

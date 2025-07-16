@@ -11,6 +11,7 @@ const PAGE_TITLES: Record<string, string> = {
     "/clear-data": "Clear Data",
     "/parse-data": "Parse Data",
     "/game-start": "Game Start",
+    "/qr-transfer": "QR Data Transfer",
   // Add more routes as needed
 };
 

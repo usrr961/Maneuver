@@ -32,16 +32,12 @@ const GameStartPage = () => {
 
   return (
     <>
-      <main
-        className={cn(
-          "flex justify-center items-center h-full w-full px-4 pb-24",
-          "[background-size:40px_40px]",
-          "[background-image:linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)]",
-          "dark:[background-image:linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)]",
-        )}
-      >
-        <div className="flex flex-col h-fit w-full max-w-2/3 justify-center gap-4">
-          <div className="flex h-full w-full gap-6">
+      <section className="flex justify-center items-start min-h-screen w-full px-4">
+        <div
+          id="game-start-inputs"
+          className="flex flex-col w-full max-w-sm md:max-w-md lg:max-w-lg xl:max-w-4xl justify-center gap-4 pt-[var(--header-height)] overflow-auto"
+        >
+          <div className="flex w-full gap-6 flex-wrap md:flex-nowrap">
             <GameStartTextInput
               question="Match Number"
               setTextValue={setMatchNumber}
@@ -58,7 +54,7 @@ const GameStartPage = () => {
               defaultText={scouterInitials}
             />
           </div>
-          <div className="flex flex-col h-full w-full gap-6">
+          <div className="flex flex-col w-full gap-6">
             <div>
               <GameStartSelectTeam
                 defaultSelectTeam={selectTeam}
@@ -102,8 +98,7 @@ const GameStartPage = () => {
             </div>
           </div>
         </div>
-        <div className="pointer-events-none absolute mt-7 top-[var(--header-height)] left-0 right-0 bottom-0 flex items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_70%,black)] dark:bg-black"></div>
-      </main>
+      </section>
     </>
   );
 };
