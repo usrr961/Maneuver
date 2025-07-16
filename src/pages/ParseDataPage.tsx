@@ -1,5 +1,4 @@
 import ParseDataSelector from "@/components/ParseDataComponents/ParseDataSelector";
-import { cn } from "@/lib/utils";
 
 const ParseDataPage = () => {
   return (

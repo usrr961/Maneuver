@@ -3,11 +3,12 @@ import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import { VitePWA } from "vite-plugin-pwa";
-
+import basicSsl from "@vitejs/plugin-basic-ssl"
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    basicSsl(),
     react(),
     tailwindcss(),
     VitePWA({
@@ -71,6 +72,10 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    https: {}, // enables HTTPS with default settings; configure with cert/key if needed
+    host: true, // same as "--host" flag
+	},
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

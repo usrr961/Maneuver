@@ -60,7 +60,7 @@ const ParseDataCompileButton = ({ selectedFiles, setSelectedFiles }) => {
     );
     element.setAttribute(
       "download",
-      `VScouterData-${new Date().toLocaleTimeString()}-Full.csv`
+      `ManeuverScoutingData-${new Date().toLocaleTimeString()}-Full.csv`
     );
 
     element.style.display = "none";

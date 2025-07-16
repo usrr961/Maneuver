@@ -44,13 +44,13 @@ const data = {
       ]
     },
     {
-      title: "Dump Data",
+      title: "Data Transfer",
       url: "#",
       icon: Download,
       items: [
         {
-          title: "USB Export",
-          url: "/parse-data",
+          title: "JSON Transfer",
+          url: "/json-transfer",
         },
         {
           title: "QR Transfer",

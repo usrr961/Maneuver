@@ -15,7 +15,8 @@ import SettingsPage from "@/pages/deprecated/SettingsPage";
 import ParseDataPage from "@/pages/ParseDataPage";
 import MatchDataPage from "@/pages/MatchDataPage";
 import ClearDataPage from "@/pages/ClearDataPage";
-import QRDataTransferPage from "./pages/QRDataTransferPage";
+import QRDataTransferPage from "@/pages/QRDataTransferPage";
+import JSONDataTransferPage from "@/pages/JSONDataTransferPage";
 
 
 
@@ -30,6 +31,7 @@ function App() {
         <Route path="/parse-data" element={<ParseDataPage />} />
         <Route path="/game-start" element={<GameStartPage />} />
         <Route path="/qr-transfer" element={<QRDataTransferPage />} />
+        <Route path="/json-transfer" element={<JSONDataTransferPage />} />
         {/* Add more routes as needed */}
       </Route>
     )

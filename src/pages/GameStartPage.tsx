@@ -35,7 +35,7 @@ const GameStartPage = () => {
       <section className="flex justify-center items-start min-h-screen w-full px-4">
         <div
           id="game-start-inputs"
-          className="flex flex-col w-full max-w-sm md:max-w-md lg:max-w-lg xl:max-w-4xl justify-center gap-4 pt-[var(--header-height)] overflow-auto"
+          className="flex flex-col w-full max-w-sm md:max-w-md lg:max-w-lg xl:max-w-4xl justify-center gap-4 pt-[var(--header-height)] overflow-auto pb-6"
         >
           <div className="flex w-full gap-6 flex-wrap md:flex-nowrap">
             <GameStartTextInput

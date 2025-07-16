@@ -1,4 +1,4 @@
-import { Binoculars, ChevronRight, Download, Home, type LucideIcon } from "lucide-react"
+import { Binoculars, ChevronRight, Home, type LucideIcon } from "lucide-react"
 
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";

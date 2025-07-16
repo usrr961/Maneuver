@@ -1,26 +1,26 @@
 import { useState } from "react";
 import Button from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import FountainCodeGenerator from "@/components/DataTransferComponents/FountainCodeGenerator";
-import FountainCodeScanner from "@/components/DataTransferComponents/FountainCodeScanner";
+import JSONDownloader from "@/components/DataTransferComponents/JSONDownloader";
+import JSONUploader from "@/components/DataTransferComponents/JSONUploader";
 
-const QRDataTransferPage = () => {
-  const [mode, setMode] = useState<'select' | 'generate' | 'scan'>('select');
+const JSONDataTransferPage = () => {
+  const [mode, setMode] = useState<'select' | 'download' | 'upload'>('select');
 
-  if (mode === 'generate') {
+  if (mode === 'download') {
     return (
-      <FountainCodeGenerator 
+      <JSONDownloader 
         onBack={() => setMode('select')} 
-        onSwitchToScanner={() => setMode('scan')} 
+        onSwitchToUpload={() => setMode('upload')} 
       />
     );
   }
 
-  if (mode === 'scan') {
+  if (mode === 'upload') {
     return (
-      <FountainCodeScanner 
+      <JSONUploader 
         onBack={() => setMode('select')} 
-        onSwitchToGenerator={() => setMode('generate')} 
+        onSwitchToDownload={() => setMode('download')} 
       />
     );
   }
@@ -29,19 +29,19 @@ const QRDataTransferPage = () => {
     <div className="h-screen w-full flex flex-col items-center px-4 pt-[var(--header-height)] pb-6">
       <div className="flex flex-col items-center gap-4 max-w-md w-full overflow-y-auto">
         <h1 className="text-2xl font-bold text-center">
-          Fountain Code Data Transfer
+          JSON Data Transfer
         </h1>
         
         <p className="text-center text-muted-foreground">
-          Transfer large scouting data files using fountain codes. Scan packets in any order until reconstruction is complete.
+          Download your scouting data as JSON files or upload JSON files to overwrite your local data storage.
         </p>
 
         <div className="flex flex-col gap-4 w-full">
           <Button
-            onClick={() => setMode('generate')}
+            onClick={() => setMode('download')}
             className="w-full h-16 text-xl"
           >
-            Generate Fountain Codes
+            Download JSON Data
           </Button>
           
           <div className="flex items-center gap-4">
@@ -51,22 +51,22 @@ const QRDataTransferPage = () => {
           </div>
           
           <Button
-            onClick={() => setMode('scan')}
+            onClick={() => setMode('upload')}
             variant="outline"
             className="w-full h-16 text-xl"
           >
-            Scan Fountain Codes
+            Upload JSON Data
           </Button>
         </div>
 
         <div className="text-xs text-muted-foreground text-center space-y-1">
-          <p>• Codes can be scanned in any order</p>
-          <p>• No need to receive all codes</p>
-          <p>• Automatic reconstruction when enough data is received</p>
+          <p>• Download: Export your data for backup or transfer</p>
+          <p>• Upload: Import data from other devices</p>
+          <p>• Supports both scouting and match schedule data</p>
         </div>
       </div>
     </div>
   );
 };
 
-export default QRDataTransferPage;
+export default JSONDataTransferPage;

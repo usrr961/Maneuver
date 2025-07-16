@@ -12,7 +12,7 @@ const HomePage = () => {
           "dark:[background-image:linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)]",
         )}
       >
-        <div className="flex flex-col w-auto justify-center items-center gap-6 lg:scale-150">
+        <div className="flex flex-col w-auto justify-center items-center gap-6 scale-75 md:scale-100 lg:scale-150">
           <img
             src={ManeuverVerticalLogo}
             className="dark:invert"

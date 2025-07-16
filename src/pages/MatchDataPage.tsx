@@ -82,16 +82,21 @@ const MatchDataPage = () => {
     };
   };
   return (
-    <main className="min-h-screen w-full pt-[var(--header-height)] px-8">
-      <input
-        type="file"
-        id="selectFiles"
-        accept=".json"
-        style={{ display: "none" }}
-        onChange={handleFileSelect}
-      />
-      <div className="flex flex-col w-full items-center gap-4">
-        <div className="w-full max-w-md h-64 md:h-80 overflow-hidden rounded-lg">
+    <main className="h-screen w-full flex flex-col items-center px-4 pt-[var(--header-height)] pb-6">
+      <div className="flex flex-col items-center gap-4 max-w-md w-full overflow-y-auto">
+        <input
+          type="file"
+          id="selectFiles"
+          accept=".json"
+          style={{ display: "none" }}
+          onChange={handleFileSelect}
+        />
+        
+        <h1 className="text-2xl font-bold text-center">
+          Match Data
+        </h1>
+        
+        <div className="w-full h-64 md:h-80 overflow-hidden rounded-lg">
           <Scanner
             components={{ finder: false }}
             styles={{ 
@@ -111,7 +116,7 @@ const MatchDataPage = () => {
             }
           />
         </div>
-        
+
         <p className="text-sm text-muted-foreground text-center">
           Scan the generated QR code to fetch match data from The Blue Alliance.
         </p>
