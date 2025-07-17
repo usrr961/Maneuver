@@ -1,14 +1,10 @@
 import { AppSidebar } from "@/components/DashboardComponents/app-sidebar"
-import { ChartAreaInteractive } from "@/components/DashboardComponents/chart-area-interactive"
-import { DataTable } from "@/components/DashboardComponents/data-table"
-import { SectionCards } from "@/components/DashboardComponents/section-cards"
 import { SiteHeader } from "@/components/DashboardComponents/site-header"
 import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
 
-import data from "./data.json"
 import { Outlet } from "react-router-dom"
 
 

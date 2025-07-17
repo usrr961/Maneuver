@@ -16,6 +16,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { ModeToggle } from "../mode-toggle"
 import {
@@ -47,9 +48,15 @@ export function NavMain({
     };
 
     const navigate = useNavigate();
+    const { isMobile, setOpenMobile } = useSidebar();
 
-  // navigate to the destination page
+    // navigate to the destination page
     const proceedClick = (url?: string) => {
+        // Close sidebar on mobile after navigation
+        if (isMobile) {
+            setOpenMobile(false);
+        }
+        
         if (url) {
         // If a destination is provided, navigate to that page
         navigate(url);
@@ -57,6 +64,15 @@ export function NavMain({
         // If no destination is provided, navigate to the root page
         navigate("/");
         }
+    };
+
+    // Handler for sub-menu clicks
+    const handleSubItemClick = (url: string) => {
+        // Close sidebar on mobile after navigation
+        if (isMobile) {
+            setOpenMobile(false);
+        }
+        navigate(url);
     };
 
     useEffect(() => {
@@ -127,9 +143,9 @@ export function NavMain({
                   {item.items?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title}>
                       <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
+                        <button onClick={() => handleSubItemClick(subItem.url)}>
                           <span>{subItem.title}</span>
-                        </a>
+                        </button>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   ))}

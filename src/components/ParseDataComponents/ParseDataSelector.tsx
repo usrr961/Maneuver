@@ -13,7 +13,7 @@ import ParseDataCompileButton from "./ParseDataCompileButton";
  * @return {ReactElement} The rendered component.
  */
 const ParseDataSelector = () => {
-  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   return (
     <>

@@ -12,7 +12,6 @@ import MainLayout from "@/layouts/MainLayout";
 import HomePage from "@/pages/HomePage";
 import GameStartPage from "@/pages/GameStartPage";
 import AutoStartPage from "@/pages/AutoStartPage";
-import SettingsPage from "@/pages/deprecated/SettingsPage";
 import ParseDataPage from "@/pages/ParseDataPage";
 import MatchDataPage from "@/pages/MatchDataPage";
 import ClearDataPage from "@/pages/ClearDataPage";
@@ -29,7 +28,6 @@ function App() {
     createRoutesFromElements(
       <Route path="/" element={<MainLayout />}>
         <Route index element={<HomePage />} />
-        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/match-data" element={<MatchDataPage />} />
         <Route path="/clear-data" element={<ClearDataPage />} /> 
         <Route path="/parse-data" element={<ParseDataPage />} />

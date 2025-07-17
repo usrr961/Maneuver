@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
  * @param {function} setSelectedFiles - The function to set the list of selected files.
  * @returns {ReactElement} The rendered component.
  */
-const ParseDataSelectedViewer = ({ selectedFiles, setSelectedFiles }) => {
+const ParseDataSelectedViewer = ({ selectedFiles, setSelectedFiles }: { selectedFiles: File[], setSelectedFiles: React.Dispatch<React.SetStateAction<File[]>> }) => {
   return (
     <>
       <ScrollArea className="w-full max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl h-full min-h-fit border rounded-xl bg-accent">
@@ -30,7 +30,7 @@ const ParseDataSelectedViewer = ({ selectedFiles, setSelectedFiles }) => {
                   onClick={() => {
                     // Filters out the clicked file from the list
                     setSelectedFiles(
-                      selectedFiles.filter((file, i) => i !== index)
+                      selectedFiles.filter((_file, i) => i !== index)
                     );
                   }}
                 >
