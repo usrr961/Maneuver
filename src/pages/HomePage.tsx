@@ -133,7 +133,7 @@ const HomePage = () => {
           </CardContent>
         </Card>
       </div>
-      <div className="pointer-events-none absolute mt-7 top-[var(--header-height)] left-0 right-0 bottom-0 flex items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_70%,black)] dark:bg-black"></div>
+      <div className="pointer-events-none absolute mt-7 top-10 left-0 right-0 bottom-0 flex items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_70%,black)] dark:bg-black"></div>
     </main>
   );
 };
