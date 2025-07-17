@@ -350,59 +350,65 @@ const MatchStrategyPage = () => {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col items-center px-4 pt-[var(--header-height)] pb-6">
-      <div className="flex flex-col items-center gap-4 max-w-7xl w-full h-full min-h-0">
-        <div className="flex justify-between w-full">
-            <div className="flex items-center gap-2 w-full">
-                <label htmlFor="match-number" className="font-semibold">
-                Match #:
-                </label>
-                <Input
-                id="match-number"
-                type="text"
-                placeholder="Optional"
-                value={matchNumber}
-                onChange={(e) => setMatchNumber(e.target.value)}
-                className="w-24"
-                />
-            </div>
-            <div className="flex items-center justify-end w-full gap-2">
-                <Button onClick={clearAllStrategies} variant="outline" className="p-4">
-                    Clear All
-                </Button>
-                <Button onClick={saveAllStrategyCanvases} variant="outline" className="p-4">
-                    Save All Strategies
-                </Button>
-            </div>
+    <div className="min-h-screen w-full flex flex-col items-center px-4 pt-[var(--header-height)] pb-6">
+      <div className="flex flex-col items-center gap-4 max-w-7xl w-full">
+        {/* Header section - should scroll naturally */}
+        <div className="flex md:justify-between w-full flex-wrap md:flex-nowrap gap-2 pt-4">
+          <div className="flex items-center gap-2 w-full md:w-auto pb-2 md:pb-0">
+            <label htmlFor="match-number" className="font-semibold whitespace-nowrap">
+              Match #:
+            </label>
+            <Input
+              id="match-number"
+              type="text"
+              placeholder="Optional"
+              value={matchNumber}
+              onChange={(e) => setMatchNumber(e.target.value)}
+              className="w-24"
+            />
+          </div>
+          <div className="flex items-center md:justify-end w-full md:w-auto gap-2">
+            <Button onClick={clearAllStrategies} variant="outline" className="flex-1 md:flex-none px-3 py-2">
+              Clear All
+            </Button>
+            <Button onClick={saveAllStrategyCanvases} variant="outline" className="flex-1 md:flex-none px-3 py-2">
+              Save All
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col gap-6 w-full flex-1 min-h-0 overflow-y-auto">
+
+        {/* Content area */}
+        <div className="flex flex-col gap-6 w-full pb-6">
           {/* Field Strategy Tabs */}
-          <Card className="w-full flex-shrink-0">
+          <Card className="w-full">
             <CardContent className="h-[500px] p-4">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsList className="grid w-full grid-cols-3 mb-4 flex-shrink-0">
                   <TabsTrigger value="autonomous">Autonomous</TabsTrigger>
                   <TabsTrigger value="teleop">Teleop</TabsTrigger>
                   <TabsTrigger value="endgame">Endgame</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="autonomous" className="flex-1 mt-0" data-stage="autonomous">
-                  <FieldCanvas key="autonomous" stageId="autonomous" />
-                </TabsContent>
-                
-                <TabsContent value="teleop" className="flex-1 mt-0" data-stage="teleop">
-                  <FieldCanvas key="teleop" stageId="teleop" />
-                </TabsContent>
-                
-                <TabsContent value="endgame" className="flex-1 mt-0" data-stage="endgame">
-                  <FieldCanvas key="endgame" stageId="endgame" />
-                </TabsContent>
+                {/* Canvas container */}
+                <div className="flex-1 mt-0">
+                  <TabsContent value="autonomous" className="h-full mt-0" data-stage="autonomous">
+                    <FieldCanvas key="autonomous" stageId="autonomous" />
+                  </TabsContent>
+                  
+                  <TabsContent value="teleop" className="h-full mt-0" data-stage="teleop">
+                    <FieldCanvas key="teleop" stageId="teleop" />
+                  </TabsContent>
+                  
+                  <TabsContent value="endgame" className="h-full mt-0" data-stage="endgame">
+                    <FieldCanvas key="endgame" stageId="endgame" />
+                  </TabsContent>
+                </div>
               </Tabs>
             </CardContent>
           </Card>
 
           {/* Team Analysis - Split by Alliance */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-shrink-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Red Alliance */}
             <Card className="w-full">
               <CardHeader>

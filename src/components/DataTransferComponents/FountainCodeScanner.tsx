@@ -423,27 +423,39 @@ const FountainCodeScanner = ({ onBack, onSwitchToGenerator }: FountainCodeScanne
               {/* Append Mode - for scouts sending to lead */}
               <Button 
                 onClick={() => saveToApp('append')} 
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-blue-600 hover:bg-blue-700 min-h-[4rem] py-3 px-4"
               >
-                📤 Append to Existing Data
-                <span className="text-xs block">Scout → Lead Scout</span>
+                <div className="flex flex-col items-center gap-1 text-center">
+                  <span className="text-sm font-medium">📤 Append to Existing Data</span>
+                  <span className="text-xs opacity-90 whitespace-normal">Scout → Lead Scout</span>
+                </div>
               </Button>
               
               {/* Overwrite Mode - for lead receiving from another lead */}
               <Button 
                 onClick={() => saveToApp('overwrite')} 
-                className="w-full bg-orange-600 hover:bg-orange-700"
+                className="w-full bg-orange-600 hover:bg-orange-700 min-h-[4rem] py-3 px-4"
               >
-                🔄 Replace All Data
-                <span className="text-xs block">Lead → Lead Scout</span>
+                <div className="flex flex-col items-center gap-1 text-center">
+                  <span className="text-sm font-medium">🔄 Replace All Data</span>
+                  <span className="text-xs opacity-90 whitespace-normal">Lead → Lead Scout</span>
+                </div>
               </Button>
               
-              <Button onClick={() => saveData()} variant="outline" className="w-full">
-                📁 Download JSON Only
+              <Button 
+                onClick={() => saveData()} 
+                variant="outline" 
+                className="w-full min-h-[3rem] py-3 px-4"
+              >
+                <span className="text-sm font-medium">📁 Download JSON Only</span>
               </Button>
               
-              <Button onClick={reset} variant="secondary" className="w-full">
-                🔄 Scan New
+              <Button 
+                onClick={reset} 
+                variant="secondary" 
+                className="w-full min-h-[3rem] py-3 px-4"
+              >
+                <span className="text-sm font-medium">🔄 Scan New</span>
               </Button>
             </div>
           </div>

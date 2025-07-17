@@ -175,9 +175,17 @@ const FieldCanvas = ({ stageId = "default" }: FieldCanvasProps) => {
     localStorage.setItem(`fieldStrategy_${stageId}`, dataURL);
   };
 
+  const canvasStyle: React.CSSProperties = {
+    userSelect: 'none',  // Prevent text selection
+    WebkitUserSelect: 'none',
+    MozUserSelect: 'none',
+    msUserSelect: 'none'
+    // Remove touchAction: 'none' - we'll handle this conditionally
+  };
+
   return (
     <div className="w-full h-full flex flex-col" data-stage={stageId}>
-      {/* Drawing Controls */}
+      {/* Drawing Controls - Allow normal scrolling */}
       <div className="flex justify-between items-center mb-4 flex-shrink-0 flex-wrap">
         <div className="flex items-center gap-2 pb-4 md:pb-0">
           <Button
@@ -225,14 +233,20 @@ const FieldCanvas = ({ stageId = "default" }: FieldCanvasProps) => {
         </div>
       </div>
 
-      {/* Canvas Container */}
+      {/* Canvas Container - Only prevent touch when actively drawing */}
       <div 
         ref={containerRef}
         className="flex-1 flex items-center justify-center border rounded-lg overflow-hidden bg-green-50 dark:bg-green-950/20 min-h-0"
       >
         <canvas
           ref={canvasRef}
-          className="cursor-crosshair"
+          width={800}
+          height={400}
+          style={{
+            ...canvasStyle,
+            touchAction: isDrawing ? 'none' : 'auto' // Only prevent touch when drawing
+          }}
+          className="border border-gray-300 rounded-lg cursor-crosshair"
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}
@@ -240,6 +254,7 @@ const FieldCanvas = ({ stageId = "default" }: FieldCanvasProps) => {
           onTouchStart={startDrawing}
           onTouchMove={draw}
           onTouchEnd={stopDrawing}
+          onTouchCancel={stopDrawing}
         />
       </div>
     </div>
