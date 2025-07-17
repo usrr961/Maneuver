@@ -15,6 +15,7 @@ const HomePage = () => {
         <div className="flex flex-col w-auto justify-center items-center gap-6 scale-75 md:scale-100 lg:scale-150">
           <img
             src={ManeuverVerticalLogo}
+            alt="Maneuver Logo"
             className="dark:invert"
           />
           <p className="text-center">
