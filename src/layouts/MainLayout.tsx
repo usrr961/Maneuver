@@ -1,5 +1,7 @@
 import Dashboard from "@/pages/Dashboard";
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "@/components/ui/sonner";
+import { PWAUpdatePrompt } from '@/components/PWAUpdatePrompt';
+
 //import MainLayoutPortraitWarning from "../components/MainLayoutComponents/MainLayoutPortraitWarning";
 
 // import "react-toastify/dist/ReactToastify.css";
@@ -21,8 +23,9 @@ const MainLayout = () => {
   // }, []);
   return (
     <div className="flex bg-background h-screen w-screen flex-col justify-center items-center">
-        <Dashboard />
-        <Toaster />
+      <Dashboard />
+      <Toaster />
+      <PWAUpdatePrompt />
     </div>
   );
 };

@@ -1,0 +1,40 @@
+{
+  "name": "Maneuver - A FRC Strategy Suite",
+  "short_name": "Maneuver FRC",
+  "description": "Maneuver is a FRC Strategy Suite designed for offline first robotics competition scouting.",
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "categories": ["sports", "utilities", "productivity"],
+  "screenshots": [
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "640x1136",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-wide.png", 
+      "sizes": "1024x768",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512", 
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ]
+}
