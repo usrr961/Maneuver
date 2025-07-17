@@ -12,28 +12,11 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      manifest: {
-        name: 'Maneuver',
-        short_name: 'Maneuver',
-        description: "Maneuver is a FRC scouting app designed to streamline data collection.",
-        theme_color: '#3A3B3E',
-        icons: [
-          {
-            src: '192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
-      },
-      registerType: "autoUpdate", // Automatically updates the service worker when changes are made
+      registerType: "autoUpdate",
       devOptions: {
-        enabled: true, // Enable PWA during development for testing
+        enabled: true,
       },
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'android-chrome-192x192.png', 'android-chrome-512x512.png'],
       workbox: {
         runtimeCaching: [
           {
