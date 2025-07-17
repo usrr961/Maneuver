@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,16 +19,16 @@ const AlgaeSection = ({ onAlgaeAction, phase, showFlashing, currentAlgae }: Alga
       return;
     }
     
-    // For scoring actions, must have algae
-    if (actionType === "score" && currentAlgae <= 0) {
-      console.log("Cannot score algae - no algae held:", currentAlgae);
+    // For scoring/action types, must have algae (miss is allowed without algae for tracking failed attempts)
+    if ((actionType === "score" || actionType === "action") && currentAlgae <= 0 && location !== "miss") {
+      console.log("Cannot score/remove algae - no algae held:", currentAlgae);
       return;
     }
     
     onAlgaeAction({
       type: actionType,
       location: location,
-      pieceType: actionType === "pickup" || actionType === "score" ? "algae" : undefined,
+      pieceType: (actionType === "pickup" || actionType === "score" || actionType === "action") ? "algae" : undefined,
       phase
     });
   };
@@ -43,14 +44,14 @@ const AlgaeSection = ({ onAlgaeAction, phase, showFlashing, currentAlgae }: Alga
 
     const pickupActions = phase === "auto" 
       ? [
-          { action: "ground", label: "Ground", type: "pickup" },
           { action: "reef", label: "Reef", type: "pickup" },
+          { action: "carpet", label: "Carpet", type: "pickup" },
           { action: "mark1", label: "Mark 1", type: "pickup" },
           { action: "mark2", label: "Mark 2", type: "pickup" },
           { action: "mark3", label: "Mark 3", type: "pickup" },
         ]
       : [
-          { action: "ground", label: "Ground", type: "pickup" },
+          { action: "reef", label: "Reef", type: "pickup" },
           { action: "carpet", label: "Carpet", type: "pickup" },
         ];
 
@@ -107,10 +108,10 @@ const AlgaeSection = ({ onAlgaeAction, phase, showFlashing, currentAlgae }: Alga
                 key={action.action}
                 onClick={() => handleAlgaeAction(action.type, action.action)}
                 variant={action.action === "miss" ? "destructive" : "outline"}
-                disabled={action.type === "score" && currentAlgae <= 0}
+                disabled={(action.type === "score" || action.type === "action") && currentAlgae <= 0}
                 className={`h-10 text-sm ${
-                  phase === "auto" && showFlashing && action.action !== "miss" ? 'animate-pulse' : ''
-                } ${action.type === "score" && currentAlgae <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  phase === "auto" && showFlashing ? 'animate-pulse' : ''
+                } ${(action.type === "score" || action.type === "action") && currentAlgae <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {action.label}
               </Button>

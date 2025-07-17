@@ -1,12 +1,18 @@
-import React from "react";
+/* eslint-disable no-control-regex */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
-const JSONDownloader = ({ onBack, onSwitchToUpload }) => {
-  const isOneDimensional = (value) => {
+interface JSONDownloaderProps {
+  onBack: () => void;
+  onSwitchToUpload: () => void;
+}
+
+const JSONDownloader = ({ onBack, onSwitchToUpload }: JSONDownloaderProps) => {
+  const isOneDimensional = (value: unknown) => {
     if (
       typeof value == "string" ||
       typeof value == "boolean" ||
@@ -17,16 +23,19 @@ const JSONDownloader = ({ onBack, onSwitchToUpload }) => {
     return false;
   };
 
-  const convertToCamelCase = (word1, word2) => {
+  const convertToCamelCase = (word1: string, word2: string) => {
     if (word1 == "") {
       return word2;
     }
     return word1 + (word2.charAt(0).toUpperCase() + word2.slice(1));
   };
 
-  const addHeaders = (data, previousKey = "") => {
-    let headers = [];
-    for (const [key, value] of Object.entries(data)) {
+  const addHeaders = (data: unknown, previousKey = "") => {
+    let headers: any[] = [];
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      return headers;
+    }
+    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
       if (isOneDimensional(value)) {
         headers.push(convertToCamelCase(previousKey, key));
       } else if (Array.isArray(value)) {
@@ -36,19 +45,19 @@ const JSONDownloader = ({ onBack, onSwitchToUpload }) => {
           } else {
             headers = [
               ...headers,
-              ...addHeaders(value[arrayIndex], convertToCamelCase(key, subKey)),
+              ...addHeaders(value[arrayIndex], convertToCamelCase(previousKey, key)),
             ];
           }
         }
       } else {
         // Dict
-        for (const [subKey, subValue] of Object.entries(value)) {
+        for (const [subKey, subValue] of Object.entries(value as Record<string, unknown>)) {
           if (isOneDimensional(subValue)) {
-            headers.push(convertToCamelCase(key, subKey)); // key + subKey = keySubKey
+            headers.push(convertToCamelCase(convertToCamelCase(previousKey, key), subKey));
           } else {
             headers = [
               ...headers,
-              ...addHeaders(subValue, convertToCamelCase(key, subKey)),
+              ...addHeaders(subValue, convertToCamelCase(convertToCamelCase(previousKey, key), subKey)),
             ];
           }
         }
@@ -56,10 +65,12 @@ const JSONDownloader = ({ onBack, onSwitchToUpload }) => {
     }
     return headers;
   };
-
-  const addRow = (data) => {
-    let row = [];
-    for (const [key, value] of Object.entries(data)) {
+  const addRow = (data: unknown) => {
+    let row: any[] = [];
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      return row;
+    }
+    for (const [, value] of Object.entries(data as Record<string, unknown>)) {
       if (isOneDimensional(value)) {
         row.push(value);
       } else if (Array.isArray(value)) {
@@ -75,7 +86,7 @@ const JSONDownloader = ({ onBack, onSwitchToUpload }) => {
         }
       } else {
         // Dict
-        for (const [subKey, subValue] of Object.entries(value)) {
+        for (const [, subValue] of Object.entries(value as Record<string, unknown>)) {
           if (isOneDimensional(subValue)) {
             row.push(subValue); // key + subKey = keySubKey
           } else {
@@ -90,7 +101,7 @@ const JSONDownloader = ({ onBack, onSwitchToUpload }) => {
     return row;
   };
 
-  const cleanText = (text) => {
+  const cleanText = (text: string) => {
     if (typeof text !== "string") return text;
     // Remove non-printable characters and trim extra spaces
     return text.replace(/[\x00-\x1F\x7F]/g, "").trim();
@@ -108,7 +119,7 @@ const JSONDownloader = ({ onBack, onSwitchToUpload }) => {
       const playerStation = localStorage.getItem("playerStation") || "Unknown";
 
       // Clean the comments column
-      const cleanedData = jsonData.map((row) => {
+      const cleanedData = jsonData.map((row: { comment: any; }) => {
         if (row.comment) {
           row.comment = cleanText(row.comment);
         }

@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useEffect, type Key } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import ReefScoringSection from "@/components/ScoringComponents/ReefScoringSection";
-import PickupSection from "@/components/ScoringComponents/PickupSection";
 import AlgaeSection from "@/components/ScoringComponents/AlgaeSection";
 
 interface ScoringPageProps {
@@ -61,14 +61,15 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
     let coralCount = 0;
     let algaeCount = 0;
     
-    scoringActions.forEach(action => {
+    scoringActions.forEach((action: { type: string; pieceType: string; }) => {
       if (action.type === "pickup") {
         if (action.pieceType === "coral") {
           coralCount = Math.min(1, coralCount + 1);
         } else if (action.pieceType === "algae") {
           algaeCount = Math.min(1, algaeCount + 1);
         }
-      } else if (action.type === "score") {
+      } else if (action.type === "score" || action.type === "action") {
+        // ALL scoring actions consume pieces (including miss)
         if (action.pieceType === "coral") {
           coralCount = Math.max(0, coralCount - 1);
         } else if (action.pieceType === "algae") {
@@ -83,40 +84,27 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
 
   // Initialize toggle states from saved data
   useEffect(() => {
-    const savedPassedStartLine = scoringActions.some(action => action.type === "passed_start_line");
-    const savedPlayedDefense = scoringActions.some(action => action.type === "defense");
+    const savedPassedStartLine = scoringActions.some((action: { type: string; }) => action.type === "passed_start_line");
+    const savedPlayedDefense = scoringActions.some((action: { type: string; }) => action.type === "defense");
     setPassedStartLine(savedPassedStartLine);
     setPlayedDefense(savedPlayedDefense);
   }, [scoringActions]);
 
   const addScoringAction = (action: any) => {
-    setScoringActions(prev => [...prev, { ...action, timestamp: Date.now() }]);
+    const newAction = { ...action, timestamp: Date.now() };
     
-    // Update piece counts based on action
-    if (action.type === "pickup") {
-      if (action.pieceType === "coral") {
-        setCurrentCoral(prev => Math.min(1, prev + 1));
-      } else if (action.pieceType === "algae") {
-        setCurrentAlgae(prev => Math.min(1, prev + 1));
-      }
-    } else if (action.type === "score") {
-      if (action.pieceType === "coral") {
-        setCurrentCoral(prev => Math.max(0, prev - 1));
-      } else if (action.pieceType === "algae") {
-        setCurrentAlgae(prev => Math.max(0, prev - 1));
-      }
-      
-      // Auto-toggle passed starting line when scoring in auto phase
-      if (phase === "auto" && !passedStartLine) {
-        setPassedStartLine(true);
-        // Also add the passed starting line action to the stack
-        setScoringActions(prev => [...prev, {
-          type: "passed_start_line",
-          value: true,
-          phase,
-          timestamp: Date.now()
-        }]);
-      }
+    // Auto-toggle passed starting line when scoring in auto phase
+    if (action.type === "score" && phase === "auto" && !passedStartLine) {
+      setPassedStartLine(true);
+      // Add both actions at once to avoid race condition
+      setScoringActions((prev: any) => [...prev, newAction, {
+        type: "passed_start_line",
+        value: true,
+        phase,
+        timestamp: Date.now()
+      }]);
+    } else {
+      setScoringActions((prev: any) => [...prev, newAction]);
     }
   };
 
@@ -127,21 +115,14 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
     }
 
     const lastAction = scoringActions[scoringActions.length - 1];
-    setScoringActions(prev => prev.slice(0, -1));
+    setScoringActions((prev: string | any[]) => prev.slice(0, -1));
 
-    // Reverse piece count changes
-    if (lastAction.type === "pickup") {
-      if (lastAction.pieceType === "coral") {
-        setCurrentCoral(prev => Math.max(0, prev - 1));
-      } else if (lastAction.pieceType === "algae") {
-        setCurrentAlgae(prev => Math.max(0, prev - 1));
-      }
-    } else if (lastAction.type === "score") {
-      if (lastAction.pieceType === "coral") {
-        setCurrentCoral(prev => prev + 1);
-      } else if (lastAction.pieceType === "algae") {
-        setCurrentAlgae(prev => prev + 1);
-      }
+    // Don't manually update piece counts - let the useEffect handle it
+    // Handle toggle state reversals
+    if (lastAction.type === "passed_start_line") {
+      setPassedStartLine(false);
+    } else if (lastAction.type === "defense") {
+      setPlayedDefense(false);
     }
 
     toast.success("Action undone");
@@ -190,7 +171,7 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
         });
       } else {
         // Remove action
-        setScoringActions(prev => prev.filter(action => action.type !== actionType));
+        setScoringActions((prev: any[]) => prev.filter((action: { type: string; }) => action.type !== actionType));
       }
     } else if (actionType === "defense") {
       const newValue = !playedDefense;
@@ -205,31 +186,22 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
         });
       } else {
         // Remove action
-        setScoringActions(prev => prev.filter(action => action.type !== actionType));
+        setScoringActions((prev: any[]) => prev.filter((action: { type: string; }) => action.type !== actionType));
       }
     }
   };
 
   const phaseTitle = phase === "auto" ? "Autonomous" : "Teleoperated";
   const actionCount = scoringActions.length;
-  const totalPieces = currentCoral + currentAlgae;
 
   return (
-    <div className="h-screen w-full flex flex-col items-center px-4 pt-[var(--header-height)] pb-6">
-      <div className="flex flex-col lg:flex-row items-start gap-6 max-w-7xl w-full h-full min-h-0">
+    <div className="h-fit w-full flex flex-col items-center px-4 pt-[var(--header-height)] pb-6">
+      <div className="flex flex-col-reverse lg:flex-row items-start gap-0 lg:gap-6 max-w-7xl w-full h-full min-h-0">
         
         {/* Main Scoring Section */}
         <div className="w-full lg:flex-1 space-y-4 min-h-0 overflow-y-auto">
           
-          {/* Pickup Section */}
-          <PickupSection 
-            onPickupAction={addScoringAction}
-            phase={phase}
-            currentCoral={currentCoral}
-            currentAlgae={currentAlgae}
-          />
-
-          {/* Reef Scoring Section */}
+          {/* Reef Scoring Section with Coral Pickup */}
           <ReefScoringSection 
             onScoringAction={addScoringAction}
             currentCoral={currentCoral}
@@ -244,7 +216,28 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
             showFlashing={showFlashing}
             currentAlgae={currentAlgae}
           />
+
+          {/* Action Buttons */}
+          <div className="flex lg:hidden gap-4 w-full">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              className="flex-1 h-12 text-lg"
+            >
+              Back
+            </Button>
+            <Button
+              onClick={handleProceed}
+              className={`flex-2 h-12 text-lg font-semibold ${
+                phase === "auto" && showFlashing ? "animate-pulse bg-green-600 hover:bg-green-700" : ""
+              }`}
+            >
+              {phase === "auto" ? "Continue to Teleop" : "Continue to Endgame"}
+            </Button>
+          </div>
         </div>
+
+
 
         {/* Info and Controls Sidebar */}
         <div className="flex flex-col gap-4 w-full lg:w-80 pb-4 lg:pb-0 min-h-0">
@@ -275,16 +268,40 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
                   <span className="text-muted-foreground">Actions:</span>
                   <Badge variant="outline">{actionCount}</Badge>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Pieces:</span>
-                  <div className="flex gap-1">
-                    <Badge variant="secondary">{currentCoral} Coral</Badge>
-                    <Badge variant="outline">{currentAlgae} Algae</Badge>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           )}
+
+          {/* Recent Actions */}
+          <Card className="flex-1 min-h-0">
+            <CardHeader>
+              <CardTitle className="text-lg">Recent Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {scoringActions.slice(-8).reverse().map((action: { type: string; pieceType: any; location: any; level: string; timestamp: string | number | Date; }, index: Key | null | undefined) => (
+                  <div key={index} className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {action.type === "passed_start_line" ? "Passed Start Line" :
+                       action.type === "defense" ? "Played Defense" :
+                       `${action.type} ${action.pieceType || ''} - ${action.location}${action.level ? ` (${action.level.toUpperCase()})` : ''}`}
+                    </span>
+                    <Badge variant="outline" className="text-xs">
+                      {new Date(action.timestamp).toLocaleTimeString([], { 
+                        minute: '2-digit', 
+                        second: '2-digit' 
+                      })}
+                    </Badge>
+                  </div>
+                ))}
+                {scoringActions.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-2">
+                    No actions recorded yet
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Toggle Actions Card - Only show if there are actions to toggle */}
           {(phase === "auto" || phase === "teleop") && (
@@ -315,37 +332,6 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
             </Card>
           )}
 
-          {/* Recent Actions */}
-          <Card className="flex-1 min-h-0">
-            <CardHeader>
-              <CardTitle className="text-lg">Recent Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                {scoringActions.slice(-8).reverse().map((action, index) => (
-                  <div key={index} className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      {action.type === "passed_start_line" ? "Passed Start Line" :
-                       action.type === "defense" ? "Played Defense" :
-                       `${action.type} ${action.pieceType || ''} - ${action.location}${action.level ? ` (${action.level.toUpperCase()})` : ''}`}
-                    </span>
-                    <Badge variant="outline" className="text-xs">
-                      {new Date(action.timestamp).toLocaleTimeString([], { 
-                        minute: '2-digit', 
-                        second: '2-digit' 
-                      })}
-                    </Badge>
-                  </div>
-                ))}
-                {scoringActions.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-2">
-                    No actions recorded yet
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Undo Button */}
           <Button
             variant="outline"
@@ -357,7 +343,7 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
           </Button>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 w-full">
+          <div className="hidden lg:flex gap-4 w-full">
             <Button
               variant="outline"
               onClick={handleBack}
@@ -374,9 +360,6 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
               {phase === "auto" ? "Continue to Teleop" : "Continue to Endgame"}
             </Button>
           </div>
-
-          {/* Bottom spacing */}
-          <div className="h-4" />
         </div>
 
       </div>

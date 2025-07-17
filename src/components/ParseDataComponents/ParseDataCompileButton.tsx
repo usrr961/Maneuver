@@ -1,5 +1,7 @@
-import React from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Button from "@/components/ui/button";
+import type { ReactElement } from "react";
+
 /**
  * A component that compiles the selected JSON files into a CSV format required
  * by the analysis software and downloads it to the user's computer.
@@ -8,7 +10,7 @@ import Button from "@/components/ui/button";
  * @param {function} setSelectedFiles - The function to set the list of selected files.
  * @return {ReactElement} The rendered component.
  */
-const ParseDataCompileButton = ({ selectedFiles, setSelectedFiles }) => {
+const ParseDataCompileButton = ({ selectedFiles }: { selectedFiles: any[] }): ReactElement => {
   /**
    * Converts the selected JSON files into a CSV format required by the
    * analysis software.
@@ -36,9 +38,9 @@ const ParseDataCompileButton = ({ selectedFiles, setSelectedFiles }) => {
 
     downloadCSV(
       fullCSV
-        .map((row) =>
+        .map((row: (string | number)[]) =>
           row
-            .map((item) =>
+            .map((item: string | number) =>
               typeof item === "string" ? `"${item.replace(/"/g, '""')}"` : item
             )
             .join(",")
@@ -52,8 +54,8 @@ const ParseDataCompileButton = ({ selectedFiles, setSelectedFiles }) => {
    * @param {string} csvContent - The CSV content to download.
    * @return {void}
    */
-  const downloadCSV = (csvContent) => {
-    var element = document.createElement("a");
+  const downloadCSV = (csvContent: string): void => {
+    const element = document.createElement("a");
     element.setAttribute(
       "href",
       "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent)

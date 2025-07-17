@@ -1,5 +1,7 @@
-import React from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Button from "@/components/ui/button";
+
+
 /**
  * A component that renders a button for selecting files to be parsed.
  * When a file is selected, it is added to the list of selected files, and its contents
@@ -9,21 +11,25 @@ import Button from "@/components/ui/button";
  * @param {function} setSelectedFiles - The function to set the list of selected files.
  * @return {ReactElement} The rendered component.
  */
-const ParseDataSelectButton = ({ selectedFiles, setSelectedFiles }) => {
+const ParseDataSelectButton = ({ setSelectedFiles }: any) => {
   /**
    * Handles the file selection and reads the contents of each selected file.
    * @param {Event} event - The file input change event.
    */
-  const handleFileSelect = (event) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+    
     // Iterate over each selected file
-    for (let itemNum = 0; itemNum < event.target.files.length; itemNum++) {
-      const file = event.target.files.item(itemNum);
+    for (let itemNum = 0; itemNum < files.length; itemNum++) {
+      const file = files.item(itemNum);
+      if (!file) continue;
 
       // Asynchronously read the text content of the file
       const getText = async () => {
         const text = await file.text();
         // Update the list of selected files with the new file and its content
-        setSelectedFiles((filesList) => [
+        setSelectedFiles((filesList: any) => [
           ...filesList,
           { name: file.name, text: text },
         ]);
@@ -47,7 +53,7 @@ const ParseDataSelectButton = ({ selectedFiles, setSelectedFiles }) => {
       <Button
         variant={"secondary"}
         className="flex w-full max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl h-16 items-center justify-center p-4 ~text-2xl/5xl text-center"
-        onClick={() => document.getElementById("selectFiles").click()}
+        onClick={() => document.getElementById("selectFiles")?.click()}
       >
         Select Files
       </Button>

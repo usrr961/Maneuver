@@ -28,10 +28,6 @@ const JSONDataTransferPage = () => {
   return (
     <div className="h-screen w-full flex flex-col items-center px-4 pt-[var(--header-height)] pb-6">
       <div className="flex flex-col items-center gap-4 max-w-md w-full overflow-y-auto">
-        <h1 className="text-2xl font-bold text-center">
-          JSON Data Transfer
-        </h1>
-        
         <p className="text-center text-muted-foreground">
           Download your scouting data as JSON files or upload JSON files to overwrite your local data storage.
         </p>

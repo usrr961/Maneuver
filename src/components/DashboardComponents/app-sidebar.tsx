@@ -120,36 +120,16 @@ const data = {
   ],
   navSecondary: [
     {
-      title: "Settings",
-      url: "#",
-      // icon: IconSettings,
-    },
-    {
-      title: "Get Help",
+      title: "Get Help (WIP)",
       url: "#",
       // icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      // icon: IconSearch,
     },
   ],
   documents: [
     {
-      name: "Data Library",
+      name: "Saved Match Strategies (WIP)",
       url: "#",
       // icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      // icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      // icon: IconFileWord,
     },
   ],
 }

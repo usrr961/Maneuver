@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import ParseDataSelectButton from "./ParseDataSelectButton";
-import ParseDataCompileButton from "./ParseDataCompileButton";
 import ParseDataSelectedViewer from "./ParseDataSelectedViewer";
+import ParseDataCompileButton from "./ParseDataCompileButton";
 
 /**
  * ParseDataSelector is a component that is responsible for managing the state
@@ -33,7 +33,6 @@ const ParseDataSelector = () => {
         {/* Button for compiling the selected files */}
         <ParseDataCompileButton
           selectedFiles={selectedFiles}
-          setSelectedFiles={setSelectedFiles}
         />
       </div>
     </>

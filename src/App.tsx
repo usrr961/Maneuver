@@ -19,7 +19,8 @@ import ClearDataPage from "@/pages/ClearDataPage";
 import QRDataTransferPage from "@/pages/QRDataTransferPage";
 import JSONDataTransferPage from "@/pages/JSONDataTransferPage";
 import MatchStrategyPage from "@/pages/MatchStrategyPage";
-import ScoringPage from "@/pages/ScoringPage";
+import { AutoScoringPage, TeleopScoringPage } from "@/pages/ScoringPage";
+import EndgamePage from "@/pages/EndgamePage";
 
 
 
@@ -37,8 +38,9 @@ function App() {
         <Route path="/qr-transfer" element={<QRDataTransferPage />} />
         <Route path="/json-transfer" element={<JSONDataTransferPage />} />
         <Route path="/match-strategy" element={<MatchStrategyPage />} />
-        <Route path="/auto-scoring" element={<ScoringPage phase="auto" />} />
-        <Route path="/teleop-scoring" element={<ScoringPage phase="teleop" />} />
+        <Route path="/auto-scoring" element={<AutoScoringPage />} />
+        <Route path="/teleop-scoring" element={<TeleopScoringPage />} />
+        <Route path="/endgame" element={<EndgamePage />} />
         {/* Add more routes as needed */}
       </Route>
     )

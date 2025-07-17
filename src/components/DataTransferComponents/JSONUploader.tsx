@@ -2,15 +2,22 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
-const JSONUploader = ({ onBack, onSwitchToDownload }) => {
-  const [selectedFile, setSelectedFile] = useState(null);
+type JSONUploaderProps = {
+  onBack: () => void;
+  onSwitchToDownload: () => void;
+};
 
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0];
+const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack, onSwitchToDownload }) => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  type FileSelectEvent = React.ChangeEvent<HTMLInputElement>
+
+  const handleFileSelect = (event: FileSelectEvent): void => {
+    const file: File | undefined = event.target.files?.[0];
     if (!file) return;
 
     if (!file.name.endsWith('.json')) {
@@ -22,7 +29,15 @@ const JSONUploader = ({ onBack, onSwitchToDownload }) => {
     toast.info(`Selected: ${file.name}`);
   };
 
-  const handleUpload = async (mode) => {
+  interface RawScoutingData {
+    data: unknown[];
+  }
+
+  type ProcessedScoutingData = unknown[][];
+
+  type UploadMode = "append" | "overwrite";
+
+  const handleUpload = async (mode: UploadMode): Promise<void> => {
     if (!selectedFile) {
       toast.error("Please select a file first");
       return;
@@ -30,21 +45,31 @@ const JSONUploader = ({ onBack, onSwitchToDownload }) => {
 
     try {
       const text = await selectedFile.text();
-      const jsonData = JSON.parse(text);
+      const jsonData: unknown = JSON.parse(text);
 
       // Validate scouting data structure
-      let newData = [];
-      if (jsonData.data && Array.isArray(jsonData.data)) {
+      let newData: unknown[] = [];
+      if (
+        typeof jsonData === "object" &&
+        jsonData !== null &&
+        "data" in jsonData &&
+        Array.isArray((jsonData as RawScoutingData).data)
+      ) {
         // Raw scouting data format
-        newData = jsonData.data;
+        newData = (jsonData as RawScoutingData).data;
       } else if (Array.isArray(jsonData)) {
         // Processed scouting data format - skip header row if it exists
-        const hasHeaderRow = jsonData.length > 0 && 
-          Array.isArray(jsonData[0]) && 
-          typeof jsonData[0][0] === 'string' &&
-          jsonData[0].some(cell => typeof cell === 'string' && cell.includes('match') || cell.includes('team'));
-        
-        newData = hasHeaderRow ? jsonData.slice(1) : jsonData;
+        const hasHeaderRow =
+          jsonData.length > 0 &&
+          Array.isArray(jsonData[0]) &&
+          typeof jsonData[0][0] === "string" &&
+          jsonData[0].some(
+            (cell: unknown) =>
+              typeof cell === "string" &&
+              (cell.includes("match") || cell.includes("team"))
+          );
+
+        newData = hasHeaderRow ? (jsonData as ProcessedScoutingData).slice(1) : (jsonData as ProcessedScoutingData);
       } else {
         toast.error("Invalid scouting data format");
         return;
@@ -52,31 +77,39 @@ const JSONUploader = ({ onBack, onSwitchToDownload }) => {
 
       if (mode === "overwrite") {
         // Overwrite existing data
-        const scoutingData = { data: newData };
+        const scoutingData: RawScoutingData = { data: newData };
         localStorage.setItem("scoutingData", JSON.stringify(scoutingData));
         toast.success(`Overwritten with ${newData.length} scouting entries`);
       } else if (mode === "append") {
         // Append to existing data
         const existingDataStr = localStorage.getItem("scoutingData");
-        let existingData = [];
-        
+        let existingData: unknown[] = [];
+
         if (existingDataStr) {
           try {
-            const parsed = JSON.parse(existingDataStr);
-            existingData = parsed.data || [];
+            const parsed: unknown = JSON.parse(existingDataStr);
+            existingData =
+              typeof parsed === "object" &&
+              parsed !== null &&
+              "data" in parsed &&
+              Array.isArray((parsed as RawScoutingData).data)
+                ? (parsed as RawScoutingData).data
+                : [];
           } catch (error) {
-            console.warn("Could not parse existing data, starting fresh");
+            console.warn("Could not parse existing data, starting fresh: " + error);
           }
         }
 
-        const mergedData = { data: [...existingData, ...newData] };
+        const mergedData: RawScoutingData = { data: [...existingData, ...newData] };
         localStorage.setItem("scoutingData", JSON.stringify(mergedData));
-        toast.success(`Appended ${newData.length} entries to existing ${existingData.length} entries (Total: ${mergedData.data.length})`);
+        toast.success(
+          `Appended ${newData.length} entries to existing ${existingData.length} entries (Total: ${mergedData.data.length})`
+        );
       }
 
       setSelectedFile(null);
       // Reset file input
-      const fileInput = document.getElementById("jsonFileInput");
+      const fileInput = document.getElementById("jsonFileInput") as HTMLInputElement | null;
       if (fileInput) fileInput.value = "";
 
     } catch (error) {
@@ -125,7 +158,10 @@ const JSONUploader = ({ onBack, onSwitchToDownload }) => {
             />
             
             <Button
-              onClick={() => document.getElementById("jsonFileInput").click()}
+              onClick={() => {
+                const input = document.getElementById("jsonFileInput");
+                if (input) input.click();
+              }}
               variant="outline"
               className="w-full min-h-16 text-xl whitespace-normal text-wrap py-3 px-4"
             >

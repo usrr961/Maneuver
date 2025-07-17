@@ -28,10 +28,7 @@ const QRDataTransferPage = () => {
   return (
     <div className="h-screen w-full flex flex-col items-center px-4 pt-[var(--header-height)] pb-6">
       <div className="flex flex-col items-center gap-4 max-w-md w-full overflow-y-auto">
-        <h1 className="text-2xl font-bold text-center">
-          Fountain Code Data Transfer
-        </h1>
-        
+
         <p className="text-center text-muted-foreground">
           Transfer large scouting data files using fountain codes. Scan packets in any order until reconstruction is complete.
         </p>

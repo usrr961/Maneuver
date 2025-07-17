@@ -14,7 +14,10 @@ const PAGE_TITLES: Record<string, string> = {
     "/qr-transfer": "QR Data Transfer",
     "/json-transfer": "JSON Data Transfer",
     "/match-strategy": "Match Strategy",
-    "/auto-start": "Auto Start"
+    "/auto-start": "Auto Start",
+    "/auto-scoring": "Auto",
+    "/teleop-scoring": "Teleop",
+    "/endgame": "Endgame",
   // Add more routes as needed
 };
 
