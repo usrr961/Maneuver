@@ -5,20 +5,19 @@
   "theme_color": "#000000",
   "background_color": "#ffffff",
   "display": "standalone",
-  "orientation": "portrait",
   "scope": "/",
   "start_url": "/",
   "categories": ["sports", "utilities", "productivity"],
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "/Icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/android-chrome-192x192.png",
-      "sizes": "192x192",
+      "src": "/apple-touch-icon-144x144.png",
+      "sizes": "144x144",
       "type": "image/png",
       "purpose": "any"
     },
