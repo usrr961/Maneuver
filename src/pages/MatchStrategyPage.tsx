@@ -350,7 +350,7 @@ const MatchStrategyPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center px-4 pt-[var(--header-height)] pb-6">
+    <div className="min-h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
       <div className="flex flex-col items-center gap-4 max-w-7xl w-full">
         {/* Header section - should scroll naturally */}
         <div className="flex md:justify-between w-full flex-wrap md:flex-nowrap gap-2 pt-4">
@@ -392,15 +392,27 @@ const MatchStrategyPage = () => {
                 {/* Canvas container */}
                 <div className="flex-1 mt-0">
                   <TabsContent value="autonomous" className="h-full mt-0" data-stage="autonomous">
-                    <FieldCanvas key="autonomous" stageId="autonomous" />
+                    <FieldCanvas 
+                      key="autonomous" 
+                      stageId="autonomous" 
+                      onStageChange={(newStageId) => setActiveTab(newStageId)}
+                    />
                   </TabsContent>
                   
                   <TabsContent value="teleop" className="h-full mt-0" data-stage="teleop">
-                    <FieldCanvas key="teleop" stageId="teleop" />
+                    <FieldCanvas 
+                      key="teleop" 
+                      stageId="teleop" 
+                      onStageChange={(newStageId) => setActiveTab(newStageId)}
+                    />
                   </TabsContent>
                   
                   <TabsContent value="endgame" className="h-full mt-0" data-stage="endgame">
-                    <FieldCanvas key="endgame" stageId="endgame" />
+                    <FieldCanvas 
+                      key="endgame" 
+                      stageId="endgame" 
+                      onStageChange={(newStageId) => setActiveTab(newStageId)}
+                    />
                   </TabsContent>
                 </div>
               </Tabs>

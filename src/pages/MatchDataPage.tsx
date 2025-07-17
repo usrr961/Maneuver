@@ -86,7 +86,7 @@ const MatchDataPage = () => {
     };
   };
   return (
-    <main className="h-screen w-full flex flex-col items-center px-4 pt-[var(--header-height)] pb-6">
+    <main className="h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
       <div className="flex flex-col items-center gap-4 max-w-md w-full overflow-y-auto">
         <input
           type="file"

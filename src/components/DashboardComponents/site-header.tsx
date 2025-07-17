@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
 const PAGE_TITLES: Record<string, string> = {
-    "/": "Home",
+    "/": "",
     "/scout": "Scout",
     "/settings": "Settings",
     "/match-data": "Load Match Data",
@@ -18,12 +18,13 @@ const PAGE_TITLES: Record<string, string> = {
     "/auto-scoring": "Auto",
     "/teleop-scoring": "Teleop",
     "/endgame": "Endgame",
+    "/team-stats": "Team Stats",
   // Add more routes as needed
 };
 
 export function SiteHeader() {
   const location = useLocation();
-  const title = PAGE_TITLES[location.pathname] || "Page";
+  const title = PAGE_TITLES[location.pathname] || "";
   return (
     <header className="flex h-(--header-height)items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)  py-2">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
@@ -36,7 +37,7 @@ export function SiteHeader() {
         <div className="ml-auto flex items-center gap-2">
           <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
             <a
-              href="https://github.com/shadcn-ui/ui/tree/main/apps/v4/app/(examples)/dashboard"
+              href="https://github.com/ShinyShips/Maneuver"
               rel="noopener noreferrer"
               target="_blank"
               className="dark:text-foreground"

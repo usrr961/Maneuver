@@ -20,6 +20,7 @@ import JSONDataTransferPage from "@/pages/JSONDataTransferPage";
 import MatchStrategyPage from "@/pages/MatchStrategyPage";
 import { AutoScoringPage, TeleopScoringPage } from "@/pages/ScoringPage";
 import EndgamePage from "@/pages/EndgamePage";
+import TeamStatsPage from "@/pages/TeamStatsPage";
 
 
 
@@ -39,6 +40,7 @@ function App() {
         <Route path="/auto-scoring" element={<AutoScoringPage />} />
         <Route path="/teleop-scoring" element={<TeleopScoringPage />} />
         <Route path="/endgame" element={<EndgamePage />} />
+        <Route path="/team-stats" element={<TeamStatsPage />} />
         {/* Add more routes as needed */}
       </Route>
     )

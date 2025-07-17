@@ -6,7 +6,7 @@ const HomePage = () => {
     <main className="overflow-hidden h-screen w-full">
       <div
         className={cn(
-          "flex flex-col h-full w-full justify-center items-center gap-6 pt-[var(--header-height)]",
+          "flex flex-col h-full w-full justify-center items-center gap-6 pt-6",
           "[background-size:40px_40px]",
           "[background-image:linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)]",
           "dark:[background-image:linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)]",
