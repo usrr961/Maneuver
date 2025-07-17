@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import Button from "@/components/ui/button";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 interface QRChunk {
   id: string;
@@ -25,7 +25,7 @@ const QRChunkGenerator = () => {
         const parsedData = JSON.parse(data);
         setScoutingData(parsedData);
       } catch (error) {
-        toast.error("Error loading scouting data");
+        toast.error("Error loading scouting data: " + (error instanceof Error ? error.message : String(error)));
       }
     }
   }, []);

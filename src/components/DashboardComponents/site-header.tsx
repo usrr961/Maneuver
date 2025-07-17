@@ -14,6 +14,7 @@ const PAGE_TITLES: Record<string, string> = {
     "/qr-transfer": "QR Data Transfer",
     "/json-transfer": "JSON Data Transfer",
     "/match-strategy": "Match Strategy",
+    "/auto-start": "Auto Start"
   // Add more routes as needed
 };
 

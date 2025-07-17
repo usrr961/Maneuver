@@ -55,7 +55,7 @@ const ClearDataPage = () => {
     toast.success("Cleared match schedule data");
   };
 
-  const formatDataSize = (data) => {
+  const formatDataSize = (data: BlobPart | null) => {
     if (!data) return "0 B";
     const bytes = new Blob([data]).size;
     if (bytes < 1024) return `${bytes} B`;

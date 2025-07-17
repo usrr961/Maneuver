@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { toast } from "sonner"
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 
 const MatchDataPage = () => {
   const navigate = useNavigate();
@@ -12,12 +12,17 @@ const MatchDataPage = () => {
 
   const [qrCodeMatchData, setQRCodeMatchData] = useState(""); // The URL to the match data
 
-  const handleFileSelect = (event) => {
-    const file = event.target.files.item(0);
-
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) {
+      toast.error("No file selected");
+      return;
+    }
+    const file = files.item(0);
+  
     const getText = async () => {
       try {
-        const text = await file.text();
+        const text = await file!.text();
         
         setSelectedData(JSON.stringify(JSON.parse(text).matches));
         toast.success("Data Loaded");

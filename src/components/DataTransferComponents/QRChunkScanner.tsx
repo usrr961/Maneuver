@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import Button from "@/components/ui/button";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 interface QRChunk {
   id: string;
@@ -75,12 +75,12 @@ const QRChunkScanner = () => {
           setIsComplete(true);
           toast.success("All chunks received! Data reconstructed successfully.");
         } catch (error) {
-          toast.error("Error reconstructing data");
+          toast.error("Error reconstructing data: " + (error instanceof Error ? error.message : String(error)));
         }
       }
 
     } catch (error) {
-      toast.error("Invalid QR code format");
+      toast.error("Invalid QR code format: " + (error instanceof Error ? error.message : String(error)));
     }
   };
 

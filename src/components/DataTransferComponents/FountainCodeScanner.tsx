@@ -27,7 +27,11 @@ interface FountainCodeScannerProps {
 const FountainCodeScanner = ({ onBack, onSwitchToGenerator }: FountainCodeScannerProps) => {
   const [currentSession, setCurrentSession] = useState<string | null>(null);
   const [isComplete, setIsComplete] = useState(false);
-  const [reconstructedData, setReconstructedData] = useState<unknown>(null);
+  interface ScoutingData {
+    data: any[];
+  }
+  
+  const [reconstructedData, setReconstructedData] = useState<ScoutingData | null>(null);
   const [progress, setProgress] = useState({ received: 0, needed: 0, percentage: 0 });
   const [debugLog, setDebugLog] = useState<string[]>([]);
   const [allowDuplicates, setAllowDuplicates] = useState(false);
@@ -285,13 +289,8 @@ const FountainCodeScanner = ({ onBack, onSwitchToGenerator }: FountainCodeScanne
             Switch to Generator
           </Button>
         </div>
-
-        {/* Debug what's being rendered */}
-        {console.log("About to render content, isComplete:", isComplete)}
-        
         {!isComplete ? (
           <>
-            {console.log("Rendering scanner UI")}
             <Card className="w-full">
               <CardHeader>
                 <CardTitle className="text-center">Scan Fountain Packets</CardTitle>
@@ -413,7 +412,7 @@ const FountainCodeScanner = ({ onBack, onSwitchToGenerator }: FountainCodeScanne
                       return <p>Existing data: {existingData.data.length} entries</p>;
                     }
                   } catch (error) {
-                    // ignore
+                    console.error("Error parsing existing data:", error);
                   }
                 }
                 return <p>No existing data found</p>;

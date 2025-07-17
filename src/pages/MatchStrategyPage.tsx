@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import FieldCanvas from "@/components/MatchStrategyComponents/FieldCanvas";
 
-// Updated interface to match actual column structure
 interface ScoutingEntry {
   matchNumber: string;                    // index 0
   alliance: string;                       // index 1
@@ -179,20 +178,20 @@ const MatchStrategyPage = () => {
       return sum + autoCoralScored + teleopCoralScored + autoAlgaeScored + teleopAlgaeScored;
     }, 0);
 
-    // Calculate average total points (you'll need to adjust point values based on actual game rules)
+    // Calculate average total points
     const totalPoints = teamEntries.reduce((sum, entry) => {
-      // Auto points - adjust these values based on actual FRC 2025 scoring
+      // Auto points
       const autoCoralPoints = (entry.autoCoralPlaceL1Count * 3) + (entry.autoCoralPlaceL2Count * 4) + 
                            (entry.autoCoralPlaceL3Count * 6) + (entry.autoCoralPlaceL4Count * 7);
       const autoAlgaePoints = (entry.autoAlgaePlaceNetShot * 4) + (entry.autoAlgaePlaceProcessor * 2);
       const autoMobilityPoints = entry.autoPassedStartLine ? 3 : 0;
       
-      // Teleop points - adjust these values based on actual FRC 2025 scoring
+      // Teleop points
       const teleopCoralPoints = (entry.teleopCoralPlaceL1Count * 2) + (entry.teleopCoralPlaceL2Count * 3) + 
                              (entry.teleopCoralPlaceL3Count * 4) + (entry.teleopCoralPlaceL4Count * 5);
       const teleopAlgaePoints = (entry.teleopAlgaePlaceNetShot * 4) + (entry.teleopAlgaePlaceProcessor * 2);
       
-      // Endgame points - adjust these values based on actual FRC 2025 scoring
+      // Endgame points
       let endgamePoints = 0;
       if ((entry.parkAttempted && !entry.climbFailed) || (entry.shallowClimbAttempted && entry.climbFailed) || (entry.deepClimbAttempted && entry.climbFailed)) endgamePoints += 2;
       if (entry.shallowClimbAttempted && !entry.climbFailed) endgamePoints += 6;
@@ -217,7 +216,6 @@ const MatchStrategyPage = () => {
 
   const handleTeamChange = (index: number, teamNumber: string) => {
     const newSelectedTeams = [...selectedTeams];
-    // Convert "none" to empty string for internal state
     newSelectedTeams[index] = teamNumber === "none" ? "" : teamNumber;
     setSelectedTeams(newSelectedTeams);
   };
