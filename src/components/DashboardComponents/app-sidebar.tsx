@@ -1,9 +1,9 @@
 import * as React from "react"
 import { Settings, SquarePen, Download } from "lucide-react"
 
-import { NavDocuments } from "@/components/DashboardComponents/nav-documents"
+// import { NavDocuments } from "@/components/DashboardComponents/nav-documents"
 import { NavMain } from "@/components/DashboardComponents/nav-main"
-import { NavSecondary } from "@/components/DashboardComponents/nav-secondary"
+// import { NavSecondary } from "@/components/DashboardComponents/nav-secondary"
 import { NavUser } from "@/components/DashboardComponents/nav-user"
 import {
   Sidebar,
