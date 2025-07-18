@@ -5,11 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SortableList, SortableListItem, type Item } from "@/components/ui/sortable-list";
-import { Plus, Eye, Trash2, Download, Upload } from "lucide-react";
+import { TeamStatsButton } from "@/components/ui/team-stats-button";
+import { Plus, Trash2, Download, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface TeamStats {
   teamNumber: string;
@@ -64,7 +63,6 @@ interface PickList {
 const PickListPage = () => {
   const [availableTeams, setAvailableTeams] = useState<TeamStats[]>([]);
   const [pickLists, setPickLists] = useState<PickList[]>([]);
-  const [selectedTeamForStats, setSelectedTeamForStats] = useState<string>("");
   const [newListName, setNewListName] = useState("");
   const [newListDescription, setNewListDescription] = useState("");
   const [searchFilter, setSearchFilter] = useState("");
@@ -303,7 +301,7 @@ const PickListPage = () => {
       id: Date.now() + Math.random(),
       text: `Team ${team.teamNumber}`,
       checked: false,
-      description: `Auto: ${team.avgAutoCoralTotal} coral, ${team.avgAutoAlgaeTotal} algae | Teleop: ${team.avgTeleopCoralTotal} coral, ${team.avgTeleopAlgaeTotal} algae | ${team.climbRate}% climb`
+      description: team.teamNumber // Store team number for lookup
     };
 
     setPickLists(prev => prev.map(list => 
@@ -427,10 +425,9 @@ const PickListPage = () => {
       }
     });
 
-  const selectedTeamStats = availableTeams.find(t => t.teamNumber === selectedTeamForStats);
 
   return (
-    <div className="h-full w-full flex flex-col px-4 pt-4 pb-6">
+    <div className="min-h-screen w-full flex flex-col px-4 pt-4 pb-6">
       <div className="flex flex-col gap-6 max-w-7xl w-full mx-auto">
         
         {/* Header */}
@@ -515,212 +512,11 @@ const PickListPage = () => {
                     </div>
                     
                     <div className="flex gap-1">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button size="sm" variant="outline" onClick={() => setSelectedTeamForStats(team.teamNumber)} className="h-8">
-                            <Eye className="w-3 h-3" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle>Team {team.teamNumber} Detailed Stats</DialogTitle>
-                          </DialogHeader>
-                          
-                          {selectedTeamStats && (
-                            <Tabs defaultValue="coral" className="w-full">
-                              <TabsList className="grid w-full grid-cols-4">
-                                <TabsTrigger value="coral">Coral</TabsTrigger>
-                                <TabsTrigger value="algae">Algae</TabsTrigger>
-                                <TabsTrigger value="climb">Climb</TabsTrigger>
-                                <TabsTrigger value="start">Start Pos</TabsTrigger>
-                              </TabsList>
-                              
-                              <TabsContent value="coral" className="space-y-4">
-                                <div className="grid grid-cols-2 gap-6">
-                                  <div>
-                                    <h4 className="font-semibold mb-3">Auto Coral Scoring</h4>
-                                    <div className="space-y-2">
-                                      <div className="flex justify-between">
-                                        <span>Level 1:</span>
-                                        <span className="font-bold">{selectedTeamStats.avgAutoCoralL1}</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Level 2:</span>
-                                        <span className="font-bold">{selectedTeamStats.avgAutoCoralL2}</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Level 3:</span>
-                                        <span className="font-bold">{selectedTeamStats.avgAutoCoralL3}</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Level 4:</span>
-                                        <span className="font-bold">{selectedTeamStats.avgAutoCoralL4}</span>
-                                      </div>
-                                      <div className="flex justify-between pt-2 border-t">
-                                        <span className="font-semibold">Total:</span>
-                                        <span className="font-bold text-blue-600">{selectedTeamStats.avgAutoCoralTotal}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <h4 className="font-semibold mb-3">Teleop Coral Scoring</h4>
-                                    <div className="space-y-2">
-                                      <div className="flex justify-between">
-                                        <span>Level 1:</span>
-                                        <span className="font-bold">{selectedTeamStats.avgTeleopCoralL1}</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Level 2:</span>
-                                        <span className="font-bold">{selectedTeamStats.avgTeleopCoralL2}</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Level 3:</span>
-                                        <span className="font-bold">{selectedTeamStats.avgTeleopCoralL3}</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Level 4:</span>
-                                        <span className="font-bold">{selectedTeamStats.avgTeleopCoralL4}</span>
-                                      </div>
-                                      <div className="flex justify-between pt-2 border-t">
-                                        <span className="font-semibold">Total:</span>
-                                        <span className="font-bold text-purple-600">{selectedTeamStats.avgTeleopCoralTotal}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                                
-                                {/* Combined Totals */}
-                                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                  <h4 className="font-semibold mb-3">Combined Totals (Auto + Teleop)</h4>
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div className="flex justify-between">
-                                      <span>Level 1:</span>
-                                      <span className="font-bold">{selectedTeamStats.avgTotalCoralL1}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>Level 2:</span>
-                                      <span className="font-bold">{selectedTeamStats.avgTotalCoralL2}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>Level 3:</span>
-                                      <span className="font-bold">{selectedTeamStats.avgTotalCoralL3}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>Level 4:</span>
-                                      <span className="font-bold">{selectedTeamStats.avgTotalCoralL4}</span>
-                                    </div>
-                                  </div>
-                                  <div className="flex justify-between pt-2 border-t font-semibold">
-                                    <span>Total Coral:</span>
-                                    <span className="text-green-600">{selectedTeamStats.avgTotalCoralTotal}</span>
-                                  </div>
-                                </div>
-                              </TabsContent>
-                              
-                              <TabsContent value="algae" className="space-y-4">
-                                <div className="grid grid-cols-2 gap-6">
-                                  <div>
-                                    <h4 className="font-semibold mb-3">Auto Algae Scoring</h4>
-                                    <div className="space-y-2">
-                                      <div className="flex justify-between">
-                                        <span>Net Shots:</span>
-                                        <span className="font-bold">{selectedTeamStats.avgAutoAlgaeNet}</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Processor:</span>
-                                        <span className="font-bold">{selectedTeamStats.avgAutoAlgaeProcessor}</span>
-                                      </div>
-                                      <div className="flex justify-between pt-2 border-t">
-                                        <span className="font-semibold">Total:</span>
-                                        <span className="font-bold text-green-600">{selectedTeamStats.avgAutoAlgaeTotal}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <h4 className="font-semibold mb-3">Teleop Algae Scoring</h4>
-                                    <div className="space-y-2">
-                                      <div className="flex justify-between">
-                                        <span>Net Shots:</span>
-                                        <span className="font-bold">{selectedTeamStats.avgTeleopAlgaeNet}</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Processor:</span>
-                                        <span className="font-bold">{selectedTeamStats.avgTeleopAlgaeProcessor}</span>
-                                      </div>
-                                      <div className="flex justify-between pt-2 border-t">
-                                        <span className="font-semibold">Total:</span>
-                                        <span className="font-bold text-orange-600">{selectedTeamStats.avgTeleopAlgaeTotal}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                                
-                                {/* Combined Algae Total */}
-                                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                  <div className="flex justify-between font-semibold">
-                                    <span>Total Algae (Auto + Teleop):</span>
-                                    <span className="text-green-600">{selectedTeamStats.avgTotalAlgaeTotal}</span>
-                                  </div>
-                                </div>
-                              </TabsContent>
-                              
-                              <TabsContent value="climb" className="space-y-4">
-                                <div className="grid grid-cols-2 gap-6">
-                                  <div>
-                                    <h4 className="font-semibold mb-3">Performance Rates</h4>
-                                    <div className="space-y-2">
-                                      <div className="flex justify-between">
-                                        <span>Climb Rate:</span>
-                                        <span className="font-bold text-purple-600">{selectedTeamStats.climbRate}%</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Mobility Rate:</span>
-                                        <span className="font-bold text-blue-600">{selectedTeamStats.mobilityRate}%</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Defense Rate:</span>
-                                        <span className="font-bold text-gray-600">{selectedTeamStats.defenseRate}%</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Breakdown Rate:</span>
-                                        <span className="font-bold text-red-600">{selectedTeamStats.breakdownRate}%</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <h4 className="font-semibold mb-3">Match Info</h4>
-                                    <div className="space-y-2">
-                                      <div className="flex justify-between">
-                                        <span>Matches Played:</span>
-                                        <span className="font-bold text-orange-600">{selectedTeamStats.matchesPlayed}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </TabsContent>
-                              
-                              <TabsContent value="start" className="space-y-4">
-                                <div>
-                                  <h4 className="font-semibold mb-3">Auto Starting Positions</h4>
-                                  <div className="grid grid-cols-3 gap-4">
-                                    {[0, 1, 2, 3, 4, 5].map(pos => (
-                                      <div key={pos} className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded">
-                                        <div className="text-sm text-muted-foreground">Position {pos}</div>
-                                        <div className="text-2xl font-bold text-blue-600">
-                                          {selectedTeamStats.startPositions[`position${pos}` as keyof typeof selectedTeamStats.startPositions]}%
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                  <p className="text-sm text-muted-foreground mt-3">
-                                    Percentage of matches started from each position
-                                  </p>
-                                </div>
-                              </TabsContent>
-                            </Tabs>
-                          )}
-                        </DialogContent>
-                      </Dialog>
+                      <TeamStatsButton 
+                        teamNumber={team.teamNumber}
+                        teamStats={team}
+                        className="h-8"
+                      />
                       
                       <Select onValueChange={(listId) => addTeamToList(team, Number(listId))}>
                         <SelectTrigger className="w-20 h-8">
@@ -815,6 +611,7 @@ const PickListPage = () => {
                     <SortableList
                       items={list.teams}
                       setItems={(newTeams) => {
+                        // Handle both function and direct array updates
                         if (typeof newTeams === 'function') {
                           updateListTeams(list.id, newTeams(list.teams));
                         } else {
@@ -822,26 +619,38 @@ const PickListPage = () => {
                         }
                       }}
                       onCompleteItem={(id) => {
+                        // Toggle the checked state to show/hide delete button
                         const updatedTeams = list.teams.map(team => 
                           team.id === id ? { ...team, checked: !team.checked } : team
                         );
                         updateListTeams(list.id, updatedTeams);
                       }}
-                      renderItem={(item, order, onCompleteItem, onRemoveItem) => (
-                        <SortableListItem
-                          key={item.id}
-                          item={item}
-                          order={order}
-                          onCompleteItem={onCompleteItem}
-                          onRemoveItem={onRemoveItem}
-                          handleDrag={() => {}}
-                          renderExtra={(item) => (
-                            <div className="flex-1 px-3 py-2">
-                              <p className="text-sm text-white/80">{item.description}</p>
-                            </div>
-                          )}
-                        />
-                      )}
+                      renderItem={(item, order, onCompleteItem, onRemoveItem) => {
+                        // Extract team number from item.text (format: "Team 1234")
+                        const teamNumber = item.text.replace('Team ', '');
+                        const teamStats = availableTeams.find(t => t.teamNumber === teamNumber);
+                        return (
+                          <SortableListItem
+                            key={item.id}
+                            item={item}
+                            order={order}
+                            onCompleteItem={onCompleteItem} // Re-enable checkbox functionality
+                            onRemoveItem={onRemoveItem}
+                            handleDrag={() => {}}
+                            renderExtra={() => (
+                              <div className="flex flex-1 justify-end px-2 py-2">
+                                <TeamStatsButton 
+                                  teamNumber={teamNumber}
+                                  teamStats={teamStats}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-white/80 hover:text-white hover:bg-white/20 h-8"
+                                />
+                              </div>
+                            )}
+                          />
+                        );
+                      }}
                     />
                   )}
                 </CardContent>
