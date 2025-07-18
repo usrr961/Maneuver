@@ -21,6 +21,7 @@ import MatchStrategyPage from "@/pages/MatchStrategyPage";
 import { AutoScoringPage, TeleopScoringPage } from "@/pages/ScoringPage";
 import EndgamePage from "@/pages/EndgamePage";
 import TeamStatsPage from "@/pages/TeamStatsPage";
+import PickListPage from "./pages/PickListPage";
 
 
 
@@ -41,6 +42,7 @@ function App() {
         <Route path="/teleop-scoring" element={<TeleopScoringPage />} />
         <Route path="/endgame" element={<EndgamePage />} />
         <Route path="/team-stats" element={<TeamStatsPage />} />
+        <Route path="/pick-list" element={<PickListPage />} />
         {/* Add more routes as needed */}
       </Route>
     )

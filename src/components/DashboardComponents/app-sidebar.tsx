@@ -59,8 +59,8 @@ const data = {
       ]
     },
     {
-      title: "Match Strategy",
-      url: "/match-strategy",
+      title: "Strategy",
+      url: "#",
       icon: SquarePen,
       items: [
         {
@@ -70,6 +70,10 @@ const data = {
         {
           title: "Team Stats",
           url: "/team-stats",
+        },
+        {
+          title: "Pick List",
+          url: "/pick-list",
         }
       ],
     },
