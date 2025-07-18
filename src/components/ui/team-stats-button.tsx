@@ -250,7 +250,7 @@ export function TeamStatsButton({ teamNumber, teamStats, variant = "outline", si
             <div>
               <h4 className="font-semibold mb-3">Auto Starting Positions</h4>
               <div className="grid grid-cols-3 gap-4">
-                {[0, 1, 2, 3, 4, 5].map(pos => (
+                {[0, 1, 2, 3, 4].map(pos => (
                   <div key={pos} className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded">
                     <div className="text-sm text-muted-foreground">Position {pos}</div>
                     <div className="text-2xl font-bold text-blue-600">
