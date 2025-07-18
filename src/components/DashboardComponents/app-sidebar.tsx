@@ -72,7 +72,7 @@ const data = {
           url: "/team-stats",
         },
         {
-          title: "Pick List",
+          title: "Pick Lists",
           url: "/pick-list",
         }
       ],

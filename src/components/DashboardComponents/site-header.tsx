@@ -19,6 +19,7 @@ const PAGE_TITLES: Record<string, string> = {
     "/teleop-scoring": "Teleop",
     "/endgame": "Endgame",
     "/team-stats": "Team Stats",
+    "/pick-list": "Pick Lists",
   // Add more routes as needed
 };
 
