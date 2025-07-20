@@ -9,6 +9,7 @@ import { SortableList, SortableListItem, type Item } from "@/components/ui/sorta
 import { TeamStatsButton } from "@/components/ui/team-stats-button";
 import { Plus, Trash2, Download, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
 
 interface TeamStats {
   teamNumber: string;
@@ -105,19 +106,17 @@ const PickListPage = () => {
   // Load team data from scouting results
   useEffect(() => {
     const loadTeamData = () => {
-      const scoutingDataStr = localStorage.getItem("scoutingData");
       const matchDataStr = localStorage.getItem("matchData");
       
-      if (scoutingDataStr) {
-        try {
-          const scouting = JSON.parse(scoutingDataStr);
-          const scoutingData = scouting.data ? scouting.data : [];
-          
-          // Get unique teams and calculate stats
-          const teamNumbers = [...new Set(scoutingData.map((entry: any[]) => entry[3]?.toString()).filter(Boolean))];
+      try {
+        const scoutingData = loadLegacyScoutingData();
+        
+        if (scoutingData.length > 0) {
+          // Get unique teams and calculate stats (team number is now at index 4)
+          const teamNumbers = [...new Set(scoutingData.map((entry: any[]) => entry[4]?.toString()).filter(Boolean))];
           
           const teamsWithStats = teamNumbers.map(teamNumber => {
-            const teamEntries = scoutingData.filter((entry: any[]) => entry[3]?.toString() === teamNumber);
+            const teamEntries = scoutingData.filter((entry: any[]) => entry[4]?.toString() === teamNumber);
             
             if (teamEntries.length === 0) return null;
             
@@ -278,10 +277,9 @@ const PickListPage = () => {
           
           teamsWithStats.sort((a, b) => Number(a.teamNumber) - Number(b.teamNumber));
           setAvailableTeams(teamsWithStats);
-          
-        } catch (error) {
-          console.error("Error loading team data:", error);
         }
+      } catch (error) {
+        console.error("Error loading team data:", error);
       }
     };
 

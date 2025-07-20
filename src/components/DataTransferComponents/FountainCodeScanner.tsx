@@ -7,6 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { createDecoder, binaryToBlock } from "luby-transform";
 import { toUint8Array } from "js-base64";
+import { 
+  loadScoutingData, 
+  saveScoutingData, 
+  mergeScoutingData, 
+  addIdsToScoutingData,
+  extractLegacyData,
+  getDataSummary
+} from "@/lib/scoutingDataUtils";
 
 interface FountainPacket {
   type: 'fountain_packet';
@@ -155,34 +163,38 @@ const FountainCodeScanner = ({ onBack, onSwitchToGenerator }: FountainCodeScanne
     if (reconstructedData) {
       console.log("Saving reconstructed data:", reconstructedData);
       
-      // Check if there's existing data to merge
-      const existingDataStr = localStorage.getItem("scoutingData");
-      let mergedData = reconstructedData;
+      // Load existing data using new utility
+      const existingScoutingData = loadScoutingData();
       
-      if (existingDataStr) {
-        try {
-          const existingData = JSON.parse(existingDataStr);
-          
-          if (existingData.data && Array.isArray(existingData.data) && 
-              reconstructedData.data && Array.isArray(reconstructedData.data)) {
-            mergedData = { 
-              data: [...existingData.data, ...reconstructedData.data] 
-            };
-            console.log(`Merged data: ${existingData.data.length} + ${reconstructedData.data.length} = ${mergedData.data.length} entries`);
-            toast.info(`Merged: ${existingData.data.length} + ${reconstructedData.data.length} = ${mergedData.data.length} entries`);
-          }
-        } catch (error) {
-          console.error("Error merging data:", error);
-          toast.warning("Could not merge with existing data, saving as new");
-        }
+      // Convert new data to ID structure
+      let newDataArrays: unknown[][] = [];
+      if (reconstructedData.data && Array.isArray(reconstructedData.data)) {
+        newDataArrays = reconstructedData.data;
       }
+      const newDataWithIds = addIdsToScoutingData(newDataArrays);
+      
+      // Merge with smart deduplication
+      const mergeResult = mergeScoutingData(
+        existingScoutingData.entries,
+        newDataWithIds,
+        'smart-merge'
+      );
+      
+      // Prepare data for download (use legacy format for compatibility)
+      const legacyFormatData = { data: extractLegacyData(mergeResult.merged) };
       
       // Save to localStorage
-      localStorage.setItem("scoutingData", JSON.stringify(mergedData));
+      saveScoutingData({ entries: mergeResult.merged });
       console.log("Data saved to localStorage");
       
+      // Show merge info
+      const { stats } = mergeResult;
+      if (stats.duplicates > 0) {
+        toast.info(`Merged: ${stats.new} new + ${stats.existing} existing (${stats.duplicates} duplicates skipped)`);
+      }
+      
       // Download file
-      const dataStr = JSON.stringify(mergedData, null, 2);
+      const dataStr = JSON.stringify(legacyFormatData, null, 2);
       const dataBlob = new Blob([dataStr], { type: "application/json" });
       const url = URL.createObjectURL(dataBlob);
       
@@ -201,43 +213,52 @@ const FountainCodeScanner = ({ onBack, onSwitchToGenerator }: FountainCodeScanne
     }
   };
 
-  const saveToApp = (mode: 'append' | 'overwrite') => {
+  const saveToApp = (mode: 'append' | 'overwrite' | 'smart-merge') => {
     if (reconstructedData) {
       console.log(`Saving to app localStorage (${mode}):`, reconstructedData);
       
-      // Check if there's existing data to merge
-      const existingDataStr = localStorage.getItem("scoutingData");
-      let mergedData = reconstructedData;
+      // Load existing data using new utility
+      const existingScoutingData = loadScoutingData();
       
-      if (existingDataStr) {
-        try {
-          const existingData = JSON.parse(existingDataStr);
-          
-          if (existingData.data && Array.isArray(existingData.data) && 
-              reconstructedData.data && Array.isArray(reconstructedData.data)) {
-            if (mode === 'append') {
-              // Append mode: just concatenate arrays
-              mergedData = { 
-                data: [...existingData.data, ...reconstructedData.data] 
-              };
-              console.log(`Merged data (append): ${existingData.data.length} + ${reconstructedData.data.length} = ${mergedData.data.length} entries`);
-              toast.success(`Merged (append): ${existingData.data.length} + ${reconstructedData.data.length} = ${mergedData.data.length} entries`);
-            } else if (mode === 'overwrite') {
-              // Overwrite mode: replace existing data
-              mergedData = { data: reconstructedData.data };
-              console.log(`Data replaced (overwrite mode), new length: ${mergedData.data.length}`);
-              toast.success(`Data replaced (overwrite mode), new length: ${mergedData.data.length}`);
-            }
-          }
-        } catch (error) {
-          console.error("Error merging data:", error);
-          toast.warning("Could not merge with existing data, saving as new");
+      // Convert new data to ID structure
+      let newDataArrays: unknown[][] = [];
+      if (reconstructedData.data && Array.isArray(reconstructedData.data)) {
+        newDataArrays = reconstructedData.data;
+      }
+      const newDataWithIds = addIdsToScoutingData(newDataArrays);
+      
+      // Merge data with deduplication
+      const mergeResult = mergeScoutingData(
+        existingScoutingData.entries,
+        newDataWithIds,
+        mode
+      );
+      
+      // Save merged data
+      saveScoutingData({ entries: mergeResult.merged });
+      
+      // Create summary message
+      const { stats } = mergeResult;
+      let message = '';
+      
+      if (mode === 'overwrite') {
+        message = `Data replaced: ${stats.final} entries`;
+        toast.success(message);
+      } else if (mode === 'append') {
+        message = `Data appended: ${stats.existing} + ${stats.new} = ${stats.final} entries`;
+        toast.success(message);
+      } else if (mode === 'smart-merge') {
+        if (stats.duplicates > 0) {
+          message = `Smart merge: ${stats.new} new entries added, ${stats.duplicates} duplicates skipped (Total: ${stats.final})`;
+          toast.success(message);
+        } else {
+          message = `Smart merge: ${stats.new} new entries added (Total: ${stats.final})`;
+          toast.success(message);
         }
       }
       
-      // Save to localStorage
-      localStorage.setItem("scoutingData", JSON.stringify(mergedData));
-      console.log("Data saved to app localStorage");
+      console.log("Merge stats:", stats);
+      console.log("Final message:", message);
       
       toast.success("Data saved to app! Returning to main view...");
       
@@ -404,30 +425,46 @@ const FountainCodeScanner = ({ onBack, onSwitchToGenerator }: FountainCodeScanne
             <div className="mt-3 text-xs text-green-600 dark:text-green-400">
               <p>Ready to save {reconstructedData?.data?.length || 0} scouting entries</p>
               {(() => {
-                const existingDataStr = localStorage.getItem("scoutingData");
-                if (existingDataStr) {
-                  try {
-                    const existingData = JSON.parse(existingDataStr);
-                    if (existingData.data && Array.isArray(existingData.data)) {
-                      return <p>Existing data: {existingData.data.length} entries</p>;
-                    }
-                  } catch (error) {
-                    console.error("Error parsing existing data:", error);
-                  }
+                try {
+                  const existingScoutingData = loadScoutingData();
+                  const summary = getDataSummary(existingScoutingData);
+                  return (
+                    <div className="space-y-1">
+                      <p>Existing data: {summary.totalEntries} entries</p>
+                      {summary.totalEntries > 0 && (
+                        <p className="text-xs opacity-75">
+                          {summary.teams.length} teams • {summary.matches.length} matches • {summary.scouters.length} scouters
+                        </p>
+                      )}
+                    </div>
+                  );
+                } catch (error) {
+                  console.error("Error loading existing data summary:", error);
+                  return <p>No existing data found</p>;
                 }
-                return <p>No existing data found</p>;
               })()}
             </div>
 
             <div className="mt-4 space-y-2">
-              {/* Append Mode - for scouts sending to lead */}
+              {/* Smart Merge Mode - recommended for most cases */}
+              <Button 
+                onClick={() => saveToApp('smart-merge')} 
+                className="w-full bg-green-600 hover:bg-green-700 min-h-[4rem] py-3 px-4"
+              >
+                <div className="flex flex-col items-center gap-1 text-center">
+                  <span className="text-sm font-medium">🧠 Smart Merge (Recommended)</span>
+                  <span className="text-xs opacity-90 whitespace-normal">Skip duplicates, add only new entries</span>
+                </div>
+              </Button>
+              
+              {/* Append Mode - for manual control */}
               <Button 
                 onClick={() => saveToApp('append')} 
                 className="w-full bg-blue-600 hover:bg-blue-700 min-h-[4rem] py-3 px-4"
               >
                 <div className="flex flex-col items-center gap-1 text-center">
-                  <span className="text-sm font-medium">📤 Append to Existing Data</span>
-                  <span className="text-xs opacity-90 whitespace-normal">Scout → Lead Scout</span>
+                  <span className="text-sm font-medium">📤 Force Append</span>
+                  <span className="text-xs opacity-90 whitespace-normal">Add all entries (may create duplicates)</span>
                 </div>
               </Button>
               
@@ -438,7 +475,7 @@ const FountainCodeScanner = ({ onBack, onSwitchToGenerator }: FountainCodeScanne
               >
                 <div className="flex flex-col items-center gap-1 text-center">
                   <span className="text-sm font-medium">🔄 Replace All Data</span>
-                  <span className="text-xs opacity-90 whitespace-normal">Lead → Lead Scout</span>
+                  <span className="text-xs opacity-90 whitespace-normal">Replace existing with this data</span>
                 </div>
               </Button>
               

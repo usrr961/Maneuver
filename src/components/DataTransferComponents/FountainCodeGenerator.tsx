@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { createEncoder, blockToBinary } from "luby-transform";
 import { fromUint8Array } from "js-base64";
+import { loadScoutingData, extractLegacyData } from "@/lib/scoutingDataUtils";
 
 interface FountainPacket {
   type: 'fountain_packet';
@@ -27,7 +28,7 @@ interface FountainCodeGeneratorProps {
 const FountainCodeGenerator = ({ onBack, onSwitchToScanner }: FountainCodeGeneratorProps) => {
   const [packets, setPackets] = useState<FountainPacket[]>([]);
   const [currentPacketIndex, setCurrentPacketIndex] = useState(0);
-  const [scoutingData, setScoutingData] = useState<unknown>(null);
+  const [scoutingData, setScoutingData] = useState<{ data: unknown[][] } | null>(null);
   const [cycleSpeed, setCycleSpeed] = useState(200); // 200ms default (5/sec)
 
   // Speed presets
@@ -39,15 +40,28 @@ const FountainCodeGenerator = ({ onBack, onSwitchToScanner }: FountainCodeGenera
   ];
 
   useEffect(() => {
-    // Load scouting data from localStorage
-    const data = localStorage.getItem("scoutingData");
-    if (data) {
-      try {
-        const parsedData = JSON.parse(data);
-        setScoutingData(parsedData);
-      } catch (error) {
-        toast.error("Error loading scouting data: " + (error instanceof Error ? error.message : String(error)));
+    // Load scouting data using the new deduplication utilities
+    try {
+      const scoutingDataWithIds = loadScoutingData();
+      
+      if (scoutingDataWithIds.entries.length > 0) {
+        // Convert to legacy format for fountain codes (scanner expects { data: [...] })
+        const legacyDataArrays = extractLegacyData(scoutingDataWithIds.entries);
+        const formattedData = { data: legacyDataArrays };
+        setScoutingData(formattedData);
+        
+        console.log("Loaded scouting data for fountain codes:", {
+          totalEntries: scoutingDataWithIds.entries.length,
+          sampleEntry: legacyDataArrays[0]?.slice(0, 5), // Show first 5 fields
+        });
+      } else {
+        setScoutingData(null);
+        console.log("No scouting data found");
       }
+    } catch (error) {
+      console.error("Error loading scouting data:", error);
+      toast.error("Error loading scouting data: " + (error instanceof Error ? error.message : String(error)));
+      setScoutingData(null);
     }
   }, []);
 
@@ -62,6 +76,7 @@ const FountainCodeGenerator = ({ onBack, onSwitchToScanner }: FountainCodeGenera
     
     console.log(`🔧 GENERATING FOUNTAIN CODES:`);
     console.log(`- Original data size: ${data.length} bytes`);
+    console.log(`- Entries count: ${scoutingData.data?.length || 0}`);
     console.log(`- JSON preview: ${jsonString.substring(0, 100)}...`);
     
     // Use even smaller block size for testing

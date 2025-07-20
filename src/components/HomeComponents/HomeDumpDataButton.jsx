@@ -1,5 +1,7 @@
 import React from "react";
-import { toast } from "react-toastify";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { loadLegacyScoutingData } from "../../lib/scoutingDataUtils";
 
 const HomeDumpDataButton = () => {
   const isOneDimensional = (value) => {
@@ -93,14 +95,14 @@ const cleanText = (text) => {
 };
 
 const handleDumpData = () => {
-  const data = localStorage.getItem("scoutingData");
-  if (data === '{"data":[]}') {
-    toast.error("No Data To Dump");
-    return;
-  }
+  try {
+    const jsonData = loadLegacyScoutingData();
+    if (jsonData.length === 0) {
+      toast.error("No Data To Dump");
+      return;
+    }
 
-  const jsonData = JSON.parse(data).data;
-  const playerStation = localStorage.getItem("playerStation") || "Unknown";
+    const playerStation = localStorage.getItem("playerStation") || "Unknown";
 
   // Clean the comments column
   const cleanedData = jsonData.map((row) => {
@@ -133,6 +135,12 @@ const handleDumpData = () => {
   element.click();
 
   document.body.removeChild(element);
+
+  toast.success(`Data dumped for station ${playerStation}`);
+  } catch (error) {
+    console.error("Error dumping data:", error);
+    toast.error("Error dumping data");
+  }
 };
 
   return (

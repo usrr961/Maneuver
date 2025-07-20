@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import AutoStartPositionMap from "@/components/TeamStatsComponents/AutoStartPositionMap";
+import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
 
 interface ScoutingEntry {
   matchNumber: string;
@@ -132,82 +133,79 @@ const TeamStatsPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
-    // Load scouting data
-    const scoutingDataStr = localStorage.getItem("scoutingData");
-    if (scoutingDataStr) {
-      try {
-        const scouting = JSON.parse(scoutingDataStr);
-        const data = scouting.data ? scouting.data : [];
-        setScoutingData(data);
-        
-        // Get unique team numbers
-        const teams = [...new Set(data.map((entry: any[]) => entry[3]?.toString()).filter(Boolean))];
-        teams.sort((a, b) => Number(a) - Number(b));
-        setAvailableTeams(teams as string[]);
-      } catch (error) {
-        console.error("Error loading scouting data:", error);
-      }
+    // Load scouting data using the new deduplication utilities
+    try {
+      const data = loadLegacyScoutingData();
+      setScoutingData(data);
+      
+      // Get unique team numbers (team number is now at index 4 due to ID at index 0)
+      const teams = [...new Set(data.map((entry: any[]) => entry[4]?.toString()).filter(Boolean))];
+      teams.sort((a, b) => Number(a) - Number(b));
+      setAvailableTeams(teams as string[]);
+    } catch (error) {
+      console.error("Error loading scouting data:", error);
     }
   }, []);
 
   const parseScoutingEntry = (dataArray: any[]): ScoutingEntry => {
+    // Account for ID at index 0, so actual data starts at index 1
     return {
-      matchNumber: dataArray[0]?.toString() || "",
-      alliance: dataArray[1] || "",
-      scouterInitials: dataArray[2] || "",
-      selectTeam: dataArray[3]?.toString() || "",
-      startPoses0: dataArray[4] || false,
-      startPoses1: dataArray[5] || false,
-      startPoses2: dataArray[6] || false,
-      startPoses3: dataArray[7] || false,
-      startPoses4: dataArray[8] || false,
-      startPoses5: dataArray[9] || false,
-      autoCoralPlaceL1Count: dataArray[10] || 0,
-      autoCoralPlaceL2Count: dataArray[11] || 0,
-      autoCoralPlaceL3Count: dataArray[12] || 0,
-      autoCoralPlaceL4Count: dataArray[13] || 0,
-      autoCoralPlaceDropMissCount: dataArray[14] || 0,
-      autoCoralPickPreloadCount: dataArray[15] || 0,
-      autoCoralPickStationCount: dataArray[16] || 0,
-      autoCoralPickMark1Count: dataArray[17] || 0,
-      autoCoralPickMark2Count: dataArray[18] || 0,
-      autoCoralPickMark3Count: dataArray[19] || 0,
-      autoAlgaePlaceNetShot: dataArray[20] || 0,
-      autoAlgaePlaceProcessor: dataArray[21] || 0,
-      autoAlgaePlaceDropMiss: dataArray[22] || 0,
-      autoAlgaePlaceRemove: dataArray[23] || 0,
-      autoAlgaePickReefCount: dataArray[24] || 0,
-      autoAlgaePickMark1Count: dataArray[25] || 0,
-      autoAlgaePickMark2Count: dataArray[26] || 0,
-      autoAlgaePickMark3Count: dataArray[27] || 0,
-      autoPassedStartLine: dataArray[28] || false,
-      teleopCoralPlaceL1Count: dataArray[29] || 0,
-      teleopCoralPlaceL2Count: dataArray[30] || 0,
-      teleopCoralPlaceL3Count: dataArray[31] || 0,
-      teleopCoralPlaceL4Count: dataArray[32] || 0,
-      teleopCoralPlaceDropMissCount: dataArray[33] || 0,
-      teleopCoralPickStationCount: dataArray[34] || 0,
-      teleopCoralPickCarpetCount: dataArray[35] || 0,
-      teleopAlgaePlaceNetShot: dataArray[36] || 0,
-      teleopAlgaePlaceProcessor: dataArray[37] || 0,
-      teleopAlgaePlaceDropMiss: dataArray[38] || 0,
-      teleopAlgaePlaceRemove: dataArray[39] || 0,
-      teleopAlgaePickReefCount: dataArray[40] || 0,
-      teleopAlgaePickCarpetCount: dataArray[41] || 0,
-      shallowClimbAttempted: dataArray[42] || false,
-      deepClimbAttempted: dataArray[43] || false,
-      parkAttempted: dataArray[44] || false,
-      climbFailed: dataArray[45] || false,
-      playedDefense: dataArray[46] || false,
-      brokeDown: dataArray[47] || false,
-      comment: dataArray[48] || ""
+      matchNumber: dataArray[1]?.toString() || "",     // was 0, now 1
+      alliance: dataArray[2] || "",                    // was 1, now 2
+      scouterInitials: dataArray[3] || "",             // was 2, now 3
+      selectTeam: dataArray[4]?.toString() || "",      // was 3, now 4
+      startPoses0: dataArray[5] || false,              // was 4, now 5
+      startPoses1: dataArray[6] || false,              // was 5, now 6
+      startPoses2: dataArray[7] || false,              // was 6, now 7
+      startPoses3: dataArray[8] || false,              // was 7, now 8
+      startPoses4: dataArray[9] || false,              // was 8, now 9
+      startPoses5: dataArray[10] || false,             // was 9, now 10
+      autoCoralPlaceL1Count: dataArray[11] || 0,       // was 10, now 11
+      autoCoralPlaceL2Count: dataArray[12] || 0,       // was 11, now 12
+      autoCoralPlaceL3Count: dataArray[13] || 0,       // was 12, now 13
+      autoCoralPlaceL4Count: dataArray[14] || 0,       // was 13, now 14
+      autoCoralPlaceDropMissCount: dataArray[15] || 0, // was 14, now 15
+      autoCoralPickPreloadCount: dataArray[16] || 0,   // was 15, now 16
+      autoCoralPickStationCount: dataArray[17] || 0,   // was 16, now 17
+      autoCoralPickMark1Count: dataArray[18] || 0,     // was 17, now 18
+      autoCoralPickMark2Count: dataArray[19] || 0,     // was 18, now 19
+      autoCoralPickMark3Count: dataArray[20] || 0,         // was 19, now 20
+      autoAlgaePlaceNetShot: dataArray[21] || 0,          // was 20, now 21
+      autoAlgaePlaceProcessor: dataArray[22] || 0,        // was 21, now 22
+      autoAlgaePlaceDropMiss: dataArray[23] || 0,         // was 22, now 23
+      autoAlgaePlaceRemove: dataArray[24] || 0,           // was 23, now 24
+      autoAlgaePickReefCount: dataArray[25] || 0,         // was 24, now 25
+      autoAlgaePickMark1Count: dataArray[26] || 0,        // was 25, now 26
+      autoAlgaePickMark2Count: dataArray[27] || 0,        // was 26, now 27
+      autoAlgaePickMark3Count: dataArray[28] || 0,        // was 27, now 28
+      autoPassedStartLine: dataArray[29] || false,        // was 28, now 29
+      teleopCoralPlaceL1Count: dataArray[30] || 0,        // was 29, now 30
+      teleopCoralPlaceL2Count: dataArray[31] || 0,        // was 30, now 31
+      teleopCoralPlaceL3Count: dataArray[32] || 0,        // was 31, now 32
+      teleopCoralPlaceL4Count: dataArray[33] || 0,        // was 32, now 33
+      teleopCoralPlaceDropMissCount: dataArray[34] || 0,  // was 33, now 34
+      teleopCoralPickStationCount: dataArray[35] || 0,    // was 34, now 35
+      teleopCoralPickCarpetCount: dataArray[36] || 0,     // was 35, now 36
+      teleopAlgaePlaceNetShot: dataArray[37] || 0,        // was 36, now 37
+      teleopAlgaePlaceProcessor: dataArray[38] || 0,      // was 37, now 38
+      teleopAlgaePlaceDropMiss: dataArray[39] || 0,       // was 38, now 39
+      teleopAlgaePlaceRemove: dataArray[40] || 0,         // was 39, now 40
+      teleopAlgaePickReefCount: dataArray[41] || 0,       // was 40, now 41
+      teleopAlgaePickCarpetCount: dataArray[42] || 0,     // was 41, now 42
+      shallowClimbAttempted: dataArray[43] || false,      // was 42, now 43
+      deepClimbAttempted: dataArray[44] || false,         // was 43, now 44
+      parkAttempted: dataArray[45] || false,              // was 44, now 45
+      climbFailed: dataArray[46] || false,                // was 45, now 46
+      playedDefense: dataArray[47] || false,              // was 46, now 47
+      brokeDown: dataArray[48] || false,                  // was 47, now 48
+      comment: dataArray[49] || ""                        // was 48, now 49
     };
   };
 
   const calculateTeamStats = (teamNumber: string): TeamStats | null => {
     if (!teamNumber) return null;
 
-    const teamDataArrays = scoutingData.filter(dataArray => dataArray[3]?.toString() === teamNumber);
+    const teamDataArrays = scoutingData.filter(dataArray => dataArray[4]?.toString() === teamNumber); // was index 3, now 4
     
     if (teamDataArrays.length === 0) {
       return null;
@@ -927,21 +925,23 @@ const TeamStatsPage = () => {
                     <CardContent>
                       <div className="space-y-3 max-h-96 overflow-y-auto">
                         {teamStats.matchResults.map((match, index) => (
-                          <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded gap-2">
-                            <div className="flex items-center gap-3">
-                              <Badge variant="outline">Match {match.matchNumber}</Badge>
-                              <Badge variant={match.alliance === "red" ? "destructive" : "default"}>
-                                {match.alliance}
-                              </Badge>
-                              {match.startPosition >= 0 && (
-                                <Badge variant="secondary">Pos {match.startPosition}</Badge>
-                              )}
-                              <div className="flex items-center gap-2">
+                          <div key={index} className="flex flex-col p-3 border rounded gap-3">
+                            <div className="flex flex-col gap-2">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <Badge variant="outline">Match {match.matchNumber}</Badge>
+                                <Badge variant={match.alliance === "red" ? "destructive" : "default"}>
+                                  {match.alliance}
+                                </Badge>
+                                {match.startPosition >= 0 && (
+                                  <Badge variant="secondary">Pos {match.startPosition}</Badge>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2">
                                 {match.climbed && <Badge variant="secondary">Climbed</Badge>}
                                 {match.brokeDown && <Badge variant="destructive">Broke Down</Badge>}
                               </div>
                             </div>
-                            <div className="text-left sm:text-right">
+                            <div className="flex justify-between items-center">
                               <div className="font-bold text-lg">{match.totalPoints} pts</div>
                               <div className="text-sm text-muted-foreground">
                                 A: {match.autoPoints} | T: {match.teleopPoints} | E: {match.endgamePoints}

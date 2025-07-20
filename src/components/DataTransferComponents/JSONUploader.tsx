@@ -5,6 +5,12 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { 
+  loadScoutingData, 
+  saveScoutingData, 
+  mergeScoutingData, 
+  addIdsToScoutingData
+} from "@/lib/scoutingDataUtils";
 
 type JSONUploaderProps = {
   onBack: () => void;
@@ -35,7 +41,7 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack, onSwitchToDownload 
 
   type ProcessedScoutingData = unknown[][];
 
-  type UploadMode = "append" | "overwrite";
+  type UploadMode = "append" | "overwrite" | "smart-merge";
 
   const handleUpload = async (mode: UploadMode): Promise<void> => {
     if (!selectedFile) {
@@ -75,37 +81,40 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack, onSwitchToDownload 
         return;
       }
 
+      // Load existing data using new utility
+      const existingScoutingData = loadScoutingData();
+      
+      // Convert new data to ID structure
+      const newDataArrays = newData as unknown[][];
+      const newDataWithIds = addIdsToScoutingData(newDataArrays);
+      
+      // Merge data based on mode
+      const mergeResult = mergeScoutingData(
+        existingScoutingData.entries,
+        newDataWithIds,
+        mode
+      );
+      
+      // Save merged data
+      saveScoutingData({ entries: mergeResult.merged });
+      
+      // Create success message based on mode and results
+      const { stats } = mergeResult;
+      let message = '';
+      
       if (mode === "overwrite") {
-        // Overwrite existing data
-        const scoutingData: RawScoutingData = { data: newData };
-        localStorage.setItem("scoutingData", JSON.stringify(scoutingData));
-        toast.success(`Overwritten with ${newData.length} scouting entries`);
+        message = `Overwritten with ${stats.final} scouting entries`;
       } else if (mode === "append") {
-        // Append to existing data
-        const existingDataStr = localStorage.getItem("scoutingData");
-        let existingData: unknown[] = [];
-
-        if (existingDataStr) {
-          try {
-            const parsed: unknown = JSON.parse(existingDataStr);
-            existingData =
-              typeof parsed === "object" &&
-              parsed !== null &&
-              "data" in parsed &&
-              Array.isArray((parsed as RawScoutingData).data)
-                ? (parsed as RawScoutingData).data
-                : [];
-          } catch (error) {
-            console.warn("Could not parse existing data, starting fresh: " + error);
-          }
+        message = `Appended ${stats.new} entries to existing ${stats.existing} entries (Total: ${stats.final})`;
+      } else if (mode === "smart-merge") {
+        if (stats.duplicates > 0) {
+          message = `Smart merge: ${stats.new} new entries added, ${stats.duplicates} duplicates skipped (Total: ${stats.final})`;
+        } else {
+          message = `Smart merge: ${stats.new} new entries added (Total: ${stats.final})`;
         }
-
-        const mergedData: RawScoutingData = { data: [...existingData, ...newData] };
-        localStorage.setItem("scoutingData", JSON.stringify(mergedData));
-        toast.success(
-          `Appended ${newData.length} entries to existing ${existingData.length} entries (Total: ${mergedData.data.length})`
-        );
       }
+      
+      toast.success(message);
 
       setSelectedFile(null);
       // Reset file input
@@ -174,10 +183,10 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack, onSwitchToDownload 
                 <Separator />
                 <div className="space-y-3">
                   <Button
-                    onClick={() => handleUpload("append")}
-                    className="w-full h-16 text-xl"
+                    onClick={() => handleUpload("smart-merge")}
+                    className="w-full h-16 text-xl bg-green-600 hover:bg-green-700"
                   >
-                    Append to Existing Data
+                    🧠 Smart Merge (Recommended)
                   </Button>
                   
                   <div className="flex items-center gap-4">
@@ -187,11 +196,18 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack, onSwitchToDownload 
                   </div>
                   
                   <Button
+                    onClick={() => handleUpload("append")}
+                    className="w-full h-16 text-xl bg-blue-600 hover:bg-blue-700"
+                  >
+                    📤 Force Append
+                  </Button>
+                  
+                  <Button
                     onClick={() => handleUpload("overwrite")}
                     variant="destructive"
                     className="w-full h-16 text-xl"
                   >
-                    Overwrite All Data
+                    🔄 Replace All Data
                   </Button>
                 </div>
               </>
@@ -202,8 +218,9 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack, onSwitchToDownload 
         <Alert>
           <AlertDescription>
             <div className="space-y-1">
-              <p>• Append: Add data to your existing collection</p>
-              <p>• Overwrite: Replace all current scouting data</p>
+              <p>• <strong>Smart Merge</strong>: Skip duplicates, add only new entries (recommended)</p>
+              <p>• <strong>Force Append</strong>: Add all data (may create duplicates)</p>
+              <p>• <strong>Replace All</strong>: Completely overwrite existing data</p>
               <p>• Supports both raw and processed JSON formats</p>
               {selectedFile && (
                 <div className="mt-2">

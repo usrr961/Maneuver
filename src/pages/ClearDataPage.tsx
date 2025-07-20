@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { loadScoutingData } from "@/lib/scoutingDataUtils";
 
 const ClearDataPage = () => {
   const [scoutingDataCount, setScoutingDataCount] = useState(0);
@@ -14,20 +15,18 @@ const ClearDataPage = () => {
 
   useEffect(() => {
     // Load data counts and info
-    const scoutingData = localStorage.getItem("scoutingData");
     const matchData = localStorage.getItem("matchData");
     const station = localStorage.getItem("playerStation") || "Unknown";
 
     setPlayerStation(station);
 
-    // Count scouting entries
-    if (scoutingData) {
-      try {
-        const parsed = JSON.parse(scoutingData);
-        setScoutingDataCount(parsed.data ? parsed.data.length : 0);
-      } catch {
-        setScoutingDataCount(0);
-      }
+    // Count scouting entries using the new system
+    try {
+      const scoutingData = loadScoutingData();
+      setScoutingDataCount(scoutingData.entries.length);
+    } catch (error) {
+      console.error("Error loading scouting data:", error);
+      setScoutingDataCount(0);
     }
 
     // Count match entries

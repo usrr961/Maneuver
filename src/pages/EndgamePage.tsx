@@ -7,6 +7,7 @@ import { Textarea } from "../components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { transformToLegacyFormat } from "@/lib/dataTransformation";
+import { generateEntryId } from "@/lib/scoutingDataUtils";
 
 const EndgamePage = () => {
   const location = useLocation();
@@ -55,6 +56,12 @@ const EndgamePage = () => {
       // Transform to legacy format (returns array of values)
       const legacyData = transformToLegacyFormat(scoutingInputs);
 
+      // Generate unique ID for this entry
+      const uniqueId = generateEntryId(legacyData);
+      
+      // Add unique ID as first element (like in sample data)
+      const dataWithId = [uniqueId, ...legacyData];
+
       // Save to localStorage in the expected format
       const existingData = localStorage.getItem("scoutingData");
       let scoutingData = [];
@@ -78,8 +85,8 @@ const EndgamePage = () => {
         }
       }
 
-      // Add new entry (array of values)
-      scoutingData.push(legacyData);
+      // Add new entry (array of values with ID at the beginning)
+      scoutingData.push(dataWithId);
       
       // Save back to localStorage in the old format (with data wrapper)
       localStorage.setItem("scoutingData", JSON.stringify({ data: scoutingData }));

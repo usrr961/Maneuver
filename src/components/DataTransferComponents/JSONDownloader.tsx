@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { loadLegacyScoutingData } from "../../lib/scoutingDataUtils";
 
 interface JSONDownloaderProps {
   onBack: () => void;
@@ -108,22 +109,26 @@ const JSONDownloader = ({ onBack, onSwitchToUpload }: JSONDownloaderProps) => {
   };
 
   const handleDownloadJSON = () => {
-    const data = localStorage.getItem("scoutingData");
-    if (!data || data === '{"data":[]}') {
-      toast.error("No scouting data to download");
-      return;
-    }
-
     try {
-      const jsonData = JSON.parse(data).data;
+      const jsonData = loadLegacyScoutingData();
+      if (jsonData.length === 0) {
+        toast.error("No scouting data to download");
+        return;
+      }
+
       const playerStation = localStorage.getItem("playerStation") || "Unknown";
 
-      // Clean the comments column
-      const cleanedData = jsonData.map((row: { comment: any; }) => {
-        if (row.comment) {
-          row.comment = cleanText(row.comment);
+      // Clean the comments column (assuming it's at a specific index)
+      const cleanedData = jsonData.map((row: unknown[]) => {
+        // Create a copy of the row
+        const cleanedRow = [...row];
+        // If there's a comment field at a specific index, clean it
+        // You may need to adjust this index based on your data structure
+        const commentIndex = row.length - 1; // Assuming comment is the last column
+        if (typeof cleanedRow[commentIndex] === 'string') {
+          cleanedRow[commentIndex] = cleanText(cleanedRow[commentIndex] as string);
         }
-        return row;
+        return cleanedRow;
       });
 
       const csvConvertedData = [];
@@ -158,19 +163,22 @@ const JSONDownloader = ({ onBack, onSwitchToUpload }: JSONDownloaderProps) => {
   };
 
   const handleDownloadRawJSON = () => {
-    const data = localStorage.getItem("scoutingData");
-    if (!data || data === '{"data":[]}') {
-      toast.error("No scouting data to download");
-      return;
-    }
-
     try {
+      const jsonData = loadLegacyScoutingData();
+      if (jsonData.length === 0) {
+        toast.error("No scouting data to download");
+        return;
+      }
+
       const playerStation = localStorage.getItem("playerStation") || "Unknown";
+      
+      // Convert back to the original format for raw download
+      const rawData = { data: jsonData };
       
       const element = document.createElement("a");
       element.setAttribute(
         "href",
-        "data:application/json;charset=utf-8," + encodeURIComponent(data)
+        "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(rawData))
       );
       element.setAttribute(
         "download",

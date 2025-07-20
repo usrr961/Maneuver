@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import demoData from "../app/dashboard/VScouterData-5_52_53 PM-Blue 1.json";
+import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
 
 const HomePage = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,21 +12,13 @@ const HomePage = () => {
 
   // Check if demo data is already loaded on component mount
   useEffect(() => {
-    const existingData = localStorage.getItem("scoutingData");
-    if (existingData) {
-      try {
-        const parsed = JSON.parse(existingData);
-        // Check if it looks like our demo data structure
-        if (
-          parsed.data &&
-          Array.isArray(parsed.data) &&
-          parsed.data.length > 1
-        ) {
-          setIsLoaded(true);
-        }
-      } catch (error) {
-        console.error("Error parsing existing data:", error);
+    try {
+      const existingData = loadLegacyScoutingData();
+      if (existingData.length > 0) {
+        setIsLoaded(true);
       }
+    } catch (error) {
+      console.error("Error checking existing data:", error);
     }
   }, []);
 
