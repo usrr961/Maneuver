@@ -30,15 +30,11 @@ const data = {
       icon: Settings,
       items: [
         {
-          title: "Load Match Data",
-          url: "/match-data",
-        },
-        {
           title: "Clear Data",
           url: "/clear-data",
         },
         {
-          title: "Parse Data",
+          title: "Convert Scouting JSON Data",
           url: "/parse-data",
         }
       ]
@@ -49,12 +45,20 @@ const data = {
       icon: Download,
       items: [
         {
-          title: "JSON Transfer",
+          title: "Scouting Data JSON Transfer",
           url: "/json-transfer",
         },
         {
-          title: "QR Transfer",
-          url: "/qr-transfer",
+          title: "Scouting Data QR Transfer",
+          url: "/scout-data-qr",
+        },
+        {
+          title: "Match Data API/JSON Load",
+          url: "/match-data",
+        },
+        {
+          title: "Match Data QR Transfer",
+          url: "/match-data-qr",
         }
       ]
     },

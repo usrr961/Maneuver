@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Scanner } from "@yudiel/react-qr-scanner";
 import { toast } from "sonner"
 import Button from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 
 const MatchDataPage = () => {
   const navigate = useNavigate();
   const [selectedData, setSelectedData] = useState("");
-
-  const [qrCodeMatchData, setQRCodeMatchData] = useState(""); // The URL to the match data
+  
+  // Direct API input states
+  const [apiKey, setApiKey] = useState("");
+  const [eventKey, setEventKey] = useState("");
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -32,58 +34,69 @@ const MatchDataPage = () => {
     getText();
   };
 
+  const fetchMatchDataFromTBA = async (tbaApiKey: string, tbaEventKey: string) => {
+    try {
+      const headers = {
+        "X-TBA-Auth-Key": tbaApiKey,
+      };
+      const res = await fetch(
+        `https://www.thebluealliance.com/api/v3/event/${tbaEventKey}/matches/simple`,
+        { headers }
+      );
+      
+      if (!res.ok) {
+        throw new Error(`API request failed with status ${res.status}`);
+      }
+      
+      const fullData = await res.json();
+
+      const qualMatchesCleaned = [];
+
+      for (const match of fullData) {
+        if (match.comp_level == "qm") {
+          qualMatchesCleaned.push({
+            matchNum: match["match_number"],
+            redAlliance: match.alliances.red.team_keys.map((team: string) =>
+              team.replace("frc", "")
+            ),
+            blueAlliance: match.alliances.blue.team_keys.map((team: string) =>
+              team.replace("frc", "")
+            ),
+          });
+        }
+      }
+      
+      // Sort the match data by matchNum
+      qualMatchesCleaned.sort((a, b) => a.matchNum - b.matchNum);
+
+      localStorage.setItem("matchData", JSON.stringify(qualMatchesCleaned));
+
+      const matchDataStr = localStorage.getItem("matchData");
+      let fetchedMsg = "Match Data Fetched";
+      if (matchDataStr) {
+        const matchData = JSON.parse(matchDataStr);
+        if (Array.isArray(matchData) && matchData.length > 0 && matchData[0].redAlliance && matchData[0].redAlliance.length > 0) {
+          fetchedMsg += `: ${qualMatchesCleaned.length} matches for ${tbaEventKey}`;
+        }
+      }
+      toast.success(fetchedMsg);
+      navigate("/");
+    } catch (err) {
+      toast.error("Failed to fetch match data from TBA");
+      console.error(err);
+    }
+  };
+
   const doneClick = async () => {
     if (selectedData) {
       localStorage.setItem("matchData", selectedData);
-    } else if (qrCodeMatchData) {
-      const qrCodeMatchDataParsed = JSON.parse(qrCodeMatchData)
-      try {
-        const headers = {
-          "X-TBA-Auth-Key": qrCodeMatchDataParsed.apiKey,
-        };
-        const res = await fetch(
-          `https://www.thebluealliance.com/api/v3/event/${qrCodeMatchDataParsed.eventKey}/matches/simple`,
-          { headers }
-        ); // Fetching the data from the URL
-        const fullData = await res.json();
-
-        const qualMatchesCleaned = [];
-
-        for (const match of fullData) {
-          if (match.comp_level == "qm") {
-            qualMatchesCleaned.push({
-              matchNum: match["match_number"],
-              redAlliance: match.alliances.red.team_keys.map((team: string) =>
-                team.replace("frc", "")
-              ),
-              blueAlliance: match.alliances.blue.team_keys.map((team: string) =>
-                team.replace("frc", "")
-              ),
-            });
-          }
-        }
-        
-        // Sort the match data by matchNum
-        qualMatchesCleaned.sort((a, b) => a.matchNum - b.matchNum);
-
-        localStorage.setItem("matchData", JSON.stringify(qualMatchesCleaned)); // Storing the data in local storage so it can be accessed if the website is refreshed
-
-        const matchDataStr = localStorage.getItem("matchData");
-        let fetchedMsg = "Match Data Fetched";
-        if (matchDataStr) {
-          const matchData = JSON.parse(matchDataStr);
-          if (Array.isArray(matchData) && matchData.length > 0 && matchData[0].redAlliance && matchData[0].redAlliance.length > 0) {
-            fetchedMsg += ": " + matchData[0].redAlliance[0];
-          }
-        }
-        toast.success(fetchedMsg); // Notifying the user that the data has been fetched
-        navigate("/"); // Navigating back to the home page
-      } catch (err) {
-        // If anything goes wrong, notify the user
-        toast.error("Invalid Data");
-        console.log(err);
-      }
-    };
+      toast.success("Match data loaded from file");
+      navigate("/");
+    } else if (apiKey && eventKey) {
+      await fetchMatchDataFromTBA(apiKey, eventKey);
+    } else {
+      toast.error("Please provide match data via file upload or direct API input");
+    }
   };
   return (
     <main className="h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
@@ -95,30 +108,38 @@ const MatchDataPage = () => {
           style={{ display: "none" }}
           onChange={handleFileSelect}
         />  
-        <div className="w-full h-64 md:h-80 overflow-hidden rounded-lg">
-          <Scanner
-            components={{ finder: false }}
-            styles={{ 
-              video: { 
-                borderRadius: "7.5%",
-                width: "100%",
-                height: "100%",
-                objectFit: "cover"
-              } 
-            }}
-            onScan={(result) => {
-              setQRCodeMatchData(result[0].rawValue);
-              toast.success("QR Code is Scanned Successfully");
-            }}
-            onError={() =>
-              toast.error("Invalid QR Code/User Canceled Prompt")
-            }
-          />
-        </div>
 
-        <p className="text-sm text-muted-foreground text-center">
-          Scan the generated QR code to fetch match data from The Blue Alliance.
-        </p>
+        <div className="w-full max-w-md space-y-3">
+          <div className="space-y-1">
+            <label htmlFor="apiKey" className="text-sm font-medium">
+              TBA API Key
+            </label>
+            <Input
+              id="apiKey"
+              type="text"
+              placeholder="Enter your Blue Alliance API key"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="eventKey" className="text-sm font-medium">
+              Event Key
+            </label>
+            <Input
+              id="eventKey"
+              type="text"
+              placeholder="e.g., 2024chcmp"
+              value={eventKey}
+              onChange={(e) => setEventKey(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Get your API key from <a href="https://www.thebluealliance.com/account" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">The Blue Alliance</a>
+          </p>
+        </div>
         
         <div className="flex items-center justify-center gap-4 w-full max-w-md">
           <Separator className="w-full max-w-xs" />

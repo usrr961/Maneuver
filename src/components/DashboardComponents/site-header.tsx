@@ -11,7 +11,7 @@ const PAGE_TITLES: Record<string, string> = {
     "/clear-data": "Clear Data",
     "/parse-data": "Parse Data",
     "/game-start": "Game Start",
-    "/qr-transfer": "QR Data Transfer",
+    "/scout-data-qr": "Scout Data QR Transfer",
     "/json-transfer": "JSON Data Transfer",
     "/match-strategy": "Match Strategy",
     "/auto-start": "Auto Start",
@@ -20,6 +20,7 @@ const PAGE_TITLES: Record<string, string> = {
     "/endgame": "Endgame",
     "/team-stats": "Team Stats",
     "/pick-list": "Pick Lists",
+    "/match-data-qr": "Match Data QR Transfer",
   // Add more routes as needed
 };
 
