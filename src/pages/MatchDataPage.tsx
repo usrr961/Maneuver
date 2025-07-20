@@ -87,19 +87,14 @@ const MatchDataPage = () => {
   };
   return (
     <main className="h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
-      <div className="flex flex-col items-center gap-4 max-w-md w-full overflow-y-auto">
+      <div className="flex flex-col items-center gap-4 max-w-md w-full">
         <input
           type="file"
           id="selectFiles"
           accept=".json"
           style={{ display: "none" }}
           onChange={handleFileSelect}
-        />
-        
-        <h1 className="text-2xl font-bold text-center">
-          Match Data
-        </h1>
-        
+        />  
         <div className="w-full h-64 md:h-80 overflow-hidden rounded-lg">
           <Scanner
             components={{ finder: false }}

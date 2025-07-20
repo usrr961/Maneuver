@@ -1,4 +1,4 @@
-import { useEffect, useState, type JSX } from "react";
+import { useEffect, useState, useMemo, type JSX } from "react";
 import {
   Card,
   CardContent,
@@ -19,7 +19,7 @@ import { Input } from "../ui/input";
 interface InitialSelectTeamProps {
   defaultSelectTeam: string;
   setSelectTeam: (team: string | null) => void;
-  selectedMatch: number;
+  selectedMatch: string;
   selectedAlliance: string;
 }
 
@@ -29,19 +29,39 @@ const InitialSelectTeam = ({
   selectedMatch,
   selectedAlliance,
 }: InitialSelectTeamProps): JSX.Element => {
-  let baseTeams = [];
-  try {
-    const matchDataStr = localStorage.getItem("matchData");
-    const matchData = matchDataStr ? JSON.parse(matchDataStr) : [];
-    baseTeams =
-      selectedMatch > matchData.length ||
-      selectedMatch < 1
-        ? matchData[0]
-        : matchData[selectedMatch - 1 || 0];
-    baseTeams = baseTeams ? baseTeams[selectedAlliance ? selectedAlliance : "redAlliance"] : ["0001", "0002", "0003"];
-  } catch {
-    baseTeams = ["0001", "0002", "0003"];
-  }
+  const baseTeams = useMemo(() => {
+    try {
+      const matchDataStr = localStorage.getItem("matchData");
+      const matchData = matchDataStr ? JSON.parse(matchDataStr) : [];
+      
+      // Check if matchData is valid
+      if (!Array.isArray(matchData) || matchData.length === 0) {
+        return ["0001", "0002", "0003"];
+      }
+      
+      // Get the correct match data
+      let matchIndex = parseInt(selectedMatch) - 1;
+      if (isNaN(matchIndex) || matchIndex < 0 || matchIndex >= matchData.length) {
+        matchIndex = 0; // Default to first match if index is invalid
+      }
+      
+      const currentMatch = matchData[matchIndex];
+      
+      // Convert alliance value to correct property name and get teams
+      if (currentMatch && typeof currentMatch === 'object') {
+        const allianceKey = selectedAlliance === "red" ? "redAlliance" : 
+                           selectedAlliance === "blue" ? "blueAlliance" : "redAlliance";
+        const teams = currentMatch[allianceKey];
+        if (Array.isArray(teams) && teams.length > 0) {
+          return teams;
+        }
+      }
+      
+      return ["0001", "0002", "0003"];
+    } catch {
+      return ["0001", "0002", "0003"];
+    }
+  }, [selectedMatch, selectedAlliance]);
 
   // States for the team selection
   const [team1Status, setTeam1Status] = useState(
