@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import FieldCanvas from "@/components/MatchStrategyComponents/FieldCanvas";
 import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
 
@@ -77,6 +78,7 @@ const MatchStrategyPage = () => {
   const [availableTeams, setAvailableTeams] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("autonomous");
   const [matchNumber, setMatchNumber] = useState<string>("");
+  const [activeStatsTab, setActiveStatsTab] = useState("overall");
 
   useEffect(() => {
     // Load scouting data using the new deduplication utilities
@@ -156,15 +158,35 @@ const MatchStrategyPage = () => {
     if (teamDataArrays.length === 0) {
       return {
         matchesPlayed: 0,
-        totalPiecesScored: 0,
-        avgTotalPoints: 0,
-        climbRate: 0
+        overall: {
+          totalPiecesScored: 0,
+          avgTotalPoints: 0,
+          avgCoral: 0,
+          avgAlgae: 0
+        },
+        auto: {
+          mobilityRate: 0,
+          avgCoral: 0,
+          avgAlgae: 0,
+          startingPositions: []
+        },
+        teleop: {
+          avgCoral: 0,
+          avgAlgae: 0
+        },
+        endgame: {
+          climbRate: 0,
+          parkRate: 0,
+          shallowClimbRate: 0,
+          deepClimbRate: 0
+        }
       };
     }
 
     const teamEntries = teamDataArrays.map(parseScoutingEntry);
+    const matchCount = teamEntries.length;
 
-    // Calculate total pieces scored (coral placed + algae placed)
+    // Calculate overall stats
     const totalPiecesScored = teamEntries.reduce((sum, entry) => {
       const autoCoralScored = entry.autoCoralPlaceL1Count + entry.autoCoralPlaceL2Count + 
                            entry.autoCoralPlaceL3Count + entry.autoCoralPlaceL4Count;
@@ -174,6 +196,18 @@ const MatchStrategyPage = () => {
       const teleopAlgaeScored = entry.teleopAlgaePlaceNetShot + entry.teleopAlgaePlaceProcessor;
       
       return sum + autoCoralScored + teleopCoralScored + autoAlgaeScored + teleopAlgaeScored;
+    }, 0);
+
+    const totalCoral = teamEntries.reduce((sum, entry) => {
+      return sum + entry.autoCoralPlaceL1Count + entry.autoCoralPlaceL2Count + 
+             entry.autoCoralPlaceL3Count + entry.autoCoralPlaceL4Count +
+             entry.teleopCoralPlaceL1Count + entry.teleopCoralPlaceL2Count + 
+             entry.teleopCoralPlaceL3Count + entry.teleopCoralPlaceL4Count;
+    }, 0);
+
+    const totalAlgae = teamEntries.reduce((sum, entry) => {
+      return sum + entry.autoAlgaePlaceNetShot + entry.autoAlgaePlaceProcessor +
+             entry.teleopAlgaePlaceNetShot + entry.teleopAlgaePlaceProcessor;
     }, 0);
 
     // Calculate average total points
@@ -199,16 +233,76 @@ const MatchStrategyPage = () => {
              teleopCoralPoints + teleopAlgaePoints + endgamePoints;
     }, 0);
 
-    // Calculate climb rate (successful climbs)
-    const climbCount = teamEntries.filter(entry => 
+    // Calculate auto stats
+    const mobilityCount = teamEntries.filter(entry => entry.autoPassedStartLine).length;
+    const autoCoralTotal = teamEntries.reduce((sum, entry) => {
+      return sum + entry.autoCoralPlaceL1Count + entry.autoCoralPlaceL2Count + 
+             entry.autoCoralPlaceL3Count + entry.autoCoralPlaceL4Count;
+    }, 0);
+    const autoAlgaeTotal = teamEntries.reduce((sum, entry) => {
+      return sum + entry.autoAlgaePlaceNetShot + entry.autoAlgaePlaceProcessor;
+    }, 0);
+
+    // Calculate starting positions
+    const startingPositions = [];
+    const positions = ['Pos 0', 'Pos 1', 'Pos 2', 'Pos 3', 'Pos 4', 'Pos 5'];
+    const positionCounts = [
+      teamEntries.filter(entry => entry.startPoses0).length,
+      teamEntries.filter(entry => entry.startPoses1).length,
+      teamEntries.filter(entry => entry.startPoses2).length,
+      teamEntries.filter(entry => entry.startPoses3).length,
+      teamEntries.filter(entry => entry.startPoses4).length,
+      teamEntries.filter(entry => entry.startPoses5).length
+    ];
+
+    for (let i = 0; i < positions.length; i++) {
+      const percentage = Math.round((positionCounts[i] / matchCount) * 100);
+      if (percentage > 0) {
+        startingPositions.push({ position: positions[i], percentage });
+      }
+    }
+
+    // Calculate teleop stats
+    const teleopCoralTotal = teamEntries.reduce((sum, entry) => {
+      return sum + entry.teleopCoralPlaceL1Count + entry.teleopCoralPlaceL2Count + 
+             entry.teleopCoralPlaceL3Count + entry.teleopCoralPlaceL4Count;
+    }, 0);
+    const teleopAlgaeTotal = teamEntries.reduce((sum, entry) => {
+      return sum + entry.teleopAlgaePlaceNetShot + entry.teleopAlgaePlaceProcessor;
+    }, 0);
+
+    // Calculate endgame stats
+    const successfulClimbs = teamEntries.filter(entry => 
       (entry.shallowClimbAttempted || entry.deepClimbAttempted) && !entry.climbFailed
     ).length;
+    const parkCount = teamEntries.filter(entry => entry.parkAttempted && !entry.climbFailed).length;
+    const shallowClimbCount = teamEntries.filter(entry => entry.shallowClimbAttempted && !entry.climbFailed).length;
+    const deepClimbCount = teamEntries.filter(entry => entry.deepClimbAttempted && !entry.climbFailed).length;
 
     return {
-      matchesPlayed: teamEntries.length,
-      totalPiecesScored: Math.round((totalPiecesScored / teamEntries.length) * 10) / 10,
-      avgTotalPoints: Math.round((totalPoints / teamEntries.length) * 10) / 10,
-      climbRate: Math.round((climbCount / teamEntries.length) * 100)
+      matchesPlayed: matchCount,
+      overall: {
+        totalPiecesScored: Math.round((totalPiecesScored / matchCount) * 10) / 10,
+        avgTotalPoints: Math.round((totalPoints / matchCount) * 10) / 10,
+        avgCoral: Math.round((totalCoral / matchCount) * 10) / 10,
+        avgAlgae: Math.round((totalAlgae / matchCount) * 10) / 10
+      },
+      auto: {
+        mobilityRate: Math.round((mobilityCount / matchCount) * 100),
+        avgCoral: Math.round((autoCoralTotal / matchCount) * 10) / 10,
+        avgAlgae: Math.round((autoAlgaeTotal / matchCount) * 10) / 10,
+        startingPositions
+      },
+      teleop: {
+        avgCoral: Math.round((teleopCoralTotal / matchCount) * 10) / 10,
+        avgAlgae: Math.round((teleopAlgaeTotal / matchCount) * 10) / 10
+      },
+      endgame: {
+        climbRate: Math.round((successfulClimbs / matchCount) * 100),
+        parkRate: Math.round((parkCount / matchCount) * 100),
+        shallowClimbRate: Math.round((shallowClimbCount / matchCount) * 100),
+        deepClimbRate: Math.round((deepClimbCount / matchCount) * 100)
+      }
     };
   };
 
@@ -216,6 +310,116 @@ const MatchStrategyPage = () => {
     const newSelectedTeams = [...selectedTeams];
     newSelectedTeams[index] = teamNumber === "none" ? "" : teamNumber;
     setSelectedTeams(newSelectedTeams);
+  };
+
+  // Helper component to render team stats for the active phase
+  const TeamStatsDetail = ({ stats, activeStatsTab }: { 
+    stats: any, 
+    activeStatsTab: string
+  }) => {
+    if (!stats) return null;
+
+    const renderStatsContent = () => {
+      switch (activeStatsTab) {
+        case "overall":
+          return (
+            <div className="grid grid-cols-3 gap-2 text-sm">
+              <div className="text-center">
+                <p className="font-medium text-xs">Coral</p>
+                <p className="text-lg font-bold text-orange-600">{stats.overall.avgCoral}</p>
+              </div>
+              <div className="text-center">
+                <p className="font-medium text-xs">Algae</p>
+                <p className="text-lg font-bold text-green-600">{stats.overall.avgAlgae}</p>
+              </div>
+              <div className="text-center">
+                <p className="font-medium text-xs">Avg Points</p>
+                <p className="text-lg font-bold text-blue-600">{stats.overall.avgTotalPoints}</p>
+              </div>
+            </div>
+          );
+
+        case "auto":
+          return (
+            <div className="space-y-2">
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                <div className="text-center">
+                  <p className="font-medium text-xs">Mobility</p>
+                  <p className="text-lg font-bold text-blue-600">{stats.auto.mobilityRate}%</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-xs">Coral</p>
+                  <p className="text-lg font-bold text-orange-600">{stats.auto.avgCoral}</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-xs">Algae</p>
+                  <p className="text-lg font-bold text-green-600">{stats.auto.avgAlgae}</p>
+                </div>
+              </div>
+              {stats.auto.startingPositions.length > 0 && (
+                <div className="mt-2">
+                  <p className="font-medium text-xs mb-1">Starting Positions:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {stats.auto.startingPositions.map((pos: { position: string, percentage: number }, idx: number) => (
+                      <Badge key={idx} variant="secondary" className="text-xs">
+                        {pos.position}: {pos.percentage}%
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+
+        case "teleop":
+          return (
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="text-center">
+                <p className="font-medium text-xs">Coral</p>
+                <p className="text-lg font-bold text-orange-600">{stats.teleop.avgCoral}</p>
+              </div>
+              <div className="text-center">
+                <p className="font-medium text-xs">Algae</p>
+                <p className="text-lg font-bold text-green-600">{stats.teleop.avgAlgae}</p>
+              </div>
+            </div>
+          );
+
+        case "endgame":
+          return (
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="text-center">
+                <p className="font-medium text-xs">Overall Climb</p>
+                <p className="text-lg font-bold text-purple-600">{stats.endgame.climbRate}%</p>
+              </div>
+              <div className="text-center">
+                <p className="font-medium text-xs">Park</p>
+                <p className="text-sm font-bold text-gray-600">{stats.endgame.parkRate}%</p>
+              </div>
+              <div className="text-center">
+                <p className="font-medium text-xs">Shallow</p>
+                <p className="text-sm font-bold text-blue-600">{stats.endgame.shallowClimbRate}%</p>
+              </div>
+              <div className="text-center">
+                <p className="font-medium text-xs">Deep</p>
+                <p className="text-sm font-bold text-red-600">{stats.endgame.deepClimbRate}%</p>
+              </div>
+            </div>
+          );
+
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+        {renderStatsContent()}
+        <div className="text-center text-xs text-muted-foreground mt-2">
+          {stats.matchesPlayed} matches played
+        </div>
+      </div>
+    );
   };
 
   const clearAllStrategies = () => {
@@ -376,7 +580,7 @@ const MatchStrategyPage = () => {
         </div>
 
         {/* Content area */}
-        <div className="flex flex-col gap-6 w-full pb-6">
+        <div className="flex flex-col gap-2 w-full pb-6">
           {/* Field Strategy Tabs */}
           <Card className="w-full">
             <CardContent className="h-[500px] p-4">
@@ -417,6 +621,18 @@ const MatchStrategyPage = () => {
             </CardContent>
           </Card>
 
+          {/* Team Stats Tabs */}
+          <div className="w-full">
+            <Tabs value={activeStatsTab} onValueChange={setActiveStatsTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mt-6">
+                <TabsTrigger value="overall">Overall</TabsTrigger>
+                <TabsTrigger value="auto">Auto</TabsTrigger>
+                <TabsTrigger value="teleop">Teleop</TabsTrigger>
+                <TabsTrigger value="endgame">Endgame</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
           {/* Team Analysis - Split by Alliance */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Red Alliance */}
@@ -428,13 +644,13 @@ const MatchStrategyPage = () => {
                     <div className="font-bold text-lg">
                       {Math.round(selectedTeams.slice(0, 3).reduce((sum, team) => {
                         const stats = getTeamStats(team);
-                        return sum + (stats?.avgTotalPoints || 0);
+                        return sum + (stats?.overall.avgTotalPoints || 0);
                       }, 0))} pts
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {selectedTeams.slice(0, 3).filter(team => {
                         const stats = getTeamStats(team);
-                        return stats && stats.climbRate > 50;
+                        return stats && stats.endgame.climbRate > 50;
                       }).length}/3 climbers
                     </div>
                   </div>
@@ -473,29 +689,10 @@ const MatchStrategyPage = () => {
 
                         {/* Team Stats */}
                         {team && stats ? (
-                          <div className="grid grid-cols-3 gap-2 text-sm pt-2 border-t border-red-200 dark:border-red-800">
-                            <div className="text-center">
-                              <p className="font-medium text-xs">Avg Pieces</p>
-                              <p className="text-lg font-bold text-blue-600">
-                                {stats.totalPiecesScored}
-                              </p>
-                            </div>
-                            <div className="text-center">
-                              <p className="font-medium text-xs">Avg Points</p>
-                              <p className="text-lg font-bold text-green-600">
-                                {stats.avgTotalPoints}
-                              </p>
-                            </div>
-                            <div className="text-center">
-                              <p className="font-medium text-xs">Climb Rate</p>
-                              <p className="text-lg font-bold text-purple-600">
-                                {stats.climbRate}%
-                              </p>
-                            </div>
-                            <div className="col-span-3 text-center text-xs text-muted-foreground mt-1">
-                              {stats.matchesPlayed} matches played
-                            </div>
-                          </div>
+                          <TeamStatsDetail 
+                            stats={stats} 
+                            activeStatsTab={activeStatsTab} 
+                          />
                         ) : (
                           <div className="text-center py-2 text-muted-foreground text-sm">
                             {team ? "No data available" : "No team selected"}
@@ -517,13 +714,13 @@ const MatchStrategyPage = () => {
                     <div className="font-bold text-lg">
                       {Math.round(selectedTeams.slice(3, 6).reduce((sum, team) => {
                         const stats = getTeamStats(team);
-                        return sum + (stats?.avgTotalPoints || 0);
+                        return sum + (stats?.overall.avgTotalPoints || 0);
                       }, 0))} pts
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {selectedTeams.slice(3, 6).filter(team => {
                         const stats = getTeamStats(team);
-                        return stats && stats.climbRate > 50;
+                        return stats && stats.endgame.climbRate > 50;
                       }).length}/3 climbers
                     </div>
                   </div>
@@ -562,29 +759,10 @@ const MatchStrategyPage = () => {
 
                         {/* Team Stats */}
                         {team && stats ? (
-                          <div className="grid grid-cols-3 gap-2 text-sm pt-2 border-t border-blue-200 dark:border-blue-800">
-                            <div className="text-center">
-                              <p className="font-medium text-xs">Avg Pieces</p>
-                              <p className="text-lg font-bold text-blue-600">
-                                {stats.totalPiecesScored}
-                              </p>
-                            </div>
-                            <div className="text-center">
-                              <p className="font-medium text-xs">Avg Points</p>
-                              <p className="text-lg font-bold text-green-600">
-                                {stats.avgTotalPoints}
-                              </p>
-                            </div>
-                            <div className="text-center">
-                              <p className="font-medium text-xs">Climb Rate</p>
-                              <p className="text-lg font-bold text-purple-600">
-                                {stats.climbRate}%
-                              </p>
-                            </div>
-                            <div className="col-span-3 text-center text-xs text-muted-foreground mt-1">
-                              {stats.matchesPlayed} matches played
-                            </div>
-                          </div>
+                          <TeamStatsDetail 
+                            stats={stats} 
+                            activeStatsTab={activeStatsTab} 
+                          />
                         ) : (
                           <div className="text-center py-2 text-muted-foreground text-sm">
                             {team ? "No data available" : "No team selected"}
