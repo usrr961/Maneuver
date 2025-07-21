@@ -14,6 +14,7 @@ import { Input } from "../ui/input";
  * @param {function} setSelectTeam - Function to set the selected team.
  * @param {number} selectedMatch - The currently selected match number.
  * @param {string} selectedAlliance - The currently selected alliance.
+ * @param {number} preferredTeamPosition - The preferred team position (1, 2, or 3) based on player station.
  * @return {JSX.Element} The rendered component.
  */
 interface InitialSelectTeamProps {
@@ -21,6 +22,7 @@ interface InitialSelectTeamProps {
   setSelectTeam: (team: string | null) => void;
   selectedMatch: string;
   selectedAlliance: string;
+  preferredTeamPosition?: number;
 }
 
 const InitialSelectTeam = ({
@@ -28,6 +30,7 @@ const InitialSelectTeam = ({
   setSelectTeam,
   selectedMatch,
   selectedAlliance,
+  preferredTeamPosition = 0,
 }: InitialSelectTeamProps): JSX.Element => {
   const baseTeams = useMemo(() => {
     try {
@@ -63,31 +66,50 @@ const InitialSelectTeam = ({
     }
   }, [selectedMatch, selectedAlliance]);
 
+  // Helper function to determine if a team should be auto-selected based on position
+  const getInitialTeamSelection = () => {
+    // If there's already a defaultSelectTeam, use that
+    if (defaultSelectTeam) {
+      return {
+        team1: defaultSelectTeam === baseTeams[0],
+        team2: defaultSelectTeam === baseTeams[1], 
+        team3: defaultSelectTeam === baseTeams[2],
+        custom: defaultSelectTeam !== baseTeams[0] && 
+                defaultSelectTeam !== baseTeams[1] && 
+                defaultSelectTeam !== baseTeams[2]
+      };
+    }
+    
+    // If there's a preferred team position, auto-select that team
+    if (preferredTeamPosition >= 1 && preferredTeamPosition <= 3) {
+      return {
+        team1: preferredTeamPosition === 1,
+        team2: preferredTeamPosition === 2,
+        team3: preferredTeamPosition === 3,
+        custom: false
+      };
+    }
+    
+    // Default - no selection
+    return {
+      team1: false,
+      team2: false,
+      team3: false,
+      custom: false
+    };
+  };
+
+  const initialSelection = getInitialTeamSelection();
+
   // States for the team selection
-  const [team1Status, setTeam1Status] = useState(
-    defaultSelectTeam === baseTeams[0]
-  );
-  const [team2Status, setTeam2Status] = useState(
-    defaultSelectTeam === baseTeams[1]
-  );
-  const [team3Status, setTeam3Status] = useState(
-    defaultSelectTeam === baseTeams[2]
-  );
-  const [customTeamStatus, setCustomTeamStatus] = useState(
-    defaultSelectTeam != baseTeams[0] &&
-      defaultSelectTeam != baseTeams[1] &&
-      defaultSelectTeam != baseTeams[2] &&
-      defaultSelectTeam != null
-  );
+  const [team1Status, setTeam1Status] = useState(initialSelection.team1);
+  const [team2Status, setTeam2Status] = useState(initialSelection.team2);
+  const [team3Status, setTeam3Status] = useState(initialSelection.team3);
+  const [customTeamStatus, setCustomTeamStatus] = useState(initialSelection.custom);
 
   // State for the custom team value
   const [customTeamValue, setCustomTeamValue] = useState(
-    defaultSelectTeam != baseTeams[0] &&
-      defaultSelectTeam != baseTeams[1] &&
-      defaultSelectTeam != baseTeams[2] &&
-      defaultSelectTeam != null
-      ? defaultSelectTeam
-      : ""
+    initialSelection.custom && defaultSelectTeam ? defaultSelectTeam : ""
   );
 
   // Function to handle team selection
@@ -134,6 +156,22 @@ const InitialSelectTeam = ({
     }
   }, [team1Status, team2Status, team3Status, customTeamStatus, customTeamValue, setSelectTeam, baseTeams]);
 
+  // Effect to update team selection when baseTeams or preferredTeamPosition changes
+  useEffect(() => {
+    // Only auto-select if no current selection and we have a preferred position
+    if (!team1Status && !team2Status && !team3Status && !customTeamStatus && 
+        preferredTeamPosition >= 1 && preferredTeamPosition <= 3) {
+      
+      if (preferredTeamPosition === 1) {
+        setTeam1Status(true);
+      } else if (preferredTeamPosition === 2) {
+        setTeam2Status(true);
+      } else if (preferredTeamPosition === 3) {
+        setTeam3Status(true);
+      }
+    }
+  }, [baseTeams, preferredTeamPosition, team1Status, team2Status, team3Status, customTeamStatus]);
+
   const [textSelected, setTextSelected] = useState(false);
 
   return (
@@ -152,6 +190,11 @@ const InitialSelectTeam = ({
           {/* Question */}
           <CardHeader className="text-2xl font-bold">
             <CardTitle>Select Team</CardTitle>
+            {preferredTeamPosition > 0 && (
+              <p className="text-sm text-muted-foreground">
+                Your role suggests position {preferredTeamPosition}
+              </p>
+            )}
           </CardHeader>
           {/* Selectors */}
           <CardContent className="flex flex-col w-full h-full gap-4">
@@ -161,6 +204,7 @@ const InitialSelectTeam = ({
                 currentTeamStatus={team1Status}
                 clickTeam={clickTeam}
                 teamName={baseTeams[0]}
+                isPreferred={preferredTeamPosition === 1}
               />
             </div>
             <div className="flex-grow">
@@ -169,6 +213,7 @@ const InitialSelectTeam = ({
                 currentTeamStatus={team2Status}
                 clickTeam={clickTeam}
                 teamName={baseTeams[1]}
+                isPreferred={preferredTeamPosition === 2}
               />
             </div>
             <div className="flex-grow">
@@ -177,6 +222,7 @@ const InitialSelectTeam = ({
                 currentTeamStatus={team3Status}
                 clickTeam={clickTeam}
                 teamName={baseTeams[2]}
+                isPreferred={preferredTeamPosition === 3}
               />
             </div>
                       {/* Custom Team Selector */}

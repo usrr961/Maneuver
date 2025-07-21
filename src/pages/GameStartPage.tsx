@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,12 +20,52 @@ const GameStartPage = () => {
   const navigate = useNavigate();
   const states = location.state;
 
-  // Initialize the state with the passed in state from the previous page, or null if no state was passed in
-  const [alliance, setAlliance] = useState(states?.inputs?.alliance || "");
-  const [matchNumber, setMatchNumber] = useState(
-    states?.inputs?.matchNumber || ""
+  // Helper function to parse player station and get alliance/position info
+  const parsePlayerStation = () => {
+    const playerStation = localStorage.getItem("playerStation");
+    if (!playerStation) return { alliance: "", teamPosition: 0 };
+    
+    if (playerStation === "lead") {
+      return { alliance: "", teamPosition: 0 };
+    }
+    
+    const parts = playerStation.split("-");
+    if (parts.length === 2) {
+      const alliance = parts[0]; // "red" or "blue"
+      const position = parseInt(parts[1]); // 1, 2, or 3
+      return { alliance, teamPosition: position };
+    }
+    
+    return { alliance: "", teamPosition: 0 };
+  };
+
+  const stationInfo = parsePlayerStation();
+
+  // Helper function to get and manage match number
+  const getInitialMatchNumber = () => {
+    // Check if there's a match number in navigation state first
+    if (states?.inputs?.matchNumber) {
+      return states.inputs.matchNumber;
+    }
+    
+    // Get current match number from localStorage, default to 1
+    const storedMatchNumber = localStorage.getItem("currentMatchNumber");
+    return storedMatchNumber || "1";
+  };
+
+  // Initialize the state with the passed in state from the previous page, or auto-fill from player station
+  const [alliance, setAlliance] = useState(
+    states?.inputs?.alliance || stationInfo.alliance || ""
   );
+  const [matchNumber, setMatchNumber] = useState(getInitialMatchNumber());
   const [selectTeam, setSelectTeam] = useState(states?.inputs?.selectTeam || "");
+
+  // Effect to save match number to localStorage when it changes
+  useEffect(() => {
+    if (matchNumber) {
+      localStorage.setItem("currentMatchNumber", matchNumber);
+    }
+  }, [matchNumber]);
 
   // Get current scouter from localStorage
   const getCurrentScouter = () => {
@@ -89,6 +129,15 @@ const GameStartPage = () => {
     navigate("/");
   };
 
+  const handleMatchNumberChange = (value: string) => {
+    setMatchNumber(value);
+    // When manually changed, update the stored match number immediately
+    // This ensures that if someone manually sets it to 5, future increments start from 5
+    if (value) {
+      localStorage.setItem("currentMatchNumber", value);
+    }
+  };
+
   const currentScouter = getCurrentScouter();
 
   return (
@@ -124,13 +173,18 @@ const GameStartPage = () => {
             
             {/* Match Number */}
             <div className="space-y-2">
-              <Label htmlFor="match-number">Match Number</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="match-number">Match Number</Label>
+                <span className="text-xs text-muted-foreground">
+                  Auto-increments after each match
+                </span>
+              </div>
               <Input
                 id="match-number"
                 type="number"
                 placeholder="Enter match number"
                 value={matchNumber}
-                onChange={(e) => setMatchNumber(e.target.value)}
+                onChange={(e) => handleMatchNumberChange(e.target.value)}
                 className="text-lg"
               />
             </div>
@@ -180,6 +234,7 @@ const GameStartPage = () => {
                 setSelectTeam={setSelectTeam}
                 selectedMatch={matchNumber}
                 selectedAlliance={alliance}
+                preferredTeamPosition={stationInfo.teamPosition}
               />
             </div>
           </CardContent>

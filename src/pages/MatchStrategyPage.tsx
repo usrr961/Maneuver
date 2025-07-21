@@ -357,7 +357,7 @@ const MatchStrategyPage = () => {
                 </div>
               </div>
               {stats.auto.startingPositions.length > 0 && (
-                <div className="mt-2">
+                <div className="flex flex-col mt-2 justify-center items-center">
                   <p className="font-medium text-xs mb-1">Starting Positions:</p>
                   <div className="flex flex-wrap gap-1">
                     {stats.auto.startingPositions.map((pos: { position: string, percentage: number }, idx: number) => (

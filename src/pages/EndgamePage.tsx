@@ -95,8 +95,13 @@ const EndgamePage = () => {
       localStorage.removeItem("autoStateStack");
       localStorage.removeItem("teleopStateStack");
 
+      // Increment match number for next scouting session
+      const currentMatchNumber = localStorage.getItem("currentMatchNumber") || "1";
+      const nextMatchNumber = (parseInt(currentMatchNumber) + 1).toString();
+      localStorage.setItem("currentMatchNumber", nextMatchNumber);
+
       toast.success("Match data saved successfully!");
-      navigate("/");
+      navigate("/game-start");
       
     } catch (error) {
       console.error("Error saving match data:", error);
