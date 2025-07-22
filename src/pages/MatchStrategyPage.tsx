@@ -168,17 +168,20 @@ const MatchStrategyPage = () => {
           mobilityRate: 0,
           avgCoral: 0,
           avgAlgae: 0,
-          startingPositions: []
+          startingPositions: [],
+          avgTotalPoints: 0
         },
         teleop: {
           avgCoral: 0,
-          avgAlgae: 0
+          avgAlgae: 0,
+          avgTotalPoints: 0
         },
         endgame: {
           climbRate: 0,
           parkRate: 0,
           shallowClimbRate: 0,
-          deepClimbRate: 0
+          deepClimbRate: 0,
+          avgTotalPoints: 0
         }
       };
     }
@@ -210,28 +213,37 @@ const MatchStrategyPage = () => {
              entry.teleopAlgaePlaceNetShot + entry.teleopAlgaePlaceProcessor;
     }, 0);
 
-    // Calculate average total points
-    const totalPoints = teamEntries.reduce((sum, entry) => {
+    const autoPoints = teamEntries.reduce((sum, entry) => {
       // Auto points
       const autoCoralPoints = (entry.autoCoralPlaceL1Count * 3) + (entry.autoCoralPlaceL2Count * 4) + 
                            (entry.autoCoralPlaceL3Count * 6) + (entry.autoCoralPlaceL4Count * 7);
       const autoAlgaePoints = (entry.autoAlgaePlaceNetShot * 4) + (entry.autoAlgaePlaceProcessor * 2);
       const autoMobilityPoints = entry.autoPassedStartLine ? 3 : 0;
-      
+
+      return sum + autoCoralPoints + autoAlgaePoints + autoMobilityPoints;
+    }, 0);
+
+    const teleopPoints = teamEntries.reduce((sum, entry) => {
       // Teleop points
       const teleopCoralPoints = (entry.teleopCoralPlaceL1Count * 2) + (entry.teleopCoralPlaceL2Count * 3) + 
                              (entry.teleopCoralPlaceL3Count * 4) + (entry.teleopCoralPlaceL4Count * 5);
       const teleopAlgaePoints = (entry.teleopAlgaePlaceNetShot * 4) + (entry.teleopAlgaePlaceProcessor * 2);
-      
-      // Endgame points
-      let endgamePoints = 0;
-      if ((entry.parkAttempted && !entry.climbFailed) || (entry.shallowClimbAttempted && entry.climbFailed) || (entry.deepClimbAttempted && entry.climbFailed)) endgamePoints += 2;
-      if (entry.shallowClimbAttempted && !entry.climbFailed) endgamePoints += 6;
-      if (entry.deepClimbAttempted && !entry.climbFailed) endgamePoints += 12;
 
-      return sum + autoCoralPoints + autoAlgaePoints + autoMobilityPoints + 
-             teleopCoralPoints + teleopAlgaePoints + endgamePoints;
+      return sum + teleopCoralPoints + teleopAlgaePoints;
     }, 0);
+
+    const endgamePoints = teamEntries.reduce((sum, entry) => {
+      // Endgame points
+      let points = 0;
+      if ((entry.parkAttempted && !entry.climbFailed) || (entry.shallowClimbAttempted && entry.climbFailed) || (entry.deepClimbAttempted && entry.climbFailed)) points += 2;
+      if (entry.shallowClimbAttempted && !entry.climbFailed) points += 6;
+      if (entry.deepClimbAttempted && !entry.climbFailed) points += 12;
+
+      return sum + points;
+    }, 0);
+
+    // Calculate average total points
+    const totalPoints = autoPoints + teleopPoints + endgamePoints;
 
     // Calculate auto stats
     const mobilityCount = teamEntries.filter(entry => entry.autoPassedStartLine).length;
@@ -291,17 +303,20 @@ const MatchStrategyPage = () => {
         mobilityRate: Math.round((mobilityCount / matchCount) * 100),
         avgCoral: Math.round((autoCoralTotal / matchCount) * 10) / 10,
         avgAlgae: Math.round((autoAlgaeTotal / matchCount) * 10) / 10,
+        avgTotalPoints: Math.round((autoPoints / matchCount) * 10) / 10,
         startingPositions
       },
       teleop: {
         avgCoral: Math.round((teleopCoralTotal / matchCount) * 10) / 10,
-        avgAlgae: Math.round((teleopAlgaeTotal / matchCount) * 10) / 10
+        avgAlgae: Math.round((teleopAlgaeTotal / matchCount) * 10) / 10,
+        avgTotalPoints: Math.round((teleopPoints / matchCount) * 10) / 10
       },
       endgame: {
         climbRate: Math.round((successfulClimbs / matchCount) * 100),
         parkRate: Math.round((parkCount / matchCount) * 100),
         shallowClimbRate: Math.round((shallowClimbCount / matchCount) * 100),
-        deepClimbRate: Math.round((deepClimbCount / matchCount) * 100)
+        deepClimbRate: Math.round((deepClimbCount / matchCount) * 100),
+        avgTotalPoints: Math.round((endgamePoints / matchCount) * 10) / 10
       }
     };
   };
@@ -310,6 +325,96 @@ const MatchStrategyPage = () => {
     const newSelectedTeams = [...selectedTeams];
     newSelectedTeams[index] = teamNumber === "none" ? "" : teamNumber;
     setSelectedTeams(newSelectedTeams);
+  };
+
+  const TeamStatsHeaders = ({ alliance, activeStatsTab }: {
+    alliance: 'red' | 'blue',
+    activeStatsTab: string
+  }) => {
+    // Get the correct team slice based on alliance
+    const teamSlice = alliance === 'red' ? selectedTeams.slice(0, 3) : selectedTeams.slice(3, 6);
+    
+    const renderStatsHeader = () => {
+      switch (activeStatsTab) {
+        case "overall":
+          return(
+            <div className="text-right text-sm">
+              <div className="font-bold text-lg">
+                {Math.round(teamSlice.reduce((sum, team) => {
+                  const stats = getTeamStats(team);
+                  return sum + (stats?.overall.avgTotalPoints || 0);
+                }, 0))} pts
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {teamSlice.filter(team => {
+                  const stats = getTeamStats(team);
+                  return stats && stats.endgame.climbRate > 50;
+                }).length}/3 climbers
+              </div>
+            </div>
+          );
+        case "auto":
+          return (
+            <div className="text-right text-sm">
+              <div className="font-bold text-lg">
+                {Math.round(teamSlice.reduce((sum, team) => {
+                  const stats = getTeamStats(team);
+                  return sum + (stats?.auto.avgTotalPoints || 0);
+                }, 0))} pts
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {teamSlice.filter(team => {
+                  const stats = getTeamStats(team);
+                  return stats && stats.auto.mobilityRate > 50;
+                }).length}/3 mobile
+              </div>
+            </div>
+          );
+        case "teleop":
+          return (
+            <div className="text-right text-sm">
+              <div className="font-bold text-lg">
+                {Math.round(teamSlice.reduce((sum, team) => {
+                  const stats = getTeamStats(team);
+                  return sum + (stats?.teleop.avgTotalPoints || 0);
+                }, 0))} pts
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {Math.round(teamSlice.reduce((sum, team) => {
+                  const stats = getTeamStats(team);
+                  return sum + (stats?.teleop.avgCoral || 0);
+                }, 0) * 10) / 10} coral | {Math.round(teamSlice.reduce((sum, team) => {
+                  const stats = getTeamStats(team);
+                  return sum + (stats?.teleop.avgAlgae || 0);
+                }, 0) * 10) / 10} algae
+              </div>
+            </div>
+          );
+        case "endgame":
+          return (
+            <div className="text-right text-sm">
+              <div className="font-bold text-lg">
+                {Math.round(teamSlice.reduce((sum, team) => {
+                  const stats = getTeamStats(team);
+                  return sum + (stats?.endgame.avgTotalPoints || 0);
+                }, 0))} pts
+              </div>
+               <div className="text-xs text-muted-foreground">
+                {teamSlice.filter(team => {
+                  const stats = getTeamStats(team);
+                  return stats && stats.endgame.climbRate > 50;
+                }).length}/3 climbers
+              </div>
+            </div>
+          );
+      }
+    }
+
+    return (
+      <>
+        {renderStatsHeader()}
+      </>
+    );
   };
 
   // Helper component to render team stats for the active phase
@@ -640,20 +745,10 @@ const MatchStrategyPage = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-red-600 dark:text-red-400">Red Alliance</CardTitle>
-                  <div className="text-right text-sm">
-                    <div className="font-bold text-lg">
-                      {Math.round(selectedTeams.slice(0, 3).reduce((sum, team) => {
-                        const stats = getTeamStats(team);
-                        return sum + (stats?.overall.avgTotalPoints || 0);
-                      }, 0))} pts
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {selectedTeams.slice(0, 3).filter(team => {
-                        const stats = getTeamStats(team);
-                        return stats && stats.endgame.climbRate > 50;
-                      }).length}/3 climbers
-                    </div>
-                  </div>
+                  <TeamStatsHeaders
+                    alliance="red" 
+                    activeStatsTab={activeStatsTab}
+                  />
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -710,20 +805,10 @@ const MatchStrategyPage = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-blue-600 dark:text-blue-400">Blue Alliance</CardTitle>
-                  <div className="text-right text-sm">
-                    <div className="font-bold text-lg">
-                      {Math.round(selectedTeams.slice(3, 6).reduce((sum, team) => {
-                        const stats = getTeamStats(team);
-                        return sum + (stats?.overall.avgTotalPoints || 0);
-                      }, 0))} pts
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {selectedTeams.slice(3, 6).filter(team => {
-                        const stats = getTeamStats(team);
-                        return stats && stats.endgame.climbRate > 50;
-                      }).length}/3 climbers
-                    </div>
-                  </div>
+                  <TeamStatsHeaders
+                    alliance="blue" 
+                    activeStatsTab={activeStatsTab}
+                  />
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
