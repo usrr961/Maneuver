@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -120,6 +120,7 @@ interface TeamStats {
     climbed: boolean;
     brokeDown: boolean;
     startPosition: number;
+    comment: string;
   }[];
 }
 
@@ -202,7 +203,7 @@ const TeamStatsPage = () => {
     };
   };
 
-  const calculateTeamStats = (teamNumber: string): TeamStats | null => {
+  const calculateTeamStats = useCallback((teamNumber: string): TeamStats | null => {
     if (!teamNumber) return null;
 
     const teamDataArrays = scoutingData.filter(dataArray => dataArray[4]?.toString() === teamNumber); // was index 3, now 4
@@ -301,7 +302,8 @@ const TeamStatsPage = () => {
         endgamePoints,
         climbed: (entry.shallowClimbAttempted || entry.deepClimbAttempted) && !entry.climbFailed,
         brokeDown: entry.brokeDown,
-        startPosition
+        startPosition,
+        comment: entry.comment
       };
     });
 
@@ -346,7 +348,7 @@ const TeamStatsPage = () => {
       },
       matchResults: matchResults.sort((a, b) => Number(a.matchNumber) - Number(b.matchNumber))
     };
-  };
+  }, [scoutingData]);
 
   useEffect(() => {
     if (selectedTeam) {
@@ -355,7 +357,7 @@ const TeamStatsPage = () => {
     } else {
       setTeamStats(null);
     }
-  }, [selectedTeam, scoutingData]);
+  }, [selectedTeam, scoutingData, calculateTeamStats]);
 
   useEffect(() => {
     if (compareTeam && compareTeam !== "none") {
@@ -364,7 +366,7 @@ const TeamStatsPage = () => {
     } else {
       setCompareStats(null);
     }
-  }, [compareTeam, scoutingData]);
+  }, [compareTeam, scoutingData, calculateTeamStats]);
 
   const StatCard = ({ title, value, subtitle, color = "blue", compareValue }: { 
     title: string; 
@@ -603,6 +605,36 @@ const TeamStatsPage = () => {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Comments Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Match Comments</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                      {teamStats.matchResults
+                        .filter(match => match.comment && match.comment.trim() !== "")
+                        .map((match, index) => (
+                          <div key={index} className="flex flex-col p-3 border rounded gap-2">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline">Match {match.matchNumber}</Badge>
+                              <Badge variant={match.alliance === "red" ? "destructive" : "default"}>
+                                {match.alliance}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground italic">"{match.comment}"</p>
+                          </div>
+                        ))
+                      }
+                      {teamStats.matchResults.filter(match => match.comment && match.comment.trim() !== "").length === 0 && (
+                        <p className="text-center text-muted-foreground text-sm py-4">
+                          No comments recorded for this team's matches
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               {/* Scoring Tab */}
@@ -947,6 +979,11 @@ const TeamStatsPage = () => {
                                 A: {match.autoPoints} | T: {match.teleopPoints} | E: {match.endgamePoints}
                               </div>
                             </div>
+                            {match.comment && match.comment.trim() !== "" && (
+                              <div className="text-xs text-muted-foreground italic border-t pt-2">
+                                "{match.comment}"
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
