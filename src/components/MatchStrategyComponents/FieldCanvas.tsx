@@ -24,6 +24,7 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
   const [lastPoint, setLastPoint] = useState<Point | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentStageId, setCurrentStageId] = useState(stageId); // Internal stage tracking
+  const backgroundImageRef = useRef<HTMLImageElement | null>(null); // Store background image reference
 
   // Available stages for switching
   const stages = [
@@ -101,6 +102,9 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
       canvas.style.maxHeight = '100%';
 
       ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+
+      // Store background image reference for erasing
+      backgroundImageRef.current = img;
 
       // Load saved drawing if exists - use currentStageId instead of stageId
       const savedData = localStorage.getItem(`fieldStrategy_${currentStageId}`);
@@ -247,20 +251,45 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
 
     const currentPoint = getPointFromEvent(e);
 
-    ctx.globalCompositeOperation = isErasing ? 'destination-out' : 'source-over';
-    ctx.lineWidth = brushSize;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    if (isErasing) {
+      // For erasing, we'll use destination-out to remove content
+      // but then immediately patch the background back in
+      ctx.save();
+      
+      // First, erase the content
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = brushSize;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
 
-    if (!isErasing) {
+      if (lastPoint) {
+        ctx.beginPath();
+        ctx.moveTo(lastPoint.x, lastPoint.y);
+        ctx.lineTo(currentPoint.x, currentPoint.y);
+        ctx.stroke();
+      }
+      
+      // Now patch the background back in the same area
+      if (backgroundImageRef.current) {
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.drawImage(backgroundImageRef.current, 0, 0, canvas.width, canvas.height);
+      }
+      
+      ctx.restore();
+    } else {
+      // Normal drawing
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.lineWidth = brushSize;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
       ctx.strokeStyle = brushColor;
-    }
 
-    if (lastPoint) {
-      ctx.beginPath();
-      ctx.moveTo(lastPoint.x, lastPoint.y);
-      ctx.lineTo(currentPoint.x, currentPoint.y);
-      ctx.stroke();
+      if (lastPoint) {
+        ctx.beginPath();
+        ctx.moveTo(lastPoint.x, lastPoint.y);
+        ctx.lineTo(currentPoint.x, currentPoint.y);
+        ctx.stroke();
+      }
     }
 
     setLastPoint(currentPoint);
@@ -286,17 +315,16 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
   const clearCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return;
+    if (!canvas || !ctx || !backgroundImageRef.current) return;
 
-    // Reload the field background
-    const img = new Image();
-    img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      // Clear saved data - use currentStageId
-      localStorage.removeItem(`fieldStrategy_${currentStageId}`);
-    };
-    img.src = fieldImage;
+    // Clear the entire canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Redraw just the background image
+    ctx.drawImage(backgroundImageRef.current, 0, 0, canvas.width, canvas.height);
+
+    // Clear saved data - use currentStageId
+    localStorage.removeItem(`fieldStrategy_${currentStageId}`);
   };
 
   const saveCanvas = (showAlert = true) => {

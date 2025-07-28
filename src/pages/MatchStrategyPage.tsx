@@ -740,33 +740,33 @@ const MatchStrategyPage = () => {
 
           {/* Team Analysis - Split by Alliance */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Red Alliance */}
+            {/* Blue Alliance */}
             <Card className="w-full">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-red-600 dark:text-red-400">Red Alliance</CardTitle>
+                  <CardTitle className="text-blue-600 dark:text-blue-400">Blue Alliance</CardTitle>
                   <TeamStatsHeaders
-                    alliance="red" 
+                    alliance="blue" 
                     activeStatsTab={activeStatsTab}
                   />
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 {Array.from({ length: 3 }, (_, index) => {
-                  const team = selectedTeams[index];
+                  const team = selectedTeams[index + 3];
                   const stats = getTeamStats(team);
 
                   return (
-                    <Card key={index} className="p-3 border-red-200 dark:border-red-800">
+                    <Card key={index + 3} className="p-3 border-blue-200 dark:border-blue-800">
                       <div className="space-y-3">
                         {/* Team Selector */}
                         <div className="flex items-center gap-3">
-                          <label className="text-sm font-medium text-red-600 dark:text-red-400 min-w-0">
-                            Red Team {index + 1}:
+                          <label className="text-sm font-medium text-blue-600 dark:text-blue-400 min-w-0">
+                            Blue Team {index + 1}:
                           </label>
                           <Select 
-                            value={selectedTeams[index] || "none"} 
-                            onValueChange={(value) => handleTeamChange(index, value)}
+                            value={selectedTeams[index + 3] || "none"} 
+                            onValueChange={(value) => handleTeamChange(index + 3, value)}
                           >
                             <SelectTrigger className="flex-1">
                               <SelectValue placeholder="Select team" />
@@ -799,34 +799,34 @@ const MatchStrategyPage = () => {
                 })}
               </CardContent>
             </Card>
-
-            {/* Blue Alliance */}
+            
+            {/* Red Alliance */}
             <Card className="w-full">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-blue-600 dark:text-blue-400">Blue Alliance</CardTitle>
+                  <CardTitle className="text-red-600 dark:text-red-400">Red Alliance</CardTitle>
                   <TeamStatsHeaders
-                    alliance="blue" 
+                    alliance="red" 
                     activeStatsTab={activeStatsTab}
                   />
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 {Array.from({ length: 3 }, (_, index) => {
-                  const team = selectedTeams[index + 3];
+                  const team = selectedTeams[index];
                   const stats = getTeamStats(team);
 
                   return (
-                    <Card key={index + 3} className="p-3 border-blue-200 dark:border-blue-800">
+                    <Card key={index} className="p-3 border-red-200 dark:border-red-800">
                       <div className="space-y-3">
                         {/* Team Selector */}
                         <div className="flex items-center gap-3">
-                          <label className="text-sm font-medium text-blue-600 dark:text-blue-400 min-w-0">
-                            Blue Team {index + 1}:
+                          <label className="text-sm font-medium text-red-600 dark:text-red-400 min-w-0">
+                            Red Team {index + 1}:
                           </label>
                           <Select 
-                            value={selectedTeams[index + 3] || "none"} 
-                            onValueChange={(value) => handleTeamChange(index + 3, value)}
+                            value={selectedTeams[index] || "none"} 
+                            onValueChange={(value) => handleTeamChange(index, value)}
                           >
                             <SelectTrigger className="flex-1">
                               <SelectValue placeholder="Select team" />
