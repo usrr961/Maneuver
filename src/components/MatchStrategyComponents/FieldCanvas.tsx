@@ -194,7 +194,7 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
     };
   }, [isFullscreen, currentStageId]);
 
-  const getPointFromEvent = (e: React.MouseEvent | React.TouchEvent): Point => {
+  const getPointFromEvent = (e: React.MouseEvent | React.TouchEvent | React.PointerEvent): Point => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
 
@@ -202,31 +202,43 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
+    let clientX: number, clientY: number;
+
     if ('touches' in e) {
       // Touch event
       const touch = e.touches[0] || e.changedTouches[0];
-      return {
-        x: (touch.clientX - rect.left) * scaleX,
-        y: (touch.clientY - rect.top) * scaleY
-      };
+      clientX = touch.clientX;
+      clientY = touch.clientY;
     } else {
-      // Mouse event
-      return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY
-      };
+      // Mouse or Pointer event
+      clientX = e.clientX;
+      clientY = e.clientY;
     }
+
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
   };
 
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+  const startDrawing = (e: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    // For touch events, prevent scrolling immediately
+    if ('touches' in e) {
+      document.body.style.overflow = 'hidden';
+    }
+    
     setIsDrawing(true);
     const point = getPointFromEvent(e);
     setLastPoint(point);
   };
 
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
+  const draw = (e: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     if (!isDrawing) return;
 
     const canvas = canvasRef.current;
@@ -254,7 +266,15 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
     setLastPoint(currentPoint);
   };
 
-  const stopDrawing = () => {
+  const stopDrawing = (e?: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    // Restore body scroll
+    document.body.style.overflow = '';
+    
     if (isDrawing) {
       // Auto-save when drawing stops
       saveCanvas(false);
@@ -469,7 +489,7 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
             ref={canvasRef}
             style={{
               ...canvasStyle,
-              touchAction: isDrawing ? 'none' : 'auto'
+              touchAction: 'none'  // Always prevent touch gestures
             }}
             className="border border-gray-300 rounded-lg cursor-crosshair shadow-lg"
             onMouseDown={startDrawing}
@@ -480,6 +500,11 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
             onTouchMove={draw}
             onTouchEnd={stopDrawing}
             onTouchCancel={stopDrawing}
+            onPointerDown={startDrawing}
+            onPointerMove={draw}
+            onPointerUp={stopDrawing}
+            onPointerLeave={stopDrawing}
+            onPointerCancel={stopDrawing}
           />
         </div>
 
@@ -508,7 +533,7 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
           ref={canvasRef}
           style={{
             ...canvasStyle,
-            touchAction: isDrawing ? 'none' : 'auto'
+            touchAction: 'none'  // Always prevent touch gestures
           }}
           className="border border-gray-300 rounded-lg cursor-crosshair max-w-full max-h-full"
           onMouseDown={startDrawing}
@@ -519,6 +544,11 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
           onTouchMove={draw}
           onTouchEnd={stopDrawing}
           onTouchCancel={stopDrawing}
+          onPointerDown={startDrawing}
+          onPointerMove={draw}
+          onPointerUp={stopDrawing}
+          onPointerLeave={stopDrawing}
+          onPointerCancel={stopDrawing}
         />
       </div>
     </div>
