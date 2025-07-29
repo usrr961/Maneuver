@@ -54,11 +54,21 @@ const GameStartPage = () => {
   };
 
   // Initialize the state with the passed in state from the previous page, or auto-fill from player station
+
   const [alliance, setAlliance] = useState(
     states?.inputs?.alliance || stationInfo.alliance || ""
   );
   const [matchNumber, setMatchNumber] = useState(getInitialMatchNumber());
+  const [debouncedMatchNumber, setDebouncedMatchNumber] = useState(matchNumber);
   const [selectTeam, setSelectTeam] = useState(states?.inputs?.selectTeam || "");
+
+  // Debounce matchNumber for team selection
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedMatchNumber(matchNumber);
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [matchNumber]);
 
   // Effect to save match number to localStorage when it changes
   useEffect(() => {
@@ -129,14 +139,21 @@ const GameStartPage = () => {
     navigate("/");
   };
 
+
+  // Debounced match number update
   const handleMatchNumberChange = (value: string) => {
     setMatchNumber(value);
-    // When manually changed, update the stored match number immediately
-    // This ensures that if someone manually sets it to 5, future increments start from 5
-    if (value) {
-      localStorage.setItem("currentMatchNumber", value);
-    }
+    // No immediate localStorage update; handled by debounced effect
   };
+
+  // Debounce localStorage update for matchNumber
+  useEffect(() => {
+    if (!matchNumber) return;
+    const timeout = setTimeout(() => {
+      localStorage.setItem("currentMatchNumber", matchNumber);
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [matchNumber]);
 
   const currentScouter = getCurrentScouter();
 
@@ -232,7 +249,7 @@ const GameStartPage = () => {
               <GameStartSelectTeam
                 defaultSelectTeam={selectTeam}
                 setSelectTeam={setSelectTeam}
-                selectedMatch={matchNumber}
+                selectedMatch={debouncedMatchNumber}
                 selectedAlliance={alliance}
                 preferredTeamPosition={stationInfo.teamPosition}
               />
