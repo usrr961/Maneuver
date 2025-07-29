@@ -50,7 +50,6 @@ interface TeamStats {
     position2: number;
     position3: number;
     position4: number;
-    position5: number;
   };
 }
 
@@ -168,13 +167,22 @@ const PickListPage = () => {
             const playedDefense = teamEntries.filter((entry: any[]) => entry[46]); // played defense
             const mobility = teamEntries.filter((entry: any[]) => entry[28]); // passed start line
             
-            // Calculate starting positions
-            const startPos0 = teamEntries.filter((entry: any[]) => entry[4]).length;
-            const startPos1 = teamEntries.filter((entry: any[]) => entry[5]).length;
-            const startPos2 = teamEntries.filter((entry: any[]) => entry[6]).length;
-            const startPos3 = teamEntries.filter((entry: any[]) => entry[7]).length;
-            const startPos4 = teamEntries.filter((entry: any[]) => entry[8]).length;
-            const startPos5 = teamEntries.filter((entry: any[]) => entry[9]).length;
+            // Calculate starting positions using entry[5] for pos0, [6] for pos1, [7] for pos2, [8] for pos3, [10] for pos4
+            let pos0 = 0, pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            teamEntries.forEach((entry: any[]) => {
+              if (entry[5]) pos0++;
+              if (entry[6]) pos1++;
+              if (entry[7]) pos2++;
+              if (entry[8]) pos3++;
+              if (entry[10]) pos4++;
+            });
+            const startPositions = {
+              position0: Math.round((pos0 / matchCount) * 100),
+              position1: Math.round((pos1 / matchCount) * 100),
+              position2: Math.round((pos2 / matchCount) * 100),
+              position3: Math.round((pos3 / matchCount) * 100),
+              position4: Math.round((pos4 / matchCount) * 100),
+            };
             
             return {
               teamNumber,
@@ -205,14 +213,7 @@ const PickListPage = () => {
               breakdownRate: Math.round((breakdowns.length / matchCount) * 100),
               defenseRate: Math.round((playedDefense.length / matchCount) * 100),
               mobilityRate: Math.round((mobility.length / matchCount) * 100),
-              startPositions: {
-                position0: Math.round((startPos0 / matchCount) * 100),
-                position1: Math.round((startPos1 / matchCount) * 100),
-                position2: Math.round((startPos2 / matchCount) * 100),
-                position3: Math.round((startPos3 / matchCount) * 100),
-                position4: Math.round((startPos4 / matchCount) * 100),
-                position5: Math.round((startPos5 / matchCount) * 100)
-              }
+              startPositions
             };
           }).filter(Boolean) as TeamStats[];
           
@@ -265,7 +266,6 @@ const PickListPage = () => {
                       position2: 0,
                       position3: 0,
                       position4: 0,
-                      position5: 0
                     }
                   });
                 }
@@ -457,10 +457,10 @@ const PickListPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-y-6 xl:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Available Teams Panel */}
-          <Card className="lg:col-span-1 w-full">
+          <Card className="lg:col-span-1">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 Available Teams

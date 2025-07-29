@@ -23,10 +23,6 @@ const InitialSelectTeamButton = ({
         className={`w-full h-full flex flex-row items-center text-xl pl-2 ${
           isPreferred ? "ring-2 ring-blue-500 ring-offset-2" : ""
         }`}
-        style={{
-          // Set the background color to default background
-          backgroundColor: `#${currentTeamStatus ? "393939" : "1B1B1D"}`,
-        }}
         onClick={() => clickTeam(currentTeamType, currentTeamStatus)}
       >
         <div className="flex items-center justify-between w-full">

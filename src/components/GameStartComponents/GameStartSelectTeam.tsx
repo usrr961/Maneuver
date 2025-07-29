@@ -1,10 +1,4 @@
 import { useEffect, useState, useMemo, type JSX } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import SelectTeamButton from "./GameStartSelectTeamButton";
 import { Input } from "../ui/input";
 /**
@@ -177,8 +171,7 @@ const InitialSelectTeam = ({
   return (
     <>
       {/* Container */}
-      <Card
-      className="w-full h-full">
+      <div className="w-full h-full">
         {/* when the text is selected on mobile, when clicking off of typing user doesn't accidentally click on something else */}
         {textSelected &&
           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -186,52 +179,47 @@ const InitialSelectTeam = ({
           ) && (
             <div className="absolute left-0 top-0 w-full h-full z-1"></div>
           )}
-
-          {/* Question */}
-          <CardHeader className="text-2xl font-bold">
-            <CardTitle>Select Team</CardTitle>
             {preferredTeamPosition > 0 && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground pb-2">
                 Your role suggests position {preferredTeamPosition}
               </p>
             )}
-          </CardHeader>
-          {/* Selectors */}
-          <CardContent className="flex flex-col w-full h-full gap-4">
-            <div className="flex-grow">
-              <SelectTeamButton
-                currentTeamType={"1"}
-                currentTeamStatus={team1Status}
-                clickTeam={clickTeam}
-                teamName={baseTeams[0]}
-                isPreferred={preferredTeamPosition === 1}
-              />
-            </div>
-            <div className="flex-grow">
-              <SelectTeamButton
-                currentTeamType={"2"}
-                currentTeamStatus={team2Status}
-                clickTeam={clickTeam}
-                teamName={baseTeams[1]}
-                isPreferred={preferredTeamPosition === 2}
-              />
-            </div>
-            <div className="flex-grow">
-              <SelectTeamButton
-                currentTeamType={"3"}
-                currentTeamStatus={team3Status}
-                clickTeam={clickTeam}
-                teamName={baseTeams[2]}
-                isPreferred={preferredTeamPosition === 3}
-              />
-            </div>
-                      {/* Custom Team Selector */}
+        {/* Selectors */}
+        <div className="flex flex-col w-full h-full gap-4">
+          <div className="flex-grow">
+            <SelectTeamButton
+              currentTeamType={"1"}
+              currentTeamStatus={team1Status}
+              clickTeam={clickTeam}
+              teamName={baseTeams[0]}
+              isPreferred={preferredTeamPosition === 1}
+            />
+          </div>
+          <div className="flex-grow">
+            <SelectTeamButton
+              currentTeamType={"2"}
+              currentTeamStatus={team2Status}
+              clickTeam={clickTeam}
+              teamName={baseTeams[1]}
+              isPreferred={preferredTeamPosition === 2}
+            />
+          </div>
+          <div className="flex-grow">
+            <SelectTeamButton
+              currentTeamType={"3"}
+              currentTeamStatus={team3Status}
+              clickTeam={clickTeam}
+              teamName={baseTeams[2]}
+              isPreferred={preferredTeamPosition === 3}
+            />
+          </div>
+          {/* Custom Team Selector */}
           <div className="flex justify-center z-[2] items-center">
             <h2 className="text-2xl font-semibold flex-grow mr-2 pb-2">
               Custom:
             </h2>
             <Input
-              className="w-full h-12 text-2xl rounded-lg"
+              className="w-full h-12 text-xl rounded-lg"
               type="text"
               placeholder="Team #"
               value={customTeamValue}
@@ -243,10 +231,8 @@ const InitialSelectTeam = ({
               onBlur={() => setTextSelected(false)}
             />
           </div>
-          </CardContent>
-
-
-      </Card>
+        </div>
+      </div>
     </>
   );
 };

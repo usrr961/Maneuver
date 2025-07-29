@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import Button from "../ui/button";
 
 interface InitialSelectAllianceProps {
   currentAlliance: string;
@@ -50,7 +51,7 @@ const InitialSelectAlliance = ({ currentAlliance, setAlliance }: InitialSelectAl
         </CardHeader>
         <CardContent
           className="flex justify-between w-full gap-2">
-          <button
+          <Button
             type="button"
             className="bg-red-600 rounded-xl h-20 flex-grow"
             style={{
@@ -58,7 +59,7 @@ const InitialSelectAlliance = ({ currentAlliance, setAlliance }: InitialSelectAl
             }}
             onClick={() => clickAlliance("red")}
           />
-          <button
+          <Button
             type="button"
             className="bg-blue-600 rounded-xl h-20 flex-grow"
             style={{

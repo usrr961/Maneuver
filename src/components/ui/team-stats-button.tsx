@@ -39,7 +39,6 @@ interface TeamStats {
     position2: number;
     position3: number;
     position4: number;
-    position5: number;
   };
 }
 
