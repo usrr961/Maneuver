@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import AutoStartPositionMap from "@/components/TeamStatsComponents/AutoStartPositionMap";
 import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
+import LogoNotFound from "../assets/Logo Not Found.png";
 
 interface ScoutingEntry {
   matchNumber: string;
@@ -996,6 +997,8 @@ const TeamStatsPage = () => {
         ) : (
           <Card className="w-full">
             <CardContent className="flex flex-col items-center justify-center py-12">
+              {availableTeams.length === 0 ?
+              <img src={LogoNotFound} alt="No Data" className="mb-4 dark:invert" /> : null}
               <p className="text-lg text-muted-foreground mb-4">
                 {availableTeams.length === 0 ? "No scouting data available" : "Select a team to view analysis"}
               </p>
