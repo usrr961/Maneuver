@@ -457,10 +457,10 @@ const PickListPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-y-6 xl:gap-6">
           
           {/* Available Teams Panel */}
-          <Card className="lg:col-span-1">
+          <Card className="lg:col-span-1 w-full">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 Available Teams
@@ -513,11 +513,11 @@ const PickListPage = () => {
                       <TeamStatsButton 
                         teamNumber={team.teamNumber}
                         teamStats={team}
-                        className="h-8"
+                        className="h-auto"
                       />
                       
                       <Select onValueChange={(listId) => addTeamToList(team, Number(listId))}>
-                        <SelectTrigger className="w-20 h-8">
+                        <SelectTrigger className="w-20">
                           <SelectValue placeholder="Add" />
                         </SelectTrigger>
                         <SelectContent>

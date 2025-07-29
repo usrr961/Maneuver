@@ -673,7 +673,7 @@
     false,
     false,
     false,
-    "Match 46: alignment was all over the place"
+    "Match 46: alignment didn't seem to be working"
   ],
   [
     "562a8cc91e14e125",
@@ -933,7 +933,7 @@
     true,
     false,
     false,
-    "Match 45: went for another piece, didn't have a enough time to put it on and then missed the park, losing the match"
+    "Match 45: went for another piece, didn't have a enough time to put it on and then missed the park"
   ],
   [
     "748ad42f7795a623",
@@ -985,7 +985,7 @@
     false,
     false,
     false,
-    "Match 49: lost comms for a while after auto, then human player could not load any coral"
+    "Match 49: lost comms for a while after auto"
   ],
   [
     "1fd22df8512f958e",
@@ -1089,7 +1089,7 @@
     false,
     false,
     false,
-    "Match 112: cannot load under defense at all because it has to be so precise"
+    "Match 112: had trouble loading under defense"
   ],
   [
     "7b8b4863687e183f",
@@ -1245,7 +1245,7 @@
     false,
     false,
     false,
-    "Match 49: like redbird but not as good"
+    "Match 49: similar to redbird"
   ],
   [
     "6d31ddac575f97a4",
@@ -2025,7 +2025,7 @@
     false,
     false,
     false,
-    "Match 61: auto is all over the place"
+    "Match 61: auto did not go as planned"
   ],
   [
     "7bbf0123703e5fe5",
@@ -2233,7 +2233,7 @@
     false,
     false,
     false,
-    "Match 61: very gross manipulator"
+    "Match 61: interesting manipulator"
   ],
   [
     "745201f72b0a7ecd",
@@ -2285,7 +2285,7 @@
     false,
     false,
     false,
-    "Match 64: any sort of defense they will drop the coral"
+    "Match 64: defense made holding the coral difficult"
   ],
   [
     "2fe01b8b517deab9",
@@ -2753,7 +2753,7 @@
     false,
     false,
     false,
-    "Match 58: elevator is so slow"
+    "Match 58: elevator seemed slow"
   ],
   [
     "17691c7f3aa77391",
@@ -2857,7 +2857,7 @@
     false,
     false,
     false,
-    "Match 103: elevator is so shakey"
+    "Match 103: elevator looked shakey"
   ],
   [
     "2c69ebd211917e14",

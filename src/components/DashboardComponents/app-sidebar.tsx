@@ -18,11 +18,6 @@ import { Separator } from "../ui/separator"
 import ManeuverHorizontalLogo from "../../assets/Maneuver Wordmark Horizontal.png"
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navMain: [
     {
       title: "Data Actions",
@@ -108,7 +103,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button] h-fit"
             >
-              <a href="#">
+              <a href="/">
                 <img
                   src={ManeuverHorizontalLogo}
                   className="row-span-4 scale-75 dark:invert"
