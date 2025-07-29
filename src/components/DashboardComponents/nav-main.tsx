@@ -26,6 +26,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { convertTeamRole } from "@/lib/utils";
+
 
 export function NavMain({
   items,
@@ -86,26 +88,6 @@ export function NavMain({
       }
     }, [selected]);
 
-    const getSelectedText = (selected: string | null) => {
-      switch (selected) {
-        case "lead":
-          return "Lead";
-        case "red-1":
-          return "Red 1";
-        case "red-2":
-          return "Red 2";
-        case "red-3":
-          return "Red 3";
-        case "blue-1":
-          return "Blue 1";
-        case "blue-2":
-          return "Blue 2";
-        case "blue-3":
-          return "Blue 3";
-      }
-      return "Role";
-    };
-
   return (
     <SidebarGroup>
       <SidebarMenuItem className="flex items-center pb-4">
@@ -114,7 +96,7 @@ export function NavMain({
                     onValueChange={handlePlayerStationChange}
                 >
                     <SelectTrigger className="w-full text-lg font-bold">
-                        <SelectValue placeholder={getSelectedText(selected) || "Role"} />
+                        <SelectValue placeholder={convertTeamRole(selected) || "Role"} />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem className="text-lg" value="lead">Lead</SelectItem>

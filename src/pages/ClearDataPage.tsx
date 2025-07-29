@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { loadScoutingData } from "@/lib/scoutingDataUtils";
+import { convertTeamRole } from "@/lib/utils";
+
 
 const ClearDataPage = () => {
   const [scoutingDataCount, setScoutingDataCount] = useState(0);
@@ -86,7 +88,7 @@ const ClearDataPage = () => {
             <CardTitle className="text-lg">Device Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p className="text-sm"><span className="font-medium">Player Station:</span> {playerStation}</p>
+            <p className="text-sm"><span className="font-medium">Player Station:</span> {convertTeamRole(playerStation)}</p>
             <p className="text-sm"><span className="font-medium">Last Updated:</span> {new Date().toLocaleDateString()}</p>
           </CardContent>
         </Card>
