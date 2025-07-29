@@ -1,6 +1,6 @@
 import { Binoculars, ChevronRight, Home, type LucideIcon } from "lucide-react"
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Collapsible,
@@ -42,9 +42,11 @@ export function NavMain({
   }[]
 }) {
 
+    const [selected, setSelected] = useState<string | null>(localStorage.getItem("playerStation"));
+
     const handlePlayerStationChange = (value : string) => {
-    const selectedStation = value;
-    localStorage.setItem("playerStation", selectedStation);
+      setSelected(value);
+      localStorage.setItem("playerStation", value);
     };
 
     const navigate = useNavigate();
@@ -76,24 +78,43 @@ export function NavMain({
     };
 
     useEffect(() => {
-    const savedPlayerStation = localStorage.getItem("playerStation");
-    if (savedPlayerStation) {
-        const element = document.getElementById(savedPlayerStation.toLowerCase().replace(" ", ""));
-        if (element) {
-        (element as HTMLInputElement).checked = true;
-        }
-    }
-    }, []);
+      if (selected) {
+          const element = document.getElementById(selected.toLowerCase().replace(" ", ""));
+          if (element) {
+          (element as HTMLInputElement).checked = true;
+          }
+      }
+    }, [selected]);
+
+    const getSelectedText = (selected: string | null) => {
+      switch (selected) {
+        case "lead":
+          return "Lead";
+        case "red-1":
+          return "Red 1";
+        case "red-2":
+          return "Red 2";
+        case "red-3":
+          return "Red 3";
+        case "blue-1":
+          return "Blue 1";
+        case "blue-2":
+          return "Blue 2";
+        case "blue-3":
+          return "Blue 3";
+      }
+      return "Role";
+    };
 
   return (
-     <SidebarGroup>
+    <SidebarGroup>
       <SidebarMenuItem className="flex items-center pb-4">
             <div className="flex w-full gap-2">
                 <Select
                     onValueChange={handlePlayerStationChange}
                 >
                     <SelectTrigger className="w-full text-lg font-bold">
-                        <SelectValue placeholder="Role" />
+                        <SelectValue placeholder={getSelectedText(selected) || "Role"} />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem className="text-lg" value="lead">Lead</SelectItem>
