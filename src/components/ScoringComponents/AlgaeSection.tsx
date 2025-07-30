@@ -83,7 +83,7 @@ const AlgaeSection = ({ onAlgaeAction, phase, showFlashing, currentAlgae }: Alga
       <CardContent className="space-y-4">
         {/* Algae Pickup */}
         <div className="space-y-2">
-          <h4 className="text-sm font-medium">Algae Pickup</h4>
+          <p className="text-sm font-medium">Algae Pickup</p>
           <div className="grid grid-cols-2 gap-2">
             {algaeActions.pickup.map((action) => (
               <Button
@@ -101,7 +101,7 @@ const AlgaeSection = ({ onAlgaeAction, phase, showFlashing, currentAlgae }: Alga
 
         {/* Algae Scoring */}
         <div className="space-y-2">
-          <h4 className="text-sm font-medium">Algae Scoring</h4>
+          <p className="text-sm font-medium">Algae Scoring</p>
           <div className="grid grid-cols-2 gap-2">
             {algaeActions.scoring.map((action) => (
               <Button

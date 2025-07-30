@@ -476,7 +476,7 @@ const PickListPage = () => {
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
                 />
-                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)} aria-label="Sort by">
                   <SelectTrigger>
                     <SelectValue placeholder="Sort by..." />
                   </SelectTrigger>

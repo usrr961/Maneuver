@@ -28,7 +28,7 @@ export function SiteHeader() {
   const location = useLocation();
   const title = PAGE_TITLES[location.pathname] || "";
   return (
-    <header className="flex h-(--header-height)items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)  py-2">
+    <header className="flex h-(--header-height)items-center bg-popover gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)  py-2">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ml-1" size={"lg"} />
         <Separator
