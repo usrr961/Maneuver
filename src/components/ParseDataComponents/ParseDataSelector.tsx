@@ -33,6 +33,7 @@ const ParseDataSelector = () => {
         {/* Button for compiling the selected files */}
         <ParseDataCompileButton
           selectedFiles={selectedFiles}
+          setSelectedFiles={setSelectedFiles}
         />
       </div>
     </>

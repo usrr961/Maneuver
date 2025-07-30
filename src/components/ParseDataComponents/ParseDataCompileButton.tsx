@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Button from "@/components/ui/button";
 import type { ReactElement } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { convertArrayOfArraysToCSV, SCOUTING_DATA_HEADER } from "@/lib/utils";
+import { toast } from "sonner";
 
 /**
  * A component that compiles the selected JSON files into a CSV format required
@@ -11,15 +13,14 @@ import { convertArrayOfArraysToCSV, SCOUTING_DATA_HEADER } from "@/lib/utils";
  * @param {function} setSelectedFiles - The function to set the list of selected files.
  * @return {ReactElement} The rendered component.
  */
-const ParseDataCompileButton = ({ selectedFiles }: { selectedFiles: any[] }): ReactElement => {
+const ParseDataCompileButton = ({ selectedFiles, setSelectedFiles }: { selectedFiles: File[], setSelectedFiles: Dispatch<SetStateAction<File[]>> }): ReactElement => {
   /**
    * Converts the selected JSON files into a CSV format required by the
    * analysis software.
    */
   const convertJSONToCSV = () => {
-    console.log(selectedFiles);
     const totalFilesData = selectedFiles.map((singleFile) =>
-      JSON.parse(singleFile.text)
+      JSON.parse((singleFile as any).text)
     );
 
     // Combine all rows, always using the shared header as the first row
@@ -62,6 +63,9 @@ const ParseDataCompileButton = ({ selectedFiles }: { selectedFiles: any[] }): Re
     element.click();
 
     document.body.removeChild(element);
+    // Clear selected files after download
+    setSelectedFiles([]);
+    toast.success("CSV compiled and downloaded successfully!");
   };
 
   return (
