@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/animate-ui/radix/tabs";
 import { Eye } from "lucide-react";
 
 interface TeamStats {
@@ -138,7 +138,7 @@ export function TeamStatsButton({ teamNumber, teamStats, variant = "outline", si
             {/* Combined Totals */}
             <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <h4 className="font-semibold mb-3">Combined Totals (Auto + Teleop)</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 pb-2">
                 <div className="flex justify-between">
                   <span>Level 1:</span>
                   <span className="font-bold">{teamStats.avgTotalCoralL1}</span>
