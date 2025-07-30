@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import LogoInvestigating from "@/assets/investigating.png";
+import LogoInvestigating from "@/assets/Investigating.png";
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
