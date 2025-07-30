@@ -66,6 +66,8 @@ const HomePage = () => {
         <div className="flex flex-col w-auto justify-center items-center gap-6 scale-75 md:scale-75 lg:scale-100">
           <img
             src={ManeuverVerticalLogo}
+            width="600"
+            height="240"
             alt="Maneuver Logo"
             className="dark:invert"
           />

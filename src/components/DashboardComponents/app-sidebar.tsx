@@ -107,6 +107,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <img
                   src={ManeuverHorizontalLogo}
                   className="row-span-4 scale-75 dark:invert"
+                  width="240"
+                  height="160"
                   alt="Maneuver Logo Wordmark Horizontal"
                 />
               </a>
