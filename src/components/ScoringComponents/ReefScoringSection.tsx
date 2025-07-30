@@ -101,7 +101,7 @@ const ReefScoringSection = ({
         <div 
           className="relative bg-cover bg-center bg-no-repeat rounded-lg overflow-hidden h-80 border"
           style={{ 
-            backgroundImage: `url(/src/assets/ReefSideView.png)`,
+            backgroundImage: `url(/ReefSideView.png)`,
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat'
           }}
