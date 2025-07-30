@@ -142,9 +142,9 @@ const MatchDataPage = () => {
         </div>
         
         <div className="flex items-center justify-center gap-4 w-full max-w-md">
-          <Separator className="w-full max-w-xs" />
+          <Separator className="flex-1" />
           <p className="text-center text-xl font-bold">OR</p>
-          <Separator className="w-full max-w-xs" />
+          <Separator className="flex-1" />
         </div>
         
         <Button
@@ -160,7 +160,7 @@ const MatchDataPage = () => {
         </Button>
         
         <Button
-          className="flex w-full max-w-md h-16 items-center justify-center text-xl text-center"
+          className="flex w-full max-w-md h-16 items-center justify-center text-xl text-center mt-8"
           onClick={() => doneClick()}
         >
           Submit
