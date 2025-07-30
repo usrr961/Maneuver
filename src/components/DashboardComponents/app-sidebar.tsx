@@ -103,10 +103,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button] h-fit"
             >
-              <a href="/">
+              <a href="/" aria-label="Maneuver Home">
                 <img
                   src={ManeuverHorizontalLogo}
                   className="row-span-4 scale-75 dark:invert"
+                  alt="Maneuver Logo Wordmark Horizontal"
                 />
               </a>
             </SidebarMenuButton>

@@ -10,6 +10,8 @@ import { TeamStatsButton } from "@/components/ui/team-stats-button";
 import { Plus, Trash2, Download, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
+import LogoSearching from "../assets/searching.png";
+import LogoConfused from "../assets/confused.png";
 
 interface TeamStats {
   teamNumber: string;
@@ -457,7 +459,7 @@ const PickListPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-y-6 xl:gap-6">
           
           {/* Available Teams Panel */}
           <Card className="lg:col-span-1">
@@ -495,7 +497,7 @@ const PickListPage = () => {
               </div>
             </CardHeader>
             
-            <CardContent className="space-y-2 max-h-96 overflow-y-auto">
+            <CardContent className="space-y-2 max-h-10/12 overflow-y-auto">
               {filteredAndSortedTeams.map(team => (
                 <Card key={team.teamNumber} className="p-3">
                   <div className="flex items-center justify-between">
@@ -535,7 +537,8 @@ const PickListPage = () => {
 
               {/* Placeholder for no teams */}
               {filteredAndSortedTeams.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="flex flex-col text-center items-center justify-center py-8 text-muted-foreground">
+                  {filteredAndSortedTeams.length === 0 ? <img src={LogoSearching} alt="No Data" className="mb-4 dark:invert" /> : null}
                   <p>No teams found. Try adjusting your search or filters.</p>
                 </div>
               )}
@@ -601,7 +604,8 @@ const PickListPage = () => {
                 
                 <CardContent>
                   {list.teams.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
+                    <div className="flex flex-col text-center items-center justify-center py-8 text-muted-foreground">
+                      {list.teams.length === 0 ? <img src={LogoConfused} alt="No Teams" className="mb-4 dark:invert" /> : null}
                       <p>No teams in this list yet</p>
                       <p className="text-sm">Add teams from the available teams panel</p>
                     </div>

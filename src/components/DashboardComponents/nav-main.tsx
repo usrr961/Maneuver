@@ -95,17 +95,17 @@ export function NavMain({
                 <Select
                     onValueChange={handlePlayerStationChange}
                 >
-                    <SelectTrigger className="w-full text-lg font-bold">
+                    <SelectTrigger className="w-full text-lg font-bold" id="scoutRole" aria-label="Scout Role">
                         <SelectValue placeholder={convertTeamRole(selected) || "Role"} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem className="text-lg" value="lead">Lead</SelectItem>
-                        <SelectItem className="text-lg" value="red-1">Red 1</SelectItem>
-                        <SelectItem className="text-lg" value="red-2">Red 2</SelectItem>
-                        <SelectItem className="text-lg" value="red-3">Red 3</SelectItem>
-                        <SelectItem className="text-lg" value="blue-1">Blue 1</SelectItem>
-                        <SelectItem className="text-lg" value="blue-2">Blue 2</SelectItem>
-                        <SelectItem className="text-lg" value="blue-3">Blue 3</SelectItem>
+                      <SelectItem className="text-lg" value="lead">Lead</SelectItem>
+                      <SelectItem className="text-lg" value="red-1">Red 1</SelectItem>
+                      <SelectItem className="text-lg" value="red-2">Red 2</SelectItem>
+                      <SelectItem className="text-lg" value="red-3">Red 3</SelectItem>
+                      <SelectItem className="text-lg" value="blue-1">Blue 1</SelectItem>
+                      <SelectItem className="text-lg" value="blue-2">Blue 2</SelectItem>
+                      <SelectItem className="text-lg" value="blue-3">Blue 3</SelectItem>
                     </SelectContent>
                 </Select>
                 <ModeToggle/>

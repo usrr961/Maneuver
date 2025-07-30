@@ -7,7 +7,9 @@ import {
 import { useEffect } from "react";
 import { ThemeProvider } from "@/components/theme-provider"
 
+
 import MainLayout from "@/layouts/MainLayout";
+import NotFoundPage from "@/pages/NotFoundPage";
 
 import HomePage from "@/pages/HomePage";
 import GameStartPage from "@/pages/GameStartPage";
@@ -46,6 +48,7 @@ function App() {
         <Route path="/team-stats" element={<TeamStatsPage />} />
         <Route path="/pick-list" element={<PickListPage />} />
         {/* Add more routes as needed */}
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     )
   );

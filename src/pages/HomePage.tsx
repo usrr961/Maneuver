@@ -78,7 +78,7 @@ const HomePage = () => {
         <Card className="w-full max-w-md mx-4 mt-8 scale-75 md:scale-100">
           <CardContent className="p-6">
             <div className="text-center space-y-4">
-              <h3 className="text-lg font-semibold">Demo Data</h3>
+              <h2 className="text-lg font-semibold">Demo Data</h2>
               <p className="text-sm text-muted-foreground">
                 Load sample scouting data to explore the app's features
               </p>
