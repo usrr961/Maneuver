@@ -9,7 +9,7 @@ const PAGE_TITLES: Record<string, string> = {
     "/settings": "Settings",
     "/match-data": "Load Match Data",
     "/clear-data": "Clear Data",
-    "/parse-data": "Parse Data",
+    "/parse-data": "Compile JSON Data",
     "/game-start": "Game Start",
     "/scout-data-qr": "Scout Data QR Transfer",
     "/json-transfer": "JSON Data Transfer",

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Button from "@/components/ui/button";
 import type { ReactElement } from "react";
+import { convertArrayOfArraysToCSV, SCOUTING_DATA_HEADER } from "@/lib/utils";
 
 /**
  * A component that compiles the selected JSON files into a CSV format required
@@ -17,13 +18,13 @@ const ParseDataCompileButton = ({ selectedFiles }: { selectedFiles: any[] }): Re
    */
   const convertJSONToCSV = () => {
     console.log(selectedFiles);
-    
     const totalFilesData = selectedFiles.map((singleFile) =>
       JSON.parse(singleFile.text)
     );
 
-    const fullCSV = [];
-    fullCSV.push(totalFilesData[0][0]);
+    // Combine all rows, always using the shared header as the first row
+    const fullCSV: (string | number)[][] = [];
+    fullCSV.push(SCOUTING_DATA_HEADER);
     for (let fileIndex = 0; fileIndex < totalFilesData.length; fileIndex++) {
       const fileData = totalFilesData[fileIndex];
       for (
@@ -36,17 +37,7 @@ const ParseDataCompileButton = ({ selectedFiles }: { selectedFiles: any[] }): Re
       }
     }
 
-    downloadCSV(
-      fullCSV
-        .map((row: (string | number)[]) =>
-          row
-            .map((item: string | number) =>
-              typeof item === "string" ? `"${item.replace(/"/g, '""')}"` : item
-            )
-            .join(",")
-        )
-        .join("\n")
-    );
+    downloadCSV(convertArrayOfArraysToCSV(fullCSV));
   };
 
   /**

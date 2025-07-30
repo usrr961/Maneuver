@@ -145,7 +145,7 @@ const JSONDownloader = ({ onBack, onSwitchToUpload }: JSONDownloaderProps) => {
       );
       element.setAttribute(
         "download",
-        `VScouterData-${new Date().toLocaleTimeString()}-${playerStation}.json`
+        `Maneuver-${new Date().toLocaleTimeString()}-${playerStation}.json`
       );
 
       element.style.display = "none";
