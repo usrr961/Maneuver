@@ -577,7 +577,7 @@ const PickListPage = () => {
 
             {/* Pick Lists */}
             {pickLists.map(list => (
-              <Card key={list.id} className="mb-4">
+              <Card key={list.id} className="mb-4 xl:mb-0">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
