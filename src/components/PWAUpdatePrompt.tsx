@@ -21,13 +21,13 @@ export function PWAUpdatePrompt() {
         toast.success('App updated successfully!');
       };
 
-      // Listen for service worker updates
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        window.location.reload();
-      });
-
       // Check for updates on page load
       navigator.serviceWorker.ready.then((registration) => {
+        // Immediately check for a waiting worker
+        if (registration.waiting) {
+          setWaitingWorker(registration.waiting);
+          setShowPrompt(true);
+        }
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
@@ -56,6 +56,7 @@ export function PWAUpdatePrompt() {
     if (waitingWorker) {
       waitingWorker.postMessage({ type: 'SKIP_WAITING' });
       setShowPrompt(false);
+      window.location.reload(); // Force refresh immediately
     }
   };
 
