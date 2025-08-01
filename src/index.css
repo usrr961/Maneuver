@@ -333,3 +333,10 @@ h1 {
     touch-action: manipulation !important;
   }
 }
+
+@media (display-mode: standalone) {
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+}
