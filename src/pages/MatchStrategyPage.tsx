@@ -381,7 +381,7 @@ const MatchStrategyPage = () => {
       switch (activeStatsTab) {
         case "overall":
           return(
-            <div className="text-right text-sm">
+            <div className="text-right text-sm h-12 flex flex-col justify-center">
               <div className="font-bold text-lg">
                 {Math.round(teamSlice.reduce((sum, team) => {
                   const stats = getTeamStats(team);
@@ -398,7 +398,7 @@ const MatchStrategyPage = () => {
           );
         case "auto":
           return (
-            <div className="text-right text-sm">
+            <div className="text-right text-sm h-12 flex flex-col justify-center">
               <div className="font-bold text-lg">
                 {Math.round(teamSlice.reduce((sum, team) => {
                   const stats = getTeamStats(team);
@@ -415,7 +415,7 @@ const MatchStrategyPage = () => {
           );
         case "teleop":
           return (
-            <div className="text-right text-sm">
+            <div className="text-right text-sm h-12 flex flex-col justify-center">
               <div className="font-bold text-lg">
                 {Math.round(teamSlice.reduce((sum, team) => {
                   const stats = getTeamStats(team);
@@ -435,7 +435,7 @@ const MatchStrategyPage = () => {
           );
         case "endgame":
           return (
-            <div className="text-right text-sm">
+            <div className="text-right text-sm h-12 flex flex-col justify-center">
               <div className="font-bold text-lg">
                 {Math.round(teamSlice.reduce((sum, team) => {
                   const stats = getTeamStats(team);
@@ -471,26 +471,28 @@ const MatchStrategyPage = () => {
       switch (activeStatsTab) {
         case "overall":
           return (
-            <div className="grid grid-cols-3 gap-2 text-sm">
-              <div className="text-center">
-                <p className="font-medium text-xs">Coral</p>
-                <p className="text-lg font-bold text-orange-600">{stats.overall.avgCoral}</p>
-              </div>
-              <div className="text-center">
-                <p className="font-medium text-xs">Algae</p>
-                <p className="text-lg font-bold text-green-600">{stats.overall.avgAlgae}</p>
-              </div>
-              <div className="text-center">
-                <p className="font-medium text-xs">Avg Points</p>
-                <p className="text-lg font-bold text-blue-600">{stats.overall.avgTotalPoints}</p>
+            <div className="h-24 flex items-center">
+              <div className="grid grid-cols-3 gap-2 text-sm w-full">
+                <div className="text-center">
+                  <p className="font-medium text-xs">Coral</p>
+                  <p className="text-lg font-bold text-orange-600">{stats.overall.avgCoral}</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-xs">Algae</p>
+                  <p className="text-lg font-bold text-green-600">{stats.overall.avgAlgae}</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-xs">Avg Points</p>
+                  <p className="text-lg font-bold text-blue-600">{stats.overall.avgTotalPoints}</p>
+                </div>
               </div>
             </div>
           );
 
         case "auto":
           return (
-            <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-2 text-sm">
+            <div className="h-24 flex flex-col justify-center">
+              <div className="grid grid-cols-3 gap-2 text-sm mb-2">
                 <div className="text-center">
                   <p className="font-medium text-xs">Mobility</p>
                   <p className="text-lg font-bold text-blue-600">{stats.auto.mobilityRate}%</p>
@@ -505,14 +507,19 @@ const MatchStrategyPage = () => {
                 </div>
               </div>
               {stats.auto.startingPositions.length > 0 && (
-                <div className="flex flex-col mt-2 justify-center items-center">
+                <div className="flex flex-col items-center">
                   <p className="font-medium text-xs mb-1">Starting Positions:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {stats.auto.startingPositions.map((pos: { position: string, percentage: number }, idx: number) => (
+                  <div className="flex flex-wrap gap-1 justify-center max-h-8 overflow-hidden">
+                    {stats.auto.startingPositions.slice(0, 4).map((pos: { position: string, percentage: number }, idx: number) => (
                       <Badge key={idx} variant="secondary" className="text-xs">
                         {pos.position}: {pos.percentage}%
                       </Badge>
                     ))}
+                    {stats.auto.startingPositions.length > 4 && (
+                      <Badge variant="secondary" className="text-xs">
+                        +{stats.auto.startingPositions.length - 4} more
+                      </Badge>
+                    )}
                   </div>
                 </div>
               )}
@@ -521,36 +528,40 @@ const MatchStrategyPage = () => {
 
         case "teleop":
           return (
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="text-center">
-                <p className="font-medium text-xs">Coral</p>
-                <p className="text-lg font-bold text-orange-600">{stats.teleop.avgCoral}</p>
-              </div>
-              <div className="text-center">
-                <p className="font-medium text-xs">Algae</p>
-                <p className="text-lg font-bold text-green-600">{stats.teleop.avgAlgae}</p>
+            <div className="h-24 flex items-center">
+              <div className="grid grid-cols-2 gap-2 text-sm w-full">
+                <div className="text-center">
+                  <p className="font-medium text-xs">Coral</p>
+                  <p className="text-lg font-bold text-orange-600">{stats.teleop.avgCoral}</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-xs">Algae</p>
+                  <p className="text-lg font-bold text-green-600">{stats.teleop.avgAlgae}</p>
+                </div>
               </div>
             </div>
           );
 
         case "endgame":
           return (
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="text-center">
-                <p className="font-medium text-xs">Overall Climb</p>
-                <p className="text-lg font-bold text-purple-600">{stats.endgame.climbRate}%</p>
-              </div>
-              <div className="text-center">
-                <p className="font-medium text-xs">Park</p>
-                <p className="text-sm font-bold text-gray-600">{stats.endgame.parkRate}%</p>
-              </div>
-              <div className="text-center">
-                <p className="font-medium text-xs">Shallow</p>
-                <p className="text-sm font-bold text-blue-600">{stats.endgame.shallowClimbRate}%</p>
-              </div>
-              <div className="text-center">
-                <p className="font-medium text-xs">Deep</p>
-                <p className="text-sm font-bold text-red-600">{stats.endgame.deepClimbRate}%</p>
+            <div className="h-24 flex items-center">
+              <div className="grid grid-cols-2 gap-2 text-sm w-full">
+                <div className="text-center">
+                  <p className="font-medium text-xs">Overall Climb</p>
+                  <p className="text-lg font-bold text-purple-600">{stats.endgame.climbRate}%</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-xs">Park</p>
+                  <p className="text-sm font-bold text-gray-600">{stats.endgame.parkRate}%</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-xs">Shallow</p>
+                  <p className="text-sm font-bold text-blue-600">{stats.endgame.shallowClimbRate}%</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-xs">Deep</p>
+                  <p className="text-sm font-bold text-red-600">{stats.endgame.deepClimbRate}%</p>
+                </div>
               </div>
             </div>
           );
