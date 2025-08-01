@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface GAEvent {
   name: string;
   parameters: Record<string, any>;
@@ -17,28 +18,38 @@ class OfflineGA4 {
   }
 
   private initializeGA4() {
-    // Load gtag script
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${this.measurementId}`;
-    document.head.appendChild(script);
+    try {
+      console.log('Initializing GA4...');
+      
+      // Load gtag script
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = `https://www.googletagmanager.com/gtag/js?id=${this.measurementId}`;
+      script.onload = () => console.log('✅ GA4 script loaded');
+      script.onerror = (e) => console.error('❌ Failed to load GA4 script', e);
+      document.head.appendChild(script);
 
-    // Initialize gtag
-    window.dataLayer = window.dataLayer || [];
-    function gtag(...args: any[]) {
-      window.dataLayer.push(args);
+      // Initialize gtag
+      window.dataLayer = window.dataLayer || [];
+      function gtag(...args: any[]) {
+        window.dataLayer.push(args);
+      }
+      window.gtag = gtag;
+
+      gtag('js', new Date());
+      gtag('config', this.measurementId, {
+        send_page_view: false,
+        client_id: this.clientId,
+        session_id: this.sessionId,
+      });
+
+      console.log('✅ GA4 initialized successfully');
+      
+      // Listen for online events to flush queue
+      window.addEventListener('online', () => this.flushQueue());
+    } catch (error) {
+      console.error('❌ Error initializing GA4:', error);
     }
-    window.gtag = gtag;
-
-    gtag('js', new Date());
-    gtag('config', this.measurementId, {
-      send_page_view: false, // We'll handle page views manually
-      client_id: this.clientId,
-      session_id: this.sessionId,
-    });
-
-    // Listen for online events to flush queue
-    window.addEventListener('online', () => this.flushQueue());
   }
 
   private generateSessionId(): string {
@@ -77,10 +88,8 @@ class OfflineGA4 {
     };
 
     if (navigator.onLine && window.gtag) {
-      // Send immediately if online
       window.gtag('event', eventName, parameters);
     } else {
-      // Queue for later if offline
       this.addToQueue(event);
     }
   }
@@ -146,6 +155,20 @@ class OfflineGA4 {
       event_label: 'install',
       app_version: '2025.1.0',
     });
+  }
+
+  debug() {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('=== Analytics Debug Info ===');
+      console.log('Measurement ID:', this.measurementId);
+      console.log('Client ID:', this.clientId);
+      console.log('Session ID:', this.sessionId);
+      console.log('Online:', navigator.onLine);
+      console.log('gtag available:', !!window.gtag);
+      console.log('dataLayer:', window.dataLayer?.length || 0, 'items');
+      console.log('Queued events:', this.getQueue().length);
+      console.log('Queue contents:', this.getQueue());
+    }
   }
 }
 

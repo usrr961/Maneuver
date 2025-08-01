@@ -54,6 +54,8 @@ function App() {
   );
 
   useEffect(() => {
+    console.log('App loaded, analytics:', analytics); // Add this debug line
+    
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js");
     }
