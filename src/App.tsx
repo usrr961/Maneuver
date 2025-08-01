@@ -4,7 +4,7 @@ import {
   RouterProvider,
   Route,
 } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ThemeProvider } from "@/components/theme-provider"
 import { analytics } from '@/lib/analytics';
 
@@ -25,6 +25,9 @@ import { AutoScoringPage, TeleopScoringPage } from "@/pages/ScoringPage";
 import EndgamePage from "@/pages/EndgamePage";
 import TeamStatsPage from "@/pages/TeamStatsPage";
 import PickListPage from "./pages/PickListPage";
+import { InstallPrompt } from '@/components/InstallPrompt';
+import { StatusBarSpacer } from '@/components/StatusBarSpacer';
+import { SplashScreen } from '@/components/SplashScreen';
 
 
 
@@ -53,6 +56,8 @@ function App() {
     )
   );
 
+  const [showSplash, setShowSplash] = useState(true);
+
   useEffect(() => {
     console.log('App loaded, analytics:', analytics); // Add this debug line
     
@@ -75,9 +80,17 @@ function App() {
 
   }, []);
   
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+  }
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <div className="min-h-screen bg-background">
         <RouterProvider router={router} />
+        <InstallPrompt />
+        <StatusBarSpacer />
+      </div>
     </ThemeProvider>
   );
 }

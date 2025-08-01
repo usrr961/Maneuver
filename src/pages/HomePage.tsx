@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import demoData from "../app/dashboard/VScouterData-5_52_53 PM-Blue 1.json";
 import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
 import { analytics } from '@/lib/analytics';
+import { haptics } from '@/lib/haptics';
 
 const HomePage = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -24,6 +25,7 @@ const HomePage = () => {
   }, []);
 
   const loadDemoData = async () => {
+    haptics.medium(); // Feedback on button press
     setIsLoading(true);
 
     try {
@@ -42,11 +44,12 @@ const HomePage = () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       setIsLoaded(true);
-      
+      haptics.success(); // Success feedback
       // Track demo data load
       analytics.trackDemoDataLoad();
       
     } catch (error) {
+      haptics.error(); // Error feedback
       console.error("Error loading demo data:", error);
     } finally {
       setIsLoading(false);
@@ -54,6 +57,7 @@ const HomePage = () => {
   };
 
   const clearData = () => {
+    haptics.medium();
     localStorage.removeItem("scoutingData");
     setIsLoaded(false);
     
