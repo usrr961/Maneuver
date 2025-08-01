@@ -9,14 +9,80 @@ import {
   MotionHighlight,
   MotionHighlightItem,
 } from '@/components/animate-ui/effects/motion-highlight';
+import { haptics } from '@/lib/haptics';
 
-type TabsProps = React.ComponentProps<typeof TabsPrimitive.Root>;
+type TabsProps = React.ComponentProps<typeof TabsPrimitive.Root> & {
+  enableSwipe?: boolean;
+};
 
-function Tabs({ className, ...props }: TabsProps) {
+function Tabs({ className, enableSwipe = false, value, onValueChange, ...props }: TabsProps) {
+  const touchStartRef = React.useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!enableSwipe) return;
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!enableSwipe || !touchStartRef.current || !value || !onValueChange) return;
+    
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+    
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+      haptics.light();
+      
+      // Find all tab triggers to determine navigation order
+      const tabsList = e.currentTarget.querySelector('[data-slot="tabs-list"]');
+      if (!tabsList) return;
+      
+      const triggers = Array.from(tabsList.querySelectorAll('[data-slot="tabs-trigger"]'));
+      const tabValues = triggers.map(trigger => {
+        const value = trigger.getAttribute('value');
+        const dataValue = trigger.getAttribute('data-value');
+        const id = trigger.getAttribute('id');
+        
+        // Try to extract value from ID if value attribute is not available
+        if (value) return value;
+        if (dataValue) return dataValue;
+        if (id && id.includes('trigger-')) {
+          return id.split('trigger-')[1];
+        }
+        return null;
+      }).filter(Boolean);
+      
+      const currentIndex = tabValues.indexOf(value);
+      if (currentIndex === -1) return;
+      
+      let newIndex;
+      if (deltaX > 0) {
+        // Swipe right - go to previous tab
+        newIndex = currentIndex > 0 ? currentIndex - 1 : tabValues.length - 1;
+      } else {
+        // Swipe left - go to next tab
+        newIndex = currentIndex < tabValues.length - 1 ? currentIndex + 1 : 0;
+      }
+      
+      const newValue = tabValues[newIndex];
+      if (typeof newValue === 'string') {
+        console.log(`Tab swipe: ${value} → ${newValue}`);
+        onValueChange(newValue);
+      }
+    }
+    
+    touchStartRef.current = null;
+  };
+
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
       className={cn('flex flex-col gap-2', className)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      value={value}
+      onValueChange={onValueChange}
       {...props}
     />
   );

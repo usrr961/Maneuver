@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect, useRef } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/animate-ui/radix/tabs";
 import { Button } from "@/components/ui/button";
@@ -325,6 +325,49 @@ const MatchStrategyPage = () => {
     const newSelectedTeams = [...selectedTeams];
     newSelectedTeams[index] = teamNumber === "none" ? "" : teamNumber;
     setSelectedTeams(newSelectedTeams);
+  };
+
+  // Touch handlers for alliance card swipe functionality
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleAllianceCardTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleAllianceCardTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+    
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+      // Import haptics dynamically
+      import('@/lib/haptics').then(({ haptics }) => {
+        haptics.light();
+      });
+      
+      const tabValues = ['overall', 'auto', 'teleop', 'endgame'];
+      const currentIndex = tabValues.indexOf(activeStatsTab);
+      
+      if (currentIndex !== -1) {
+        let newIndex;
+        if (deltaX > 0) {
+          // Swipe right - go to previous tab
+          newIndex = currentIndex > 0 ? currentIndex - 1 : tabValues.length - 1;
+        } else {
+          // Swipe left - go to next tab
+          newIndex = currentIndex < tabValues.length - 1 ? currentIndex + 1 : 0;
+        }
+        
+        const newValue = tabValues[newIndex];
+        console.log(`Alliance card swipe: ${activeStatsTab} → ${newValue}`);
+        setActiveStatsTab(newValue);
+      }
+    }
+    
+    touchStartRef.current = null;
   };
 
   const TeamStatsHeaders = ({ alliance, activeStatsTab }: {
@@ -685,11 +728,11 @@ const MatchStrategyPage = () => {
         </div>
 
         {/* Content area */}
-        <div className="flex flex-col gap-2 w-full pb-6">
+        <div className="flex flex-col gap-8 w-full pb-6">
           {/* Field Strategy Tabs */}
           <Card className="w-full">
             <CardContent className="h-[500px] p-4">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col" enableSwipe={true}>
                 <TabsList className="grid w-full grid-cols-3 mb-4 flex-shrink-0">
                   <TabsTrigger value="autonomous">Autonomous</TabsTrigger>
                   <TabsTrigger value="teleop">Teleop</TabsTrigger>
@@ -726,140 +769,152 @@ const MatchStrategyPage = () => {
             </CardContent>
           </Card>
 
-          {/* Team Stats Tabs */}
-          <div className="w-full">
-            <Tabs value={activeStatsTab} onValueChange={setActiveStatsTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 mt-6">
-                <TabsTrigger value="overall">Overall</TabsTrigger>
-                <TabsTrigger value="auto">Auto</TabsTrigger>
-                <TabsTrigger value="teleop">Teleop</TabsTrigger>
-                <TabsTrigger value="endgame">Endgame</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
-          {/* Team Analysis - Split by Alliance */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Blue Alliance */}
-            <Card className="w-full">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-blue-600 dark:text-blue-400">Blue Alliance</CardTitle>
-                  <TeamStatsHeaders
-                    alliance="blue" 
-                    activeStatsTab={activeStatsTab}
-                  />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {Array.from({ length: 3 }, (_, index) => {
-                  const team = selectedTeams[index + 3];
-                  const stats = getTeamStats(team);
-
-                  return (
-                    <Card key={index + 3} className="p-3 border-blue-200 dark:border-blue-800">
-                      <div className="space-y-3">
-                        {/* Team Selector */}
-                        <div className="flex items-center gap-3">
-                          <label className="text-sm font-medium text-blue-600 dark:text-blue-400 min-w-0">
-                            Blue Team {index + 1}:
-                          </label>
-                          <Select 
-                            value={selectedTeams[index + 3] || "none"} 
-                            onValueChange={(value) => handleTeamChange(index + 3, value)}
-                          >
-                            <SelectTrigger className="flex-1">
-                              <SelectValue placeholder="Select team" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">No team</SelectItem>
-                              {availableTeams.map((teamNum) => (
-                                <SelectItem key={teamNum} value={teamNum}>
-                                  Team {teamNum}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Team Stats */}
-                        {team && stats ? (
-                          <TeamStatsDetail 
-                            stats={stats} 
-                            activeStatsTab={activeStatsTab} 
-                          />
-                        ) : (
-                          <div className="text-center py-2 text-muted-foreground text-sm">
-                            {team ? "No data available" : "No team selected"}
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                  );
-                })}
-              </CardContent>
-            </Card>
+          {/* Team Analysis Card - Combined Layout */}
+          <Card className="w-full">
+            <CardHeader>
+              {/* Team Stats Tabs */}
+              <Tabs value={activeStatsTab} onValueChange={setActiveStatsTab} className="w-full" enableSwipe={true}>
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="overall">Overall</TabsTrigger>
+                  <TabsTrigger value="auto">Auto</TabsTrigger>
+                  <TabsTrigger value="teleop">Teleop</TabsTrigger>
+                  <TabsTrigger value="endgame">Endgame</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </CardHeader>
             
-            {/* Red Alliance */}
-            <Card className="w-full">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-red-600 dark:text-red-400">Red Alliance</CardTitle>
-                  <TeamStatsHeaders
-                    alliance="red" 
-                    activeStatsTab={activeStatsTab}
-                  />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {Array.from({ length: 3 }, (_, index) => {
-                  const team = selectedTeams[index];
-                  const stats = getTeamStats(team);
-
-                  return (
-                    <Card key={index} className="p-3 border-red-200 dark:border-red-800">
-                      <div className="space-y-3">
-                        {/* Team Selector */}
-                        <div className="flex items-center gap-3">
-                          <label className="text-sm font-medium text-red-600 dark:text-red-400 min-w-0">
-                            Red Team {index + 1}:
-                          </label>
-                          <Select 
-                            value={selectedTeams[index] || "none"} 
-                            onValueChange={(value) => handleTeamChange(index, value)}
-                          >
-                            <SelectTrigger className="flex-1">
-                              <SelectValue placeholder="Select team" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">No team</SelectItem>
-                              {availableTeams.map((teamNum) => (
-                                <SelectItem key={teamNum} value={teamNum}>
-                                  Team {teamNum}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Team Stats */}
-                        {team && stats ? (
-                          <TeamStatsDetail 
-                            stats={stats} 
-                            activeStatsTab={activeStatsTab} 
-                          />
-                        ) : (
-                          <div className="text-center py-2 text-muted-foreground text-sm">
-                            {team ? "No data available" : "No team selected"}
-                          </div>
-                        )}
+            <CardContent>
+              {/* Alliance Split Layout */}
+              <div className="flex flex-col lg:flex-row gap-6">
+                {/* Blue Alliance */}
+                <div className="flex-1" onTouchStart={handleAllianceCardTouchStart} onTouchEnd={handleAllianceCardTouchEnd}>
+                  <div className="border rounded-lg border-blue-200 dark:border-blue-800">
+                    <div className="p-4 border-b border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400">Blue Alliance</h3>
+                        <TeamStatsHeaders
+                          alliance="blue" 
+                          activeStatsTab={activeStatsTab}
+                        />
                       </div>
-                    </Card>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          </div>
+                    </div>
+                    <div className="p-4 space-y-3">
+                      {Array.from({ length: 3 }, (_, index) => {
+                        const team = selectedTeams[index + 3];
+                        const stats = getTeamStats(team);
+
+                        return (
+                          <Card key={index + 3} className="p-3">
+                            <div className="space-y-3">
+                              {/* Team Selector */}
+                              <div className="flex items-center gap-3">
+                                <label className="text-sm font-medium text-blue-600 dark:text-blue-400 min-w-0">
+                                  Blue Team {index + 1}:
+                                </label>
+                                <Select 
+                                  value={selectedTeams[index + 3] || "none"} 
+                                  onValueChange={(value) => handleTeamChange(index + 3, value)}
+                                >
+                                  <SelectTrigger className="flex-1">
+                                    <SelectValue placeholder="Select team" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="none">No team</SelectItem>
+                                    {availableTeams.map((teamNum) => (
+                                      <SelectItem key={teamNum} value={teamNum}>
+                                        Team {teamNum}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {/* Team Stats */}
+                              {team && stats ? (
+                                <TeamStatsDetail 
+                                  stats={stats} 
+                                  activeStatsTab={activeStatsTab} 
+                                />
+                              ) : (
+                                <div className="text-center py-2 text-muted-foreground text-sm">
+                                  {team ? "No data available" : "No team selected"}
+                                </div>
+                              )}
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Separator - Vertical on lg, horizontal on smaller screens */}
+                <div className="lg:w-px lg:bg-border lg:mx-0 lg:h-auto h-px bg-border w-full my-0 lg:my-4"></div>
+                
+                {/* Red Alliance */}
+                <div className="flex-1" onTouchStart={handleAllianceCardTouchStart} onTouchEnd={handleAllianceCardTouchEnd}>
+                  <div className="border rounded-lg border-red-200 dark:border-red-800">
+                    <div className="p-4 border-b border-red-200 dark:border-red-800">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Red Alliance</h3>
+                        <TeamStatsHeaders
+                          alliance="red" 
+                          activeStatsTab={activeStatsTab}
+                        />
+                      </div>
+                    </div>
+                    <div className="p-4 space-y-3">
+                      {Array.from({ length: 3 }, (_, index) => {
+                        const team = selectedTeams[index];
+                        const stats = getTeamStats(team);
+
+                        return (
+                          <Card key={index} className="p-3">
+                            <div className="space-y-3">
+                              {/* Team Selector */}
+                              <div className="flex items-center gap-3">
+                                <label className="text-sm font-medium text-red-600 dark:text-red-400 min-w-0">
+                                  Red Team {index + 1}:
+                                </label>
+                                <Select 
+                                  value={selectedTeams[index] || "none"} 
+                                  onValueChange={(value) => handleTeamChange(index, value)}
+                                >
+                                  <SelectTrigger className="flex-1">
+                                    <SelectValue placeholder="Select team" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="none">No team</SelectItem>
+                                    {availableTeams.map((teamNum) => (
+                                      <SelectItem key={teamNum} value={teamNum}>
+                                        Team {teamNum}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {/* Team Stats */}
+                              {team && stats ? (
+                                <TeamStatsDetail 
+                                  stats={stats} 
+                                  activeStatsTab={activeStatsTab} 
+                                />
+                              ) : (
+                                <div className="text-center py-2 text-muted-foreground text-sm">
+                                  {team ? "No data available" : "No team selected"}
+                                </div>
+                              )}
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
