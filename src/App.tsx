@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 import { useEffect } from "react";
 import { ThemeProvider } from "@/components/theme-provider"
-
+import { analytics } from '@/lib/analytics';
 
 import MainLayout from "@/layouts/MainLayout";
 import NotFoundPage from "@/pages/NotFoundPage";
@@ -57,6 +57,20 @@ function App() {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js");
     }
+
+    // Track initial page view
+    analytics.trackPageView();
+
+    // Track PWA install prompt
+    window.addEventListener('beforeinstallprompt', () => {
+      analytics.trackEvent('pwa_install_prompt_shown');
+    });
+
+    // Track if app was launched as PWA
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      analytics.trackEvent('pwa_launched');
+    }
+
   }, []);
   
   return (

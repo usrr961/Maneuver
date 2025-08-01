@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { analytics } from '@/lib/analytics';
 
 export function PWAUpdatePrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
@@ -54,6 +55,9 @@ export function PWAUpdatePrompt() {
 
   const handleUpdate = () => {
     if (waitingWorker) {
+      // Track PWA update
+      analytics.trackPWAUpdate();
+      
       waitingWorker.postMessage({ type: 'SKIP_WAITING' });
       setShowPrompt(false);
       window.location.reload(); // Force refresh immediately

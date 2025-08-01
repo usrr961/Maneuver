@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import demoData from "../app/dashboard/VScouterData-5_52_53 PM-Blue 1.json";
 import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
+import { analytics } from '@/lib/analytics';
 
 const HomePage = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +42,10 @@ const HomePage = () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       setIsLoaded(true);
+      
+      // Track demo data load
+      analytics.trackDemoDataLoad();
+      
     } catch (error) {
       console.error("Error loading demo data:", error);
     } finally {
@@ -51,6 +56,9 @@ const HomePage = () => {
   const clearData = () => {
     localStorage.removeItem("scoutingData");
     setIsLoaded(false);
+    
+    // Track demo data clear
+    analytics.trackDemoDataClear();
   };
 
   return (
