@@ -13,9 +13,11 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { Separator } from "../ui/separator"
 import ManeuverHorizontalLogo from "../../assets/Maneuver Wordmark Horizontal.png"
+import { haptics } from "@/lib/haptics"
 
 const data = {
   navMain: [
@@ -94,9 +96,79 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { setOpenMobile } = useSidebar()
+  const touchStartRef = React.useRef<{ x: number; y: number } | null>(null)
+  
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY }
+  }
+  
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return
+    
+    const touch = e.changedTouches[0]
+    const deltaX = touch.clientX - touchStartRef.current.x
+    const deltaY = touch.clientY - touchStartRef.current.y
+    const minSwipeDistance = 60
+    
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+      if (deltaX < -minSwipeDistance) {
+        e.preventDefault()
+        haptics.light()
+        setOpenMobile(false)
+      }
+    }
+    
+    touchStartRef.current = null
+  }
+
+  React.useEffect(() => {
+    const handleGlobalTouchStart = (e: TouchEvent) => {
+      const sidebar = document.querySelector('[data-sidebar="sidebar"]')
+      if (sidebar && !sidebar.contains(e.target as Node)) {
+        const touch = e.touches[0]
+        touchStartRef.current = { x: touch.clientX, y: touch.clientY }
+      }
+    }
+
+    const handleGlobalTouchEnd = (e: TouchEvent) => {
+      if (!touchStartRef.current) return
+      
+      const sidebar = document.querySelector('[data-sidebar="sidebar"]')
+      if (sidebar && !sidebar.contains(e.target as Node)) {
+        const touch = e.changedTouches[0]
+        const deltaX = touch.clientX - touchStartRef.current.x
+        const deltaY = touch.clientY - touchStartRef.current.y
+        const minSwipeDistance = 60
+        
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+          if (deltaX < -minSwipeDistance) {
+            e.preventDefault()
+            haptics.light()
+            setOpenMobile(false)
+          }
+        }
+      }
+      
+      touchStartRef.current = null
+    }
+
+    document.addEventListener('touchstart', handleGlobalTouchStart, { passive: true })
+    document.addEventListener('touchend', handleGlobalTouchEnd, { passive: false })
+
+    return () => {
+      document.removeEventListener('touchstart', handleGlobalTouchStart)
+      document.removeEventListener('touchend', handleGlobalTouchEnd)
+    }
+  }, [setOpenMobile])
+
   return (
     <Sidebar variant="inset" {...props}>
-      <SidebarHeader>
+      <SidebarHeader
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -117,10 +189,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <NavMain items={data.navMain} />
-        {/* <NavDocuments items={data.documents} /> */}
-        {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
