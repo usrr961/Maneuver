@@ -98,61 +98,184 @@ function SheetContent({
   side?: "top" | "right" | "bottom" | "left"
 }) {
   const closeButtonRef = React.useRef<HTMLButtonElement>(null);
+  const contentRef = React.useRef<HTMLDivElement>(null);
   
-  // Touch event handlers for swipe-to-dismiss
+  // Touch event handlers for swipe-to-dismiss with drag preview
   const touchStartRef = React.useRef<{ x: number; y: number } | null>(null);
   const touchEndRef = React.useRef<{ x: number; y: number } | null>(null);
+  const lastTouchRef = React.useRef<{ x: number; y: number; time: number } | null>(null);
+  const isDraggingRef = React.useRef(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartRef.current = {
       x: e.targetTouches[0].clientX,
       y: e.targetTouches[0].clientY,
     };
+    isDraggingRef.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStartRef.current) return;
+    if (!touchStartRef.current || !contentRef.current) return;
     
-    touchEndRef.current = {
-      x: e.targetTouches[0].clientX,
-      y: e.targetTouches[0].clientY,
-    };
+    const currentX = e.targetTouches[0].clientX;
+    const currentY = e.targetTouches[0].clientY;
+    const currentTime = Date.now();
+    
+    touchEndRef.current = { x: currentX, y: currentY };
+    lastTouchRef.current = { x: currentX, y: currentY, time: currentTime };
+
+    const deltaX = currentX - touchStartRef.current.x;
+    const deltaY = currentY - touchStartRef.current.y;
+    
+    // Calculate maximum drag distance based on viewport dimensions
+    const maxVerticalDrag = window.innerHeight * 0.8; // 80% of viewport height
+    const maxHorizontalDrag = window.innerWidth * 0.8; // 80% of viewport width
+    
+    // Only apply transform for the appropriate direction based on sheet side
+    let shouldTransform = false;
+    let transform = '';
+
+    switch (side) {
+      case "bottom":
+        if (deltaY > 0) { // Only drag down
+          shouldTransform = true;
+          transform = `translateY(${Math.min(deltaY, maxVerticalDrag)}px)`;
+          isDraggingRef.current = true;
+        }
+        break;
+      case "top":
+        if (deltaY < 0) { // Only drag up
+          shouldTransform = true;
+          transform = `translateY(${Math.max(deltaY, -maxVerticalDrag)}px)`;
+          isDraggingRef.current = true;
+        }
+        break;
+      case "right":
+        if (deltaX > 0) { // Only drag right
+          shouldTransform = true;
+          transform = `translateX(${Math.min(deltaX, maxHorizontalDrag)}px)`;
+          isDraggingRef.current = true;
+        }
+        break;
+      case "left":
+        if (deltaX < 0) { // Only drag left
+          shouldTransform = true;
+          transform = `translateX(${Math.max(deltaX, -maxHorizontalDrag)}px)`;
+          isDraggingRef.current = true;
+        }
+        break;
+    }
+
+    if (shouldTransform) {
+      contentRef.current.style.transform = transform;
+      contentRef.current.style.transition = 'none'; // Disable transition during drag
+    }
   };
 
   const handleTouchEnd = () => {
-    if (!touchStartRef.current || !touchEndRef.current) return;
+    if (!touchStartRef.current || !touchEndRef.current || !contentRef.current) return;
 
     const deltaX = touchEndRef.current.x - touchStartRef.current.x;
     const deltaY = touchEndRef.current.y - touchStartRef.current.y;
-    const threshold = 50;
+    const dismissThreshold = 100; // Need to drag 100px to dismiss
+    const dragThreshold = 20; // Minimum drag to register as dragging
+    const velocityThreshold = 1.0; // Increased velocity threshold for quick flicks
+    const counterVelocityThreshold = 0.8; // Threshold for detecting counter-movement
 
     let shouldClose = false;
+    let wasDragging = false;
 
-    // Determine swipe direction based on sheet side
+    // Calculate velocity if we have recent touch data
+    let velocity = 0;
+    let hasRecentTouch = false;
+    
+    if (lastTouchRef.current && touchEndRef.current) {
+      const timeDiff = Date.now() - lastTouchRef.current.time;
+      if (timeDiff > 0 && timeDiff < 150) { // Extended window to 150ms for better detection
+        hasRecentTouch = true;
+        switch (side) {
+          case "bottom":
+            velocity = (touchEndRef.current.y - lastTouchRef.current.y) / timeDiff;
+            break;
+          case "top":
+            velocity = (lastTouchRef.current.y - touchEndRef.current.y) / timeDiff;
+            break;
+          case "right":
+            velocity = (touchEndRef.current.x - lastTouchRef.current.x) / timeDiff;
+            break;
+          case "left":
+            velocity = (lastTouchRef.current.x - touchEndRef.current.x) / timeDiff;
+            break;
+        }
+      }
+    }
+
+    // Check if we dragged far enough to dismiss based on sheet side
+    // New logic: Only dismiss if BOTH conditions are met:
+    // 1. Distance threshold is met AND no strong counter-velocity
+    // 2. OR strong positive velocity (quick flick in dismiss direction)
     switch (side) {
       case "bottom":
-        shouldClose = deltaY > threshold; // Swipe down
+        wasDragging = deltaY > dragThreshold;
+        // Only dismiss if:
+        // - Dragged far enough AND not flicking back up strongly
+        // - OR quick downward flick regardless of distance
+        shouldClose = (deltaY > dismissThreshold && (!hasRecentTouch || velocity >= -counterVelocityThreshold)) || 
+                      (hasRecentTouch && velocity > velocityThreshold);
         break;
       case "top":
-        shouldClose = deltaY < -threshold; // Swipe up
+        wasDragging = deltaY < -dragThreshold;
+        shouldClose = (deltaY < -dismissThreshold && (!hasRecentTouch || velocity >= -counterVelocityThreshold)) || 
+                      (hasRecentTouch && velocity > velocityThreshold);
         break;
       case "right":
-        shouldClose = deltaX > threshold; // Swipe right
+        wasDragging = deltaX > dragThreshold;
+        shouldClose = (deltaX > dismissThreshold && (!hasRecentTouch || velocity >= -counterVelocityThreshold)) || 
+                      (hasRecentTouch && velocity > velocityThreshold);
         break;
       case "left":
-        shouldClose = deltaX < -threshold; // Swipe left
+        wasDragging = deltaX < -dragThreshold;
+        shouldClose = (deltaX < -dismissThreshold && (!hasRecentTouch || velocity >= -counterVelocityThreshold)) || 
+                      (hasRecentTouch && velocity > velocityThreshold);
         break;
     }
+
+    // Debug logging to understand what's happening
+    console.log('Dismiss Debug:', {
+      side,
+      deltaX,
+      deltaY,
+      velocity,
+      hasRecentTouch,
+      shouldClose,
+      wasDragging
+    });
+
+    // Re-enable transition for snap-back animation
+    contentRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
 
     if (shouldClose) {
       haptics.vibrate(50);
       // Trigger the close button click to close the sheet
       closeButtonRef.current?.click();
+    } else if (wasDragging) {
+      // Snap back to original position
+      contentRef.current.style.transform = 'translateX(0) translateY(0)';
+      haptics.vibrate(25); // Lighter haptic for snap-back
+      
+      // Reset transition after animation completes
+      setTimeout(() => {
+        if (contentRef.current) {
+          contentRef.current.style.transition = '';
+        }
+      }, 300);
     }
 
     // Reset touch references
     touchStartRef.current = null;
     touchEndRef.current = null;
+    lastTouchRef.current = null;
+    isDraggingRef.current = false;
   };
 
   const handleOverlaySwipeDismiss = () => {
@@ -163,6 +286,7 @@ function SheetContent({
     <SheetPortal>
       <SheetOverlay onSwipeDismiss={handleOverlaySwipeDismiss} />
       <SheetPrimitive.Content
+        ref={contentRef}
         data-slot="sheet-content"
         className={cn(
           "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
