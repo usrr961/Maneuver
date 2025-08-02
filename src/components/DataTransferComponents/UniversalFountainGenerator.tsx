@@ -165,7 +165,7 @@ const UniversalFountainGenerator = ({
 
   return (
     <div className="h-screen w-full flex flex-col items-center gap-6 px-4 pt-[var(--header-height)]">
-      <div className="flex flex-col items-center gap-4 max-w-md w-full max-h-full overflow-y-auto">
+      <div className="flex flex-col items-center gap-4 max-w-md w-full pb-4">
         {/* Navigation Header */}
         <div className="flex items-center justify-between w-full">
           <Button 
