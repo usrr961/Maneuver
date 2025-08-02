@@ -2,9 +2,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/animate-ui/radix/tabs";
 import { Progress } from "@/components/ui/progress";
+import { ChevronDownIcon } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import AutoStartPositionMap from "@/components/TeamStatsComponents/AutoStartPositionMap";
 import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
 import LogoNotFound from "../assets/Logo Not Found.png";
@@ -133,6 +137,7 @@ const TeamStatsPage = () => {
   const [teamStats, setTeamStats] = useState<TeamStats | null>(null);
   const [compareStats, setCompareStats] = useState<TeamStats | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Load scouting data using the new deduplication utilities
@@ -430,6 +435,85 @@ const TeamStatsPage = () => {
     );
   };
 
+  // Responsive Team Selector Component
+  const TeamSelector = ({ 
+    label, 
+    value, 
+    onValueChange,
+    availableOptions,
+    placeholder 
+  }: {
+    label: string;
+    value: string;
+    onValueChange: (value: string) => void;
+    availableOptions: string[];
+    placeholder: string;
+  }) => {
+    if (isMobile) {
+      return (
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="w-40 justify-between"
+            >
+              <span className="truncate">
+                {value && value !== "none" ? `Team ${value}` : placeholder}
+              </span>
+              <ChevronDownIcon className="h-4 w-4 opacity-50" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[60vh]">
+            <SheetHeader>
+              <SheetTitle>{label}</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-4">
+              <div className="space-y-2">
+                <SheetClose asChild>
+                  <Button 
+                    variant={!value || value === "none" ? "default" : "outline"}
+                    className="w-full justify-start h-12 px-4"
+                    onClick={() => onValueChange("none")}
+                  >
+                    None
+                  </Button>
+                </SheetClose>
+                {availableOptions.map((teamNum) => (
+                  <SheetClose key={teamNum} asChild>
+                    <Button 
+                      variant={value === teamNum ? "default" : "outline"}
+                      className="w-full justify-start h-12 px-4"
+                      onClick={() => onValueChange(teamNum)}
+                    >
+                      Team {teamNum}
+                    </Button>
+                  </SheetClose>
+                ))}
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      );
+    }
+
+    // Desktop version - keep existing Select
+    return (
+      <Select value={value} onValueChange={onValueChange}>
+        <SelectTrigger className="w-40">
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">None</SelectItem>
+          {availableOptions.map((teamNum) => (
+            <SelectItem key={teamNum} value={teamNum}>
+              Team {teamNum}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-4 pt-4 pb-6">
       <div className="flex flex-col items-center gap-6 max-w-7xl w-full">
@@ -439,38 +523,24 @@ const TeamStatsPage = () => {
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <div className="flex items-center gap-2">
               <label className="font-medium">Select Team:</label>
-              <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Choose team" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {availableTeams.map((teamNum) => (
-                    <SelectItem key={teamNum} value={teamNum}>
-                      Team {teamNum}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <TeamSelector
+                label="Select Team"
+                value={selectedTeam}
+                onValueChange={setSelectedTeam}
+                availableOptions={availableTeams}
+                placeholder="Choose team"
+              />
             </div>
             
             <div className="flex items-center gap-2">
               <label className="font-medium">Compare to:</label>
-              <Select value={compareTeam} onValueChange={setCompareTeam}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Optional" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {availableTeams
-                    .filter(teamNum => teamNum !== selectedTeam)
-                    .map((teamNum) => (
-                      <SelectItem key={teamNum} value={teamNum}>
-                        Team {teamNum}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+              <TeamSelector
+                label="Compare Team"
+                value={compareTeam}
+                onValueChange={setCompareTeam}
+                availableOptions={availableTeams.filter(teamNum => teamNum !== selectedTeam)}
+                placeholder="Optional"
+              />
             </div>
           </div>
         </div>

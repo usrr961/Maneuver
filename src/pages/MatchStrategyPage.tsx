@@ -2,10 +2,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/animate-ui/radix/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ChevronDownIcon } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import FieldCanvas from "@/components/MatchStrategyComponents/FieldCanvas";
 import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
 
@@ -79,6 +82,7 @@ const MatchStrategyPage = () => {
   const [activeTab, setActiveTab] = useState("autonomous");
   const [matchNumber, setMatchNumber] = useState<string>("");
   const [activeStatsTab, setActiveStatsTab] = useState("overall");
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Load scouting data using the new deduplication utilities
@@ -368,6 +372,86 @@ const MatchStrategyPage = () => {
     }
     
     touchStartRef.current = null;
+  };
+
+  // Responsive Team Selector Component
+  const TeamSelector = ({ 
+    label, 
+    value, 
+    onValueChange 
+  }: {
+    index: number;
+    label: string;
+    labelColor: string;
+    value: string;
+    onValueChange: (value: string) => void;
+  }) => {
+    if (isMobile) {
+      return (
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="flex-1 justify-between h-10"
+            >
+              <span className="truncate">
+                {value ? `Team ${value}` : "Select team"}
+              </span>
+              <ChevronDownIcon className="h-4 w-4 opacity-50" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[60vh] pb-8">
+            <SheetHeader>
+              <SheetTitle>{label}</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-4">
+              <div className="space-y-2">
+                <SheetClose asChild>
+                  <Button 
+                    variant={!value ? "default" : "outline"}
+                    className="w-full justify-start h-12 px-4"
+                    onClick={() => onValueChange("none")}
+                  >
+                    No team
+                  </Button>
+                </SheetClose>
+                {availableTeams.map((teamNum) => (
+                  <SheetClose key={teamNum} asChild>
+                    <Button 
+                      variant={value === teamNum ? "default" : "outline"}
+                      className="w-full justify-start h-12 px-4"
+                      onClick={() => onValueChange(teamNum)}
+                    >
+                      Team {teamNum}
+                    </Button>
+                  </SheetClose>
+                ))}
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      );
+    }
+
+    // Desktop version - keep existing Select
+    return (
+      <Select 
+        value={value || "none"} 
+        onValueChange={onValueChange}
+      >
+        <SelectTrigger className="flex-1">
+          <SelectValue placeholder="Select team" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">No team</SelectItem>
+          {availableTeams.map((teamNum) => (
+            <SelectItem key={teamNum} value={teamNum}>
+              Team {teamNum}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
   };
 
   const TeamStatsHeaders = ({ alliance, activeStatsTab }: {
@@ -822,22 +906,13 @@ const MatchStrategyPage = () => {
                                 <label className="text-sm font-medium text-blue-600 dark:text-blue-400 min-w-0">
                                   Blue Team {index + 1}:
                                 </label>
-                                <Select 
-                                  value={selectedTeams[index + 3] || "none"} 
+                                <TeamSelector
+                                  index={index + 3}
+                                  label={`Blue Team ${index + 1}`}
+                                  labelColor="text-blue-600 dark:text-blue-400"
+                                  value={selectedTeams[index + 3]}
                                   onValueChange={(value) => handleTeamChange(index + 3, value)}
-                                >
-                                  <SelectTrigger className="flex-1">
-                                    <SelectValue placeholder="Select team" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="none">No team</SelectItem>
-                                    {availableTeams.map((teamNum) => (
-                                      <SelectItem key={teamNum} value={teamNum}>
-                                        Team {teamNum}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                />
                               </div>
 
                               {/* Team Stats */}
@@ -887,22 +962,13 @@ const MatchStrategyPage = () => {
                                 <label className="text-sm font-medium text-red-600 dark:text-red-400 min-w-0">
                                   Red Team {index + 1}:
                                 </label>
-                                <Select 
-                                  value={selectedTeams[index] || "none"} 
+                                <TeamSelector
+                                  index={index}
+                                  label={`Red Team ${index + 1}`}
+                                  labelColor="text-red-600 dark:text-red-400"
+                                  value={selectedTeams[index]}
                                   onValueChange={(value) => handleTeamChange(index, value)}
-                                >
-                                  <SelectTrigger className="flex-1">
-                                    <SelectValue placeholder="Select team" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="none">No team</SelectItem>
-                                    {availableTeams.map((teamNum) => (
-                                      <SelectItem key={teamNum} value={teamNum}>
-                                        Team {teamNum}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                />
                               </div>
 
                               {/* Team Stats */}

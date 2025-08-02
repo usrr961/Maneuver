@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SortableList, SortableListItem, type Item } from "@/components/ui/sortable-list";
 import { TeamStatsButton } from "@/components/ui/team-stats-button";
-import { Plus, Trash2, Download, Upload } from "lucide-react";
+import { Plus, Trash2, Download, Upload, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import LogoSearching from "../assets/searching.png";
 import LogoConfused from "../assets/confused.png";
 
@@ -69,6 +71,7 @@ const PickListPage = () => {
   const [newListDescription, setNewListDescription] = useState("");
   const [searchFilter, setSearchFilter] = useState("");
   const [sortBy, setSortBy] = useState<"number" | "totalCoral" | "totalAlgae" | "autoCorals" | "teleopCorals" | "coralL1" | "coralL2" | "coralL3" | "coralL4" | "climb" | "matches">("number");
+  const isMobile = useIsMobile();
 
   // Load persistent pick lists from localStorage
   useEffect(() => {
@@ -425,6 +428,72 @@ const PickListPage = () => {
       }
     });
 
+  // Sort options for the dropdown
+  const sortOptions = [
+    { value: "number", label: "Team Number" },
+    { value: "totalCoral", label: "Total Coral (All)" },
+    { value: "totalAlgae", label: "Total Algae (All)" },
+    { value: "autoCorals", label: "Auto Corals" },
+    { value: "teleopCorals", label: "Teleop Corals" },
+    { value: "coralL1", label: "Level 1 Coral (All)" },
+    { value: "coralL2", label: "Level 2 Coral (All)" },
+    { value: "coralL3", label: "Level 3 Coral (All)" },
+    { value: "coralL4", label: "Level 4 Coral (All)" },
+    { value: "climb", label: "Climb Rate" },
+    { value: "matches", label: "Matches Played" }
+  ];
+
+  // Sort selector component with responsive behavior
+  const SortSelector = () => {
+    const currentOption = sortOptions.find(option => option.value === sortBy);
+    
+    if (isMobile) {
+      return (
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" className="w-full justify-between">
+              {currentOption?.label || "Sort by..."}
+              <ChevronDown className="h-4 w-4 opacity-50" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[60vh]">
+            <SheetHeader>
+              <SheetTitle>Sort Teams By</SheetTitle>
+            </SheetHeader>
+            <div className="grid gap-2 py-4 px-4 overflow-y-scroll">
+              {sortOptions.map((option) => (
+                <SheetClose key={option.value} asChild>
+                  <Button
+                    variant={sortBy === option.value ? "default" : "ghost"}
+                    className="w-full justify-start h-12 px-4"
+                    onClick={() => setSortBy(option.value as any)}
+                  >
+                    {option.label}
+                  </Button>
+                </SheetClose>
+              ))}
+            </div>
+          </SheetContent>
+        </Sheet>
+      );
+    }
+
+    return (
+      <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)} aria-label="Sort by">
+        <SelectTrigger>
+          <SelectValue placeholder="Sort by..." />
+        </SelectTrigger>
+        <SelectContent>
+          {sortOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  };
+
 
   return (
     <div className="min-h-screen w-full flex flex-col px-4 pt-4 pb-6">
@@ -476,24 +545,7 @@ const PickListPage = () => {
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
                 />
-                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)} aria-label="Sort by">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sort by..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="number">Team Number</SelectItem>
-                    <SelectItem value="totalCoral">Total Coral (All)</SelectItem>
-                    <SelectItem value="totalAlgae">Total Algae (All)</SelectItem>
-                    <SelectItem value="autoCorals">Auto Corals</SelectItem>
-                    <SelectItem value="teleopCorals">Teleop Corals</SelectItem>
-                    <SelectItem value="coralL1">Level 1 Coral (All)</SelectItem>
-                    <SelectItem value="coralL2">Level 2 Coral (All)</SelectItem>
-                    <SelectItem value="coralL3">Level 3 Coral (All)</SelectItem>
-                    <SelectItem value="coralL4">Level 4 Coral (All)</SelectItem>
-                    <SelectItem value="climb">Climb Rate</SelectItem>
-                    <SelectItem value="matches">Matches Played</SelectItem>
-                  </SelectContent>
-                </Select>
+                <SortSelector />
               </div>
             </CardHeader>
             
