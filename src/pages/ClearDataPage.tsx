@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { loadScoutingData } from "@/lib/scoutingDataUtils";
+import { clearAllScoutingData } from "@/lib/indexedDBUtils";
 import { convertTeamRole } from "@/lib/utils";
 
 
@@ -23,13 +24,17 @@ const ClearDataPage = () => {
     setPlayerStation(station);
 
     // Count scouting entries using the new system
-    try {
-      const scoutingData = loadScoutingData();
-      setScoutingDataCount(scoutingData.entries.length);
-    } catch (error) {
-      console.error("Error loading scouting data:", error);
-      setScoutingDataCount(0);
-    }
+    const loadScoutingCount = async () => {
+      try {
+        const scoutingData = await loadScoutingData();
+        setScoutingDataCount(scoutingData.entries.length);
+      } catch (error) {
+        console.error("Error loading scouting data:", error);
+        setScoutingDataCount(0);
+      }
+    };
+
+    loadScoutingCount();
 
     // Count match entries
     if (matchData) {
@@ -42,11 +47,20 @@ const ClearDataPage = () => {
     }
   }, []);
 
-  const handleClearScoutingData = () => {
-    localStorage.setItem("scoutingData", JSON.stringify({ data: [] }));
-    setScoutingDataCount(0);
-    setShowScoutingConfirm(false);
-    toast.success("Cleared all scouting data");
+  const handleClearScoutingData = async () => {
+    try {
+      // Clear IndexedDB data
+      await clearAllScoutingData();
+      // Also clear localStorage as fallback/backup
+      localStorage.setItem("scoutingData", JSON.stringify({ data: [] }));
+      
+      setScoutingDataCount(0);
+      setShowScoutingConfirm(false);
+      toast.success("Cleared all scouting data");
+    } catch (error) {
+      console.error("Error clearing scouting data:", error);
+      toast.error("Failed to clear scouting data");
+    }
   };
 
   const handleClearMatchData = () => {

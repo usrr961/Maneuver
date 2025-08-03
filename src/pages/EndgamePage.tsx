@@ -6,8 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "../components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { transformToLegacyFormat } from "@/lib/dataTransformation";
+import { transformToObjectFormat } from "@/lib/dataTransformation";
 import { generateEntryId } from "@/lib/scoutingDataUtils";
+import { saveScoutingEntry } from "@/lib/indexedDBUtils";
+import type { ScoutingDataWithId } from "@/lib/scoutingDataUtils";
 
 const EndgamePage = () => {
   const location = useLocation();
@@ -28,7 +30,7 @@ const EndgamePage = () => {
     return saved ? JSON.parse(saved) : [];
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     try {
       // Get all the collected data
       const autoActions = getActionsFromLocalStorage("auto");
@@ -53,43 +55,21 @@ const EndgamePage = () => {
         comment
       };
 
-      // Transform to legacy format (returns array of values)
-      const legacyData = transformToLegacyFormat(scoutingInputs);
+      // Transform to object format for the new system
+      const objectData = transformToObjectFormat(scoutingInputs);
 
       // Generate unique ID for this entry
-      const uniqueId = generateEntryId(legacyData);
+      const uniqueId = generateEntryId(objectData);
       
-      // Add unique ID as first element (like in sample data)
-      const dataWithId = [uniqueId, ...legacyData];
+      // Create entry with ID structure
+      const entryWithId: ScoutingDataWithId = {
+        id: uniqueId,
+        data: objectData,
+        timestamp: Date.now()
+      };
 
-      // Save to localStorage in the expected format
-      const existingData = localStorage.getItem("scoutingData");
-      let scoutingData = [];
-      
-      if (existingData) {
-        try {
-          const parsed = JSON.parse(existingData);
-          // Handle both old format (with data wrapper) and new format (direct array)
-          if (parsed && typeof parsed === 'object') {
-            if (Array.isArray(parsed)) {
-              // New format: direct array
-              scoutingData = parsed;
-            } else if (parsed.data && Array.isArray(parsed.data)) {
-              // Old format: wrapped in data object
-              scoutingData = parsed.data;
-            }
-          }
-        } catch (e) {
-          console.error("Error parsing existing scouting data:", e);
-          scoutingData = [];
-        }
-      }
-
-      // Add new entry (array of values with ID at the beginning)
-      scoutingData.push(dataWithId);
-      
-      // Save back to localStorage in the old format (with data wrapper)
-      localStorage.setItem("scoutingData", JSON.stringify({ data: scoutingData }));
+      // Save to IndexedDB
+      await saveScoutingEntry(entryWithId);
 
       // Clear the state stacks
       localStorage.removeItem("autoStateStack");

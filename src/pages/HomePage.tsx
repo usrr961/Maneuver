@@ -3,8 +3,9 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect } from "react";
-import demoData from "../app/dashboard/VScouterData-5_52_53 PM-Blue 1.json";
-import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
+import demoData from "../app/dashboard/ManeuverData-5_52_53 PM-Blue 1.json";
+import { loadLegacyScoutingData, saveScoutingData, addIdsToScoutingData, loadScoutingData } from "../lib/scoutingDataUtils";
+import { clearAllScoutingData } from "../lib/indexedDBUtils";
 import { analytics } from '@/lib/analytics';
 import { haptics } from '@/lib/haptics';
 
@@ -14,14 +15,18 @@ const HomePage = () => {
 
   // Check if demo data is already loaded on component mount
   useEffect(() => {
-    try {
-      const existingData = loadLegacyScoutingData();
-      if (existingData.length > 0) {
-        setIsLoaded(true);
+    const checkExistingData = async () => {
+      try {
+        const existingData = await loadLegacyScoutingData();
+        if (existingData.length > 0) {
+          setIsLoaded(true);
+        }
+      } catch (error) {
+        console.error("Error checking existing data:", error);
       }
-    } catch (error) {
-      console.error("Error checking existing data:", error);
-    }
+    };
+
+    checkExistingData();
   }, []);
 
   const loadDemoData = async () => {
@@ -31,14 +36,20 @@ const HomePage = () => {
     try {
       // Exclude the first row (column headers) from the demo data
       const dataWithoutHeaders = demoData.slice(1);
+      console.log("HomePage - Demo data without headers:", dataWithoutHeaders.length, "entries");
 
-      // Store in localStorage with the same format as the app expects
-      const scoutingDataObj = {
-        timestamp: new Date().toISOString(),
-        data: dataWithoutHeaders,
-      };
+      // Add IDs to the data for IndexedDB compatibility
+      const dataWithIds = addIdsToScoutingData(dataWithoutHeaders);
+      console.log("HomePage - Demo data with IDs:", dataWithIds.length, "entries");
+      console.log("HomePage - Sample entry with ID:", dataWithIds[0]);
 
-      localStorage.setItem("scoutingData", JSON.stringify(scoutingDataObj));
+      // Store using IndexedDB through the utility function
+      await saveScoutingData({ entries: dataWithIds });
+      console.log("HomePage - Demo data saved to IndexedDB successfully");
+
+      // Verify the data was saved by loading it back
+      const verifyData = await loadScoutingData();
+      console.log("HomePage - Verification: loaded", verifyData.entries.length, "entries from IndexedDB");
 
       // Simulate loading delay
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -50,19 +61,29 @@ const HomePage = () => {
       
     } catch (error) {
       haptics.error(); // Error feedback
-      console.error("Error loading demo data:", error);
+      console.error("HomePage - Error loading demo data:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const clearData = () => {
+  const clearData = async () => {
     haptics.medium();
-    localStorage.removeItem("scoutingData");
-    setIsLoaded(false);
     
-    // Track demo data clear
-    analytics.trackDemoDataClear();
+    try {
+      // Clear data from IndexedDB and fallback to localStorage
+      await clearAllScoutingData();
+      setIsLoaded(false);
+      
+      // Track demo data clear
+      analytics.trackDemoDataClear();
+    } catch (error) {
+      console.error("Error clearing data:", error);
+      // Fallback: clear localStorage directly if IndexedDB fails
+      localStorage.removeItem("scoutingData");
+      setIsLoaded(false);
+      analytics.trackDemoDataClear();
+    }
   };
 
   return (

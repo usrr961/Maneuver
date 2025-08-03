@@ -3,6 +3,7 @@ import { useState } from "react";
 import Button from "@/components/ui/button";
 import JSONUploader from "@/components/DataTransferComponents/JSONUploader";
 import { convertArrayOfArraysToCSV, SCOUTING_DATA_HEADER } from "@/lib/utils";
+import { loadScoutingData, extractLegacyData } from "@/lib/scoutingDataUtils";
 
 
 const JSONDataTransferPage = () => {
@@ -18,33 +19,27 @@ const JSONDataTransferPage = () => {
   }
 
   // Handler to download scouting data as CSV
-  const handleDownloadCSV = () => {
+  const handleDownloadCSV = async () => {
     try {
-      const scoutingDataRaw = localStorage.getItem("scoutingData");
-      if (!scoutingDataRaw) {
-        alert("No scouting data found in localStorage.");
+      // Load data from IndexedDB
+      const scoutingDataWithIds = await loadScoutingData();
+      console.log("JSONDataTransferPage CSV - Loaded data:", scoutingDataWithIds.entries.length, "entries");
+      
+      if (scoutingDataWithIds.entries.length === 0) {
+        alert("No scouting data found.");
         return;
       }
-      let dataArr = [];
+
+      // Convert to legacy format
+      const dataArr = extractLegacyData(scoutingDataWithIds.entries);
+      console.log("JSONDataTransferPage CSV - Legacy data:", dataArr.length, "entries");
+      
       const defaultHeader = SCOUTING_DATA_HEADER;
-      try {
-        const parsed = JSON.parse(scoutingDataRaw);
-        if (Array.isArray(parsed)) {
-          dataArr = parsed;
-        } else if (parsed && Array.isArray(parsed.data)) {
-          dataArr = parsed.data;
-        } else {
-          alert("Scouting data format is invalid.");
-          return;
-        }
-      } catch {
-        alert("Failed to parse scouting data.");
-        return;
-      }
-      if (!Array.isArray(dataArr[0]) || dataArr[0].length !== defaultHeader.length || dataArr[0].some((v, i) => v !== defaultHeader[i])) {
-        dataArr = [defaultHeader, ...dataArr];
-      }
-      const csv = convertArrayOfArraysToCSV(dataArr);
+      
+      // Ensure header row is present as first row
+      const finalDataArr = [defaultHeader, ...dataArr];
+      
+      const csv = convertArrayOfArraysToCSV(finalDataArr as (string | number)[][]);
       const element = document.createElement("a");
       element.setAttribute(
         "href",
@@ -58,7 +53,8 @@ const JSONDataTransferPage = () => {
       document.body.appendChild(element);
       element.click();
       document.body.removeChild(element);
-    } catch {
+    } catch (error) {
+      console.error("Failed to export scouting data as CSV:", error);
       alert("Failed to export scouting data as CSV.");
     }
   };
@@ -73,47 +69,37 @@ const JSONDataTransferPage = () => {
 
         <div className="flex flex-col gap-4 w-full">
           <Button
-            onClick={() => {
-              // Download scoutingData as a plain array (like VScouterData), always including header row
-              const scoutingDataRaw = localStorage.getItem("scoutingData");
-              if (!scoutingDataRaw) {
-                alert("No scouting data found in localStorage.");
-                return;
-              }
-              let dataArr = [];
-              // Use shared header
-              const defaultHeader = SCOUTING_DATA_HEADER;
+            onClick={async () => {
               try {
-                const parsed = JSON.parse(scoutingDataRaw);
-                if (Array.isArray(parsed)) {
-                  dataArr = parsed;
-                } else if (parsed && Array.isArray(parsed.data)) {
-                  dataArr = parsed.data;
-                } else {
-                  alert("Scouting data format is invalid.");
+                // Load data from IndexedDB
+                const scoutingDataWithIds = await loadScoutingData();
+                console.log("JSONDataTransferPage JSON - Loaded data:", scoutingDataWithIds.entries.length, "entries");
+                
+                if (scoutingDataWithIds.entries.length === 0) {
+                  alert("No scouting data found.");
                   return;
                 }
-              } catch {
-                alert("Failed to parse scouting data.");
-                return;
+
+                const dataArr = extractLegacyData(scoutingDataWithIds.entries);
+                console.log("JSONDataTransferPage JSON - Legacy data:", dataArr.length, "entries");
+                
+                const element = document.createElement("a");
+                element.setAttribute(
+                  "href",
+                  "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataArr, null, 2))
+                );
+                element.setAttribute(
+                  "download",
+                  `ManeuverScoutingData-${new Date().toLocaleTimeString()}.json`
+                );
+                element.style.display = "none";
+                document.body.appendChild(element);
+                element.click();
+                document.body.removeChild(element);
+              } catch (error) {
+                console.error("Failed to export scouting data as JSON:", error);
+                alert("Failed to export scouting data as JSON.");
               }
-              // Ensure header row is present as first row
-              if (!Array.isArray(dataArr[0]) || dataArr[0].length !== defaultHeader.length || dataArr[0].some((v, i) => v !== defaultHeader[i])) {
-                dataArr = [defaultHeader, ...dataArr];
-              }
-              const element = document.createElement("a");
-              element.setAttribute(
-                "href",
-                "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataArr, null, 2))
-              );
-              element.setAttribute(
-                "download",
-                `ManeuverScoutingData-${new Date().toLocaleTimeString()}.json`
-              );
-              element.style.display = "none";
-              document.body.appendChild(element);
-              element.click();
-              document.body.removeChild(element);
             }}
             className="w-full h-16 text-xl"
           >

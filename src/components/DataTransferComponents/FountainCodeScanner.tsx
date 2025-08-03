@@ -5,6 +5,7 @@ import {
   mergeScoutingData, 
   addIdsToScoutingData
 } from "@/lib/scoutingDataUtils";
+import type { ScoutingDataWithId } from "@/lib/scoutingDataUtils";
 import UniversalFountainScanner from "./UniversalFountainScanner";
 
 interface FountainCodeScannerProps {
@@ -13,18 +14,24 @@ interface FountainCodeScannerProps {
 }
 
 const FountainCodeScanner = ({ onBack, onSwitchToGenerator }: FountainCodeScannerProps) => {
-  const saveScoutingDataFromFountain = (data: unknown) => {
+  const saveScoutingDataFromFountain = async (data: unknown) => {
     console.log('Saving scouting data from fountain:', data);
     
     // Load existing data
-    const existingScoutingData = loadScoutingData();
+    const existingScoutingData = await loadScoutingData();
     
-    // Convert new data to ID structure
-    let newDataArrays: unknown[][] = [];
-    if (data && typeof data === 'object' && 'data' in data && Array.isArray((data as any).data)) {
-      newDataArrays = (data as any).data;
+    // Handle new format with preserved IDs
+    let newDataWithIds: ScoutingDataWithId[] = [];
+    if (data && typeof data === 'object' && 'entries' in data && Array.isArray((data as any).entries)) {
+      // New format: entries with preserved IDs
+      newDataWithIds = (data as any).entries;
+      console.log(`Received ${newDataWithIds.length} entries with preserved IDs`);
+    } else if (data && typeof data === 'object' && 'data' in data && Array.isArray((data as any).data)) {
+      // Fallback: old format without IDs (regenerate them)
+      console.log('Received old format data, regenerating IDs');
+      const newDataObjects = (data as any).data;
+      newDataWithIds = addIdsToScoutingData(newDataObjects);
     }
-    const newDataWithIds = addIdsToScoutingData(newDataArrays);
     
     // Merge data with deduplication (smart merge by default)
     const mergeResult = mergeScoutingData(
@@ -34,7 +41,7 @@ const FountainCodeScanner = ({ onBack, onSwitchToGenerator }: FountainCodeScanne
     );
     
     // Save merged data
-    saveScoutingData({ entries: mergeResult.merged });
+    await saveScoutingData({ entries: mergeResult.merged });
     
     // Show merge info
     const { stats } = mergeResult;
@@ -48,25 +55,48 @@ const FountainCodeScanner = ({ onBack, onSwitchToGenerator }: FountainCodeScanne
     if (!data || typeof data !== 'object') return false;
     
     const dataObj = data as any;
-    if (!dataObj.data || !Array.isArray(dataObj.data)) return false;
     
-    // Check if it has reasonable scouting data structure
-    if (dataObj.data.length === 0) return false;
+    // Check for new format with preserved IDs
+    if (dataObj.entries && Array.isArray(dataObj.entries)) {
+      if (dataObj.entries.length === 0) return false;
+      const firstEntry = dataObj.entries[0];
+      return firstEntry && 
+             typeof firstEntry === 'object' && 
+             'id' in firstEntry && 
+             'data' in firstEntry;
+    }
     
-    // Basic validation - should have arrays with reasonable length
-    const firstEntry = dataObj.data[0];
-    if (!Array.isArray(firstEntry) || firstEntry.length < 5) return false;
+    // Check for old format (fallback)
+    if (dataObj.data && Array.isArray(dataObj.data)) {
+      if (dataObj.data.length === 0) return false;
+      const firstEntry = dataObj.data[0];
+      if (!firstEntry || typeof firstEntry !== 'object') return false;
+      
+      // Check for expected scouting data fields (object format)
+      const requiredFields = ['matchNumber', 'selectTeam', 'alliance'];
+      const hasRequiredFields = requiredFields.some(field => field in firstEntry);
+      return hasRequiredFields;
+    }
     
-    return true;
+    return false;
   };
 
   const getScoutingDataSummary = (data: unknown): string => {
     if (!data || typeof data !== 'object') return '0 entries';
     
     const dataObj = data as any;
-    if (!dataObj.data || !Array.isArray(dataObj.data)) return '0 entries';
     
-    return `${dataObj.data.length} entries`;
+    // Check for new format with preserved IDs
+    if (dataObj.entries && Array.isArray(dataObj.entries)) {
+      return `${dataObj.entries.length} entries (with IDs)`;
+    }
+    
+    // Check for old format (fallback)
+    if (dataObj.data && Array.isArray(dataObj.data)) {
+      return `${dataObj.data.length} entries (legacy)`;
+    }
+    
+    return '0 entries';
   };
 
   return (

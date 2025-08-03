@@ -109,55 +109,63 @@ const PickListPage = () => {
 
   // Load team data from scouting results
   useEffect(() => {
-    const loadTeamData = () => {
+    const loadTeamData = async () => {
       const matchDataStr = localStorage.getItem("matchData");
       
       try {
-        const scoutingData = loadLegacyScoutingData();
+        const scoutingData = await loadLegacyScoutingData();
         
         if (scoutingData.length > 0) {
-          // Get unique teams and calculate stats (team number is now at index 4)
-          const teamNumbers = [...new Set(scoutingData.map((entry: any[]) => entry[4]?.toString()).filter(Boolean))];
+          // Get unique teams and calculate stats using selectTeam field
+          const teamNumbers = [...new Set(scoutingData.map((entry: Record<string, unknown>) => entry.selectTeam?.toString()).filter(Boolean))];
           
           const teamsWithStats = teamNumbers.map(teamNumber => {
-            const teamEntries = scoutingData.filter((entry: any[]) => entry[4]?.toString() === teamNumber);
+            const teamEntries = scoutingData.filter((entry: Record<string, unknown>) => entry.selectTeam?.toString() === teamNumber);
             
             if (teamEntries.length === 0) return null;
             
             const matchCount = teamEntries.length;
             
-            // Calculate coral totals
-            const autoCoralTotals = teamEntries.map((entry: any[]) => 
-              (entry[10] || 0) + (entry[11] || 0) + (entry[12] || 0) + (entry[13] || 0)
+            // Calculate coral totals using object properties
+            const autoCoralTotals = teamEntries.map((entry: Record<string, unknown>) => 
+              (Number(entry.autoCoralPlaceL1Count) || 0) + 
+              (Number(entry.autoCoralPlaceL2Count) || 0) + 
+              (Number(entry.autoCoralPlaceL3Count) || 0) + 
+              (Number(entry.autoCoralPlaceL4Count) || 0)
             );
-            const teleopCoralTotals = teamEntries.map((entry: any[]) => 
-              (entry[29] || 0) + (entry[30] || 0) + (entry[31] || 0) + (entry[32] || 0)
-            );
-            
-            // Calculate algae totals
-            const autoAlgaeTotals = teamEntries.map((entry: any[]) => 
-              (entry[20] || 0) + (entry[21] || 0)
-            );
-            const teleopAlgaeTotals = teamEntries.map((entry: any[]) => 
-              (entry[36] || 0) + (entry[37] || 0)
+            const teleopCoralTotals = teamEntries.map((entry: Record<string, unknown>) => 
+              (Number(entry.teleopCoralPlaceL1Count) || 0) + 
+              (Number(entry.teleopCoralPlaceL2Count) || 0) + 
+              (Number(entry.teleopCoralPlaceL3Count) || 0) + 
+              (Number(entry.teleopCoralPlaceL4Count) || 0)
             );
             
-            // Calculate averages for each coral level
-            const avgAutoCoralL1 = teamEntries.reduce((sum: number, entry: any[]) => sum + (entry[10] || 0), 0) / matchCount;
-            const avgAutoCoralL2 = teamEntries.reduce((sum: number, entry: any[]) => sum + (entry[11] || 0), 0) / matchCount;
-            const avgAutoCoralL3 = teamEntries.reduce((sum: number, entry: any[]) => sum + (entry[12] || 0), 0) / matchCount;
-            const avgAutoCoralL4 = teamEntries.reduce((sum: number, entry: any[]) => sum + (entry[13] || 0), 0) / matchCount;
+            // Calculate algae totals using object properties
+            const autoAlgaeTotals = teamEntries.map((entry: Record<string, unknown>) => 
+              (Number(entry.autoAlgaePlaceNetShot) || 0) + 
+              (Number(entry.autoAlgaePlaceProcessor) || 0)
+            );
+            const teleopAlgaeTotals = teamEntries.map((entry: Record<string, unknown>) => 
+              (Number(entry.teleopAlgaePlaceNetShot) || 0) + 
+              (Number(entry.teleopAlgaePlaceProcessor) || 0)
+            );
             
-            const avgTeleopCoralL1 = teamEntries.reduce((sum: number, entry: any[]) => sum + (entry[29] || 0), 0) / matchCount;
-            const avgTeleopCoralL2 = teamEntries.reduce((sum: number, entry: any[]) => sum + (entry[30] || 0), 0) / matchCount;
-            const avgTeleopCoralL3 = teamEntries.reduce((sum: number, entry: any[]) => sum + (entry[31] || 0), 0) / matchCount;
-            const avgTeleopCoralL4 = teamEntries.reduce((sum: number, entry: any[]) => sum + (entry[32] || 0), 0) / matchCount;
+            // Calculate averages for each coral level using object properties
+            const avgAutoCoralL1 = teamEntries.reduce((sum: number, entry: Record<string, unknown>) => sum + (Number(entry.autoCoralPlaceL1Count) || 0), 0) / matchCount;
+            const avgAutoCoralL2 = teamEntries.reduce((sum: number, entry: Record<string, unknown>) => sum + (Number(entry.autoCoralPlaceL2Count) || 0), 0) / matchCount;
+            const avgAutoCoralL3 = teamEntries.reduce((sum: number, entry: Record<string, unknown>) => sum + (Number(entry.autoCoralPlaceL3Count) || 0), 0) / matchCount;
+            const avgAutoCoralL4 = teamEntries.reduce((sum: number, entry: Record<string, unknown>) => sum + (Number(entry.autoCoralPlaceL4Count) || 0), 0) / matchCount;
             
-            // Calculate averages for algae locations
-            const avgAutoAlgaeNet = teamEntries.reduce((sum: number, entry: any[]) => sum + (entry[20] || 0), 0) / matchCount;
-            const avgAutoAlgaeProcessor = teamEntries.reduce((sum: number, entry: any[]) => sum + (entry[21] || 0), 0) / matchCount;
-            const avgTeleopAlgaeNet = teamEntries.reduce((sum: number, entry: any[]) => sum + (entry[36] || 0), 0) / matchCount;
-            const avgTeleopAlgaeProcessor = teamEntries.reduce((sum: number, entry: any[]) => sum + (entry[37] || 0), 0) / matchCount;
+            const avgTeleopCoralL1 = teamEntries.reduce((sum: number, entry: Record<string, unknown>) => sum + (Number(entry.teleopCoralPlaceL1Count) || 0), 0) / matchCount;
+            const avgTeleopCoralL2 = teamEntries.reduce((sum: number, entry: Record<string, unknown>) => sum + (Number(entry.teleopCoralPlaceL2Count) || 0), 0) / matchCount;
+            const avgTeleopCoralL3 = teamEntries.reduce((sum: number, entry: Record<string, unknown>) => sum + (Number(entry.teleopCoralPlaceL3Count) || 0), 0) / matchCount;
+            const avgTeleopCoralL4 = teamEntries.reduce((sum: number, entry: Record<string, unknown>) => sum + (Number(entry.teleopCoralPlaceL4Count) || 0), 0) / matchCount;
+            
+            // Calculate averages for algae locations using object properties
+            const avgAutoAlgaeNet = teamEntries.reduce((sum: number, entry: Record<string, unknown>) => sum + (Number(entry.autoAlgaePlaceNetShot) || 0), 0) / matchCount;
+            const avgAutoAlgaeProcessor = teamEntries.reduce((sum: number, entry: Record<string, unknown>) => sum + (Number(entry.autoAlgaePlaceProcessor) || 0), 0) / matchCount;
+            const avgTeleopAlgaeNet = teamEntries.reduce((sum: number, entry: Record<string, unknown>) => sum + (Number(entry.teleopAlgaePlaceNetShot) || 0), 0) / matchCount;
+            const avgTeleopAlgaeProcessor = teamEntries.reduce((sum: number, entry: Record<string, unknown>) => sum + (Number(entry.teleopAlgaePlaceProcessor) || 0), 0) / matchCount;
             
             // Calculate combined totals
             const avgAutoCoralTotal: number = autoCoralTotals.reduce((a: number, b: number) => a + b, 0) / matchCount;
@@ -165,21 +173,21 @@ const PickListPage = () => {
             const avgAutoAlgaeTotal: number = autoAlgaeTotals.reduce((a: number, b: number) => a + b, 0) / matchCount;
             const avgTeleopAlgaeTotal: number = teleopAlgaeTotals.reduce((a: number, b: number) => a + b, 0) / matchCount;
 
-            // Calculate rates
-            const climbAttempts = teamEntries.filter((entry: any[]) => entry[42] || entry[43]); // shallow or deep climb
-            const climbSuccesses = teamEntries.filter((entry: any[]) => (entry[42] || entry[43]) && !entry[45]); // not failed
-            const breakdowns = teamEntries.filter((entry: any[]) => entry[47]); // broke down
-            const playedDefense = teamEntries.filter((entry: any[]) => entry[46]); // played defense
-            const mobility = teamEntries.filter((entry: any[]) => entry[28]); // passed start line
+            // Calculate rates using object properties
+            const climbAttempts = teamEntries.filter((entry: Record<string, unknown>) => entry.shallowClimbAttempted || entry.deepClimbAttempted);
+            const climbSuccesses = teamEntries.filter((entry: Record<string, unknown>) => (entry.shallowClimbAttempted || entry.deepClimbAttempted) && !entry.climbFailed);
+            const breakdowns = teamEntries.filter((entry: Record<string, unknown>) => entry.brokeDown);
+            const playedDefense = teamEntries.filter((entry: Record<string, unknown>) => entry.playedDefense);
+            const mobility = teamEntries.filter((entry: Record<string, unknown>) => entry.autoPassedStartLine);
             
-            // Calculate starting positions using entry[5] for pos0, [6] for pos1, [7] for pos2, [8] for pos3, [10] for pos4
+            // Calculate starting positions using object properties
             let pos0 = 0, pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-            teamEntries.forEach((entry: any[]) => {
-              if (entry[5]) pos0++;
-              if (entry[6]) pos1++;
-              if (entry[7]) pos2++;
-              if (entry[8]) pos3++;
-              if (entry[10]) pos4++;
+            teamEntries.forEach((entry: Record<string, unknown>) => {
+              if (entry.startPoses0) pos0++;
+              if (entry.startPoses1) pos1++;
+              if (entry.startPoses2) pos2++;
+              if (entry.startPoses3) pos3++;
+              if (entry.startPoses4) pos4++;
             });
             const startPositions = {
               position0: Math.round((pos0 / matchCount) * 100),

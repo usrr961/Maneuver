@@ -86,80 +86,84 @@ const MatchStrategyPage = () => {
 
   useEffect(() => {
     // Load scouting data using the new deduplication utilities
-    try {
-      const data = loadLegacyScoutingData();
-      setScoutingData(data);
-      
-      // Get unique team numbers (team number is now at index 4 due to ID at index 0)
-      const teams = [...new Set(data.map((entry: any[]) => entry[4]?.toString()).filter(Boolean))];
-      teams.sort((a, b) => Number(a) - Number(b));
-      setAvailableTeams(teams as string[]);
-    } catch (error) {
-      console.error("Error loading scouting data:", error);
-    }
+    const loadData = async () => {
+      try {
+        const data = await loadLegacyScoutingData();
+        setScoutingData(data);
+        
+        // Get unique team numbers from selectTeam field
+        const teams = [...new Set(data.map((entry: Record<string, unknown>) => entry.selectTeam?.toString()).filter(Boolean))];
+        teams.sort((a, b) => Number(a) - Number(b));
+        setAvailableTeams(teams as string[]);
+      } catch (error) {
+        console.error("Error loading scouting data:", error);
+      }
+    };
+
+    loadData();
   }, []);
 
-  const parseScoutingEntry = (dataArray: any[]): ScoutingEntry => {
-    // Account for ID at index 0, so actual data starts at index 1
+  const parseScoutingEntry = (dataObject: Record<string, unknown>): ScoutingEntry => {
+    // Convert object properties to ScoutingEntry structure
     return {
-      matchNumber: dataArray[1]?.toString() || "",     // was 0, now 1
-      alliance: dataArray[2] || "",                    // was 1, now 2
-      scouterInitials: dataArray[3] || "",             // was 2, now 3
-      selectTeam: dataArray[4]?.toString() || "",      // was 3, now 4
-      startPoses0: dataArray[5] || false,              // was 4, now 5
-      startPoses1: dataArray[6] || false,              // was 5, now 6
-      startPoses2: dataArray[7] || false,              // was 6, now 7
-      startPoses3: dataArray[8] || false,              // was 7, now 8
-      startPoses4: dataArray[9] || false,              // was 8, now 9
-      startPoses5: dataArray[10] || false,             // was 9, now 10
-      autoCoralPlaceL1Count: dataArray[11] || 0,       // was 10, now 11
-      autoCoralPlaceL2Count: dataArray[12] || 0,       // was 11, now 12
-      autoCoralPlaceL3Count: dataArray[13] || 0,       // was 12, now 13
-      autoCoralPlaceL4Count: dataArray[14] || 0,       // was 13, now 14
-      autoCoralPlaceDropMissCount: dataArray[15] || 0, // was 14, now 15
-      autoCoralPickPreloadCount: dataArray[16] || 0,   // was 15, now 16
-      autoCoralPickStationCount: dataArray[17] || 0,   // was 16, now 17
-      autoCoralPickMark1Count: dataArray[18] || 0,     // was 17, now 18
-      autoCoralPickMark2Count: dataArray[19] || 0,     // was 18, now 19
-      autoCoralPickMark3Count: dataArray[20] || 0,     // was 19, now 20
-      autoAlgaePlaceNetShot: dataArray[21] || 0,       // was 20, now 21
-      autoAlgaePlaceProcessor: dataArray[22] || 0,     // was 21, now 22
-      autoAlgaePlaceDropMiss: dataArray[23] || 0,      // was 22, now 23
-      autoAlgaePlaceRemove: dataArray[24] || 0,           // was 23, now 24
-      autoAlgaePickReefCount: dataArray[25] || 0,         // was 24, now 25
-      autoAlgaePickMark1Count: dataArray[26] || 0,        // was 25, now 26
-      autoAlgaePickMark2Count: dataArray[27] || 0,        // was 26, now 27
-      autoAlgaePickMark3Count: dataArray[28] || 0,        // was 27, now 28
-      autoPassedStartLine: dataArray[29] || false,        // was 28, now 29
-      teleopCoralPlaceL1Count: dataArray[30] || 0,        // was 29, now 30
-      teleopCoralPlaceL2Count: dataArray[31] || 0,        // was 30, now 31
-      teleopCoralPlaceL3Count: dataArray[32] || 0,        // was 31, now 32
-      teleopCoralPlaceL4Count: dataArray[33] || 0,        // was 32, now 33
-      teleopCoralPlaceDropMissCount: dataArray[34] || 0,  // was 33, now 34
-      teleopCoralPickStationCount: dataArray[35] || 0,    // was 34, now 35
-      teleopCoralPickCarpetCount: dataArray[36] || 0,     // was 35, now 36
-      teleopAlgaePlaceNetShot: dataArray[37] || 0,        // was 36, now 37
-      teleopAlgaePlaceProcessor: dataArray[38] || 0,      // was 37, now 38
-      teleopAlgaePlaceDropMiss: dataArray[39] || 0,       // was 38, now 39
-      teleopAlgaePlaceRemove: dataArray[40] || 0,         // was 39, now 40
-      teleopAlgaePickReefCount: dataArray[41] || 0,       // was 40, now 41
-      teleopAlgaePickCarpetCount: dataArray[42] || 0,     // was 41, now 42
-      shallowClimbAttempted: dataArray[43] || false,      // was 42, now 43
-      deepClimbAttempted: dataArray[44] || false,         // was 43, now 44
-      parkAttempted: dataArray[45] || false,              // was 44, now 45
-      climbFailed: dataArray[46] || false,                // was 45, now 46
-      playedDefense: dataArray[47] || false,              // was 46, now 47
-      brokeDown: dataArray[48] || false,                  // was 47, now 48
-      comment: dataArray[49] || ""                        // was 48, now 49
+      matchNumber: dataObject.matchNumber?.toString() || "",
+      alliance: dataObject.alliance?.toString() || "",
+      scouterInitials: dataObject.scouterInitials?.toString() || "",
+      selectTeam: dataObject.selectTeam?.toString() || "",
+      startPoses0: Boolean(dataObject.startPoses0),
+      startPoses1: Boolean(dataObject.startPoses1),
+      startPoses2: Boolean(dataObject.startPoses2),
+      startPoses3: Boolean(dataObject.startPoses3),
+      startPoses4: Boolean(dataObject.startPoses4),
+      startPoses5: Boolean(dataObject.startPoses5),
+      autoCoralPlaceL1Count: Number(dataObject.autoCoralPlaceL1Count) || 0,
+      autoCoralPlaceL2Count: Number(dataObject.autoCoralPlaceL2Count) || 0,
+      autoCoralPlaceL3Count: Number(dataObject.autoCoralPlaceL3Count) || 0,
+      autoCoralPlaceL4Count: Number(dataObject.autoCoralPlaceL4Count) || 0,
+      autoCoralPlaceDropMissCount: Number(dataObject.autoCoralPlaceDropMissCount) || 0,
+      autoCoralPickPreloadCount: Number(dataObject.autoCoralPickPreloadCount) || 0,
+      autoCoralPickStationCount: Number(dataObject.autoCoralPickStationCount) || 0,
+      autoCoralPickMark1Count: Number(dataObject.autoCoralPickMark1Count) || 0,
+      autoCoralPickMark2Count: Number(dataObject.autoCoralPickMark2Count) || 0,
+      autoCoralPickMark3Count: Number(dataObject.autoCoralPickMark3Count) || 0,
+      autoAlgaePlaceNetShot: Number(dataObject.autoAlgaePlaceNetShot) || 0,
+      autoAlgaePlaceProcessor: Number(dataObject.autoAlgaePlaceProcessor) || 0,
+      autoAlgaePlaceDropMiss: Number(dataObject.autoAlgaePlaceDropMiss) || 0,
+      autoAlgaePlaceRemove: Number(dataObject.autoAlgaePlaceRemove) || 0,
+      autoAlgaePickReefCount: Number(dataObject.autoAlgaePickReefCount) || 0,
+      autoAlgaePickMark1Count: Number(dataObject.autoAlgaePickMark1Count) || 0,
+      autoAlgaePickMark2Count: Number(dataObject.autoAlgaePickMark2Count) || 0,
+      autoAlgaePickMark3Count: Number(dataObject.autoAlgaePickMark3Count) || 0,
+      autoPassedStartLine: Boolean(dataObject.autoPassedStartLine),
+      teleopCoralPlaceL1Count: Number(dataObject.teleopCoralPlaceL1Count) || 0,
+      teleopCoralPlaceL2Count: Number(dataObject.teleopCoralPlaceL2Count) || 0,
+      teleopCoralPlaceL3Count: Number(dataObject.teleopCoralPlaceL3Count) || 0,
+      teleopCoralPlaceL4Count: Number(dataObject.teleopCoralPlaceL4Count) || 0,
+      teleopCoralPlaceDropMissCount: Number(dataObject.teleopCoralPlaceDropMissCount) || 0,
+      teleopCoralPickStationCount: Number(dataObject.teleopCoralPickStationCount) || 0,
+      teleopCoralPickCarpetCount: Number(dataObject.teleopCoralPickCarpetCount) || 0,
+      teleopAlgaePlaceNetShot: Number(dataObject.teleopAlgaePlaceNetShot) || 0,
+      teleopAlgaePlaceProcessor: Number(dataObject.teleopAlgaePlaceProcessor) || 0,
+      teleopAlgaePlaceDropMiss: Number(dataObject.teleopAlgaePlaceDropMiss) || 0,
+      teleopAlgaePlaceRemove: Number(dataObject.teleopAlgaePlaceRemove) || 0,
+      teleopAlgaePickReefCount: Number(dataObject.teleopAlgaePickReefCount) || 0,
+      teleopAlgaePickCarpetCount: Number(dataObject.teleopAlgaePickCarpetCount) || 0,
+      shallowClimbAttempted: Boolean(dataObject.shallowClimbAttempted),
+      deepClimbAttempted: Boolean(dataObject.deepClimbAttempted),
+      parkAttempted: Boolean(dataObject.parkAttempted),
+      climbFailed: Boolean(dataObject.climbFailed),
+      playedDefense: Boolean(dataObject.playedDefense),
+      brokeDown: Boolean(dataObject.brokeDown),
+      comment: dataObject.comment?.toString() || ""
     };
   };
 
   const getTeamStats = (teamNumber: string) => {
     if (!teamNumber) return null;
 
-    const teamDataArrays = scoutingData.filter(dataArray => dataArray[4]?.toString() === teamNumber); // was index 3, now 4
+    const teamDataObjects = scoutingData.filter((dataObject: Record<string, unknown>) => dataObject.selectTeam?.toString() === teamNumber);
     
-    if (teamDataArrays.length === 0) {
+    if (teamDataObjects.length === 0) {
       return {
         matchesPlayed: 0,
         overall: {
@@ -190,7 +194,7 @@ const MatchStrategyPage = () => {
       };
     }
 
-    const teamEntries = teamDataArrays.map(parseScoutingEntry);
+    const teamEntries = teamDataObjects.map(parseScoutingEntry);
     const matchCount = teamEntries.length;
 
     // Calculate overall stats

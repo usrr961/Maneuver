@@ -23,7 +23,7 @@ interface UniversalFountainGeneratorProps {
   onBack: () => void;
   onSwitchToScanner?: () => void;
   dataType: 'scouting' | 'match';
-  loadData: () => unknown;
+  loadData: () => Promise<unknown> | unknown;
   title: string;
   description: string;
   noDataMessage: string;
@@ -50,20 +50,24 @@ const UniversalFountainGenerator = ({
   ];
 
   useEffect(() => {
-    try {
-      const loadedData = loadData();
-      setData(loadedData);
-      
-      if (loadedData) {
-        console.log(`Loaded ${dataType} data for fountain codes:`, loadedData);
-      } else {
-        console.log(`No ${dataType} data found`);
+    const loadDataAsync = async () => {
+      try {
+        const loadedData = await loadData();
+        setData(loadedData);
+        
+        if (loadedData) {
+          console.log(`Loaded ${dataType} data for fountain codes:`, loadedData);
+        } else {
+          console.log(`No ${dataType} data found`);
+        }
+      } catch (error) {
+        console.error(`Error loading ${dataType} data:`, error);
+        toast.error(`Error loading ${dataType} data: ` + (error instanceof Error ? error.message : String(error)));
+        setData(null);
       }
-    } catch (error) {
-      console.error(`Error loading ${dataType} data:`, error);
-      toast.error(`Error loading ${dataType} data: ` + (error instanceof Error ? error.message : String(error)));
-      setData(null);
-    }
+    };
+
+    loadDataAsync();
   }, [loadData, dataType]);
 
   const generateFountainPackets = () => {

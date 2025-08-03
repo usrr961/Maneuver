@@ -3,7 +3,7 @@
  */
 
 // Generate a deterministic ID based on scouting entry data content
-export const generateEntryId = (entryData: unknown[]): string => {
+export const generateEntryId = (entryData: Record<string, unknown> | unknown[]): string => {
   // Create a deterministic hash from ALL the scouting data
   // This ensures the same data always generates the same ID across devices
   const dataString = JSON.stringify(entryData);
@@ -30,37 +30,48 @@ export const generateEntryId = (entryData: unknown[]): string => {
 // Enhanced scouting data structure with ID
 export interface ScoutingDataWithId {
   id: string;
-  data: unknown[];
+  data: Record<string, unknown>; // Changed from unknown[] to object
   timestamp?: number; // When this entry was created/imported
 }
 
-// Convert legacy data arrays to data with IDs
-export const addIdsToScoutingData = (legacyData: unknown[][]): ScoutingDataWithId[] => {
-  return legacyData.map(entryArray => {
-    // Check if this array already has an ID as the first element (16-char hex string)
-    const firstElement = entryArray[0];
-    if (typeof firstElement === 'string' && firstElement.length === 16 && /^[0-9a-f]+$/i.test(firstElement)) {
-      // Already has ID, use it and keep the full array as data
-      return {
-        id: firstElement,
-        data: entryArray,
-        timestamp: Date.now()
-      };
+// Convert legacy data arrays or objects to data with IDs
+export const addIdsToScoutingData = (legacyData: (unknown[] | Record<string, unknown>)[]): ScoutingDataWithId[] => {
+  return legacyData.map(entryData => {
+    let cleanData: Record<string, unknown>;
+    
+    if (Array.isArray(entryData)) {
+      // Legacy array format - this shouldn't happen with the new object format
+      // but we'll handle it for backward compatibility
+      console.warn('Legacy array format detected, this should not happen with object-based data');
+      
+      // Clean the data array by removing any embedded ID (if it exists at the beginning)
+      let cleanArray = entryData;
+      const firstElement = entryData[0];
+      
+      // Check if first element looks like an embedded ID (16-char hex string)
+      if (typeof firstElement === 'string' && firstElement.length === 16 && /^[0-9a-f]+$/i.test(firstElement)) {
+        cleanArray = entryData.slice(1);
+      }
+      
+      // Convert array to object (this would need proper field mapping - not recommended)
+      cleanData = { legacyArrayData: cleanArray };
     } else {
-      // No ID, generate one and add it to the beginning
-      const generatedId = generateEntryId(entryArray);
-      const dataWithId = [generatedId, ...entryArray];
-      return {
-        id: generatedId,
-        data: dataWithId,
-        timestamp: Date.now()
-      };
+      // New object format - just use as-is
+      cleanData = { ...entryData };
     }
+    
+    // Generate a unique ID for this entry
+    const generatedId = generateEntryId(cleanData);
+    return {
+      id: generatedId,
+      data: cleanData,
+      timestamp: Date.now()
+    };
   });
 };
 
-// Convert data with IDs back to legacy format
-export const extractLegacyData = (dataWithIds: ScoutingDataWithId[]): unknown[][] => {
+// Convert data with IDs back to legacy format (objects instead of arrays now)
+export const extractLegacyData = (dataWithIds: ScoutingDataWithId[]): Record<string, unknown>[] => {
   return dataWithIds.map(entry => entry.data);
 };
 
@@ -86,24 +97,36 @@ export const hasIdStructure = (data: unknown): data is { entries: ScoutingDataWi
 
 // Migrate legacy data to new ID-based structure
 export const migrateToIdStructure = (legacyData: unknown): { entries: ScoutingDataWithId[] } => {
-  let dataArrays: unknown[][] = [];
+  let dataEntries: (unknown[] | Record<string, unknown>)[] = [];
   
   // Handle different legacy formats
   if (Array.isArray(legacyData)) {
-    // Direct array format - check if it's array of arrays
-    if (legacyData.length > 0 && Array.isArray(legacyData[0])) {
-      dataArrays = legacyData as unknown[][];
+    // Check if it's an array of objects (new format) or array of arrays (old format)
+    if (legacyData.length > 0) {
+      if (typeof legacyData[0] === 'object' && legacyData[0] !== null && !Array.isArray(legacyData[0])) {
+        // New object format
+        dataEntries = legacyData as Record<string, unknown>[];
+      } else if (Array.isArray(legacyData[0])) {
+        // Old array format
+        dataEntries = legacyData as unknown[][];
+      }
     }
   } else if (typeof legacyData === 'object' && legacyData !== null && 'data' in legacyData) {
     // Wrapped in data object
     const wrapped = legacyData as { data: unknown[] };
-    if (Array.isArray(wrapped.data) && wrapped.data.length > 0 && Array.isArray(wrapped.data[0])) {
-      dataArrays = wrapped.data as unknown[][];
+    if (Array.isArray(wrapped.data) && wrapped.data.length > 0) {
+      if (typeof wrapped.data[0] === 'object' && wrapped.data[0] !== null && !Array.isArray(wrapped.data[0])) {
+        // New object format wrapped
+        dataEntries = wrapped.data as Record<string, unknown>[];
+      } else if (Array.isArray(wrapped.data[0])) {
+        // Old array format wrapped
+        dataEntries = wrapped.data as unknown[][];
+      }
     }
   }
   
   return {
-    entries: addIdsToScoutingData(dataArrays)
+    entries: addIdsToScoutingData(dataEntries)
   };
 };
 
@@ -164,44 +187,72 @@ export const mergeScoutingData = (
   };
 };
 
-// Load scouting data from localStorage with migration support
-export const loadScoutingData = (): { entries: ScoutingDataWithId[] } => {
-  const existingDataStr = localStorage.getItem("scoutingData");
-  
-  if (!existingDataStr) {
-    return { entries: [] };
-  }
-  
+// Load scouting data with IndexedDB support and localStorage fallback
+export const loadScoutingData = async (): Promise<{ entries: ScoutingDataWithId[] }> => {
   try {
-    const parsed = JSON.parse(existingDataStr);
+    // First, try to load from IndexedDB
+    const { loadAllScoutingEntries, migrateFromLocalStorage } = await import('./indexedDBUtils');
     
-    if (hasIdStructure(parsed)) {
-      // Already in new format
-      return parsed;
-    } else {
-      // Legacy format - migrate and save
-      const migrated = migrateToIdStructure(parsed);
-      saveScoutingData(migrated);
-      return migrated;
+    const existingEntries = await loadAllScoutingEntries();
+    if (existingEntries.length > 0) {
+      return { entries: existingEntries };
     }
-  } catch (error) {
-    console.error("Error parsing scouting data:", error);
+    
+    // If no data in IndexedDB, try migrating from localStorage
+    const migrationResult = await migrateFromLocalStorage();
+    if (migrationResult.success && migrationResult.migratedCount > 0) {
+      const entries = await loadAllScoutingEntries();
+      return { entries };
+    }
+    
     return { entries: [] };
+  } catch (error) {
+    console.error('Error loading scouting data from IndexedDB, falling back to localStorage:', error);
+    
+    // Fallback to localStorage
+    const existingDataStr = localStorage.getItem("scoutingData");
+    
+    if (!existingDataStr) {
+      return { entries: [] };
+    }
+    
+    try {
+      const parsed = JSON.parse(existingDataStr);
+      
+      if (hasIdStructure(parsed)) {
+        return parsed;
+      } else {
+        const migrated = migrateToIdStructure(parsed);
+        saveScoutingData(migrated);
+        return migrated;
+      }
+    } catch (parseError) {
+      console.error("Error parsing scouting data:", parseError);
+      return { entries: [] };
+    }
   }
 };
 
 // Load legacy format data for backward compatibility with existing components
-export const loadLegacyScoutingData = (): unknown[][] => {
-  const data = loadScoutingData();
+export const loadLegacyScoutingData = async (): Promise<Record<string, unknown>[]> => {
+  const data = await loadScoutingData();
   return extractLegacyData(data.entries);
 };
 
-// Save scouting data to localStorage in legacy format (maintains backward compatibility)
-export const saveScoutingData = (data: { entries: ScoutingDataWithId[] }): void => {
-  // Convert back to legacy format: { data: array[][] }
-  const legacyData = extractLegacyData(data.entries);
-  const legacyFormat = { data: legacyData };
-  localStorage.setItem("scoutingData", JSON.stringify(legacyFormat));
+// Save scouting data using IndexedDB with localStorage fallback
+export const saveScoutingData = async (data: { entries: ScoutingDataWithId[] }): Promise<void> => {
+  try {
+    // Try to save to IndexedDB first
+    const { saveScoutingEntries } = await import('./indexedDBUtils');
+    await saveScoutingEntries(data.entries);
+  } catch (error) {
+    console.error('Error saving to IndexedDB, falling back to localStorage:', error);
+    
+    // Fallback to localStorage (legacy format)
+    const legacyData = extractLegacyData(data.entries);
+    const legacyFormat = { data: legacyData };
+    localStorage.setItem("scoutingData", JSON.stringify(legacyFormat));
+  }
 };
 
 // Save scouting data in new object format (for internal use if needed)
@@ -209,18 +260,24 @@ export const saveScoutingDataNewFormat = (data: { entries: ScoutingDataWithId[] 
   localStorage.setItem("scoutingData", JSON.stringify(data));
 };
 
-// Get display summary for UI
-export const getDataSummary = (data: { entries: ScoutingDataWithId[] }): {
+// Get display summary for UI (now async)
+export const getDataSummary = async (data?: { entries: ScoutingDataWithId[] }): Promise<{
   totalEntries: number;
   teams: string[];
   matches: string[];
   scouters: string[];
-} => {
+}> => {
+  let dataToUse = data;
+  
+  if (!dataToUse) {
+    dataToUse = await loadScoutingData();
+  }
+  
   const teams = new Set<string>();
   const matches = new Set<string>();
   const scouters = new Set<string>();
   
-  data.entries.forEach(entry => {
+  dataToUse.entries.forEach(entry => {
     // Skip the ID at index 0, so actual data starts at index 1
     const matchNumber = entry.data[1]?.toString(); // was index 0, now index 1
     const scouterInitials = entry.data[3]?.toString(); // was index 2, now index 3
@@ -232,7 +289,7 @@ export const getDataSummary = (data: { entries: ScoutingDataWithId[] }): {
   });
   
   return {
-    totalEntries: data.entries.length,
+    totalEntries: dataToUse.entries.length,
     teams: Array.from(teams).sort((a, b) => Number(a) - Number(b)),
     matches: Array.from(matches).sort((a, b) => Number(a) - Number(b)),
     scouters: Array.from(scouters).sort()

@@ -1,4 +1,4 @@
-import { loadScoutingData, extractLegacyData } from "@/lib/scoutingDataUtils";
+import { loadScoutingData } from "@/lib/scoutingDataUtils";
 import UniversalFountainGenerator from "./UniversalFountainGenerator";
 
 interface FountainCodeGeneratorProps {
@@ -7,17 +7,17 @@ interface FountainCodeGeneratorProps {
 }
 
 const FountainCodeGenerator = ({ onBack, onSwitchToScanner }: FountainCodeGeneratorProps) => {
-  const loadScoutingDataForFountain = () => {
-    const scoutingDataWithIds = loadScoutingData();
+  const loadScoutingDataForFountain = async () => {
+    const scoutingDataWithIds = await loadScoutingData();
     
     if (scoutingDataWithIds.entries.length > 0) {
-      // Convert to legacy format for fountain codes (scanner expects { data: [...] })
-      const legacyDataArrays = extractLegacyData(scoutingDataWithIds.entries);
-      const formattedData = { data: legacyDataArrays };
+      // Send the full entries with IDs preserved for proper deduplication
+      const formattedData = { entries: scoutingDataWithIds.entries };
       
       console.log("Loaded scouting data for fountain codes:", {
         totalEntries: scoutingDataWithIds.entries.length,
-        sampleEntry: legacyDataArrays[0]?.slice(0, 5), // Show first 5 fields
+        sampleEntryFields: scoutingDataWithIds.entries[0]?.data ? Object.keys(scoutingDataWithIds.entries[0].data).slice(0, 5) : [],
+        sampleEntryId: scoutingDataWithIds.entries[0]?.id,
       });
       
       return formattedData;

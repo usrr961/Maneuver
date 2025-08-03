@@ -82,7 +82,7 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack, onSwitchToDownload 
       }
 
       // Load existing data using new utility
-      const existingScoutingData = loadScoutingData();
+      const existingScoutingData = await loadScoutingData();
       
       // Convert new data to ID structure
       const newDataArrays = newData as unknown[][];
@@ -96,7 +96,7 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack, onSwitchToDownload 
       );
       
       // Save merged data
-      saveScoutingData({ entries: mergeResult.merged });
+      await saveScoutingData({ entries: mergeResult.merged });
       
       // Create success message based on mode and results
       const { stats } = mergeResult;
