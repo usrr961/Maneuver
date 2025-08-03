@@ -50,11 +50,14 @@ export default function Button(
       asChild?: boolean
   }) {
 
+  // Check if device supports hover (desktop) vs touch-only (mobile)
+  const supportsHover = typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches;
+
   return (
     <motion.button
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
-      whileHover={{ scale: 1.02 }}
+      whileHover={supportsHover ? { scale: 1.02 } : undefined}
       whileTap={{ scale: 0.95 }}
       {...props}
     />
