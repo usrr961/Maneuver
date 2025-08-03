@@ -98,107 +98,29 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { setOpenMobile } = useSidebar()
   const touchStartRef = React.useRef<{ x: number; y: number } | null>(null)
-  const touchEndRef = React.useRef<{ x: number; y: number } | null>(null)
-  const lastTouchRef = React.useRef<{ x: number; y: number; time: number } | null>(null)
-  const sidebarRef = React.useRef<HTMLDivElement>(null)
-  const isDraggingRef = React.useRef(false)
   
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0]
     touchStartRef.current = { x: touch.clientX, y: touch.clientY }
-    isDraggingRef.current = false
   }
   
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStartRef.current || !sidebarRef.current) return
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return
     
-    const currentX = e.touches[0].clientX
-    const currentY = e.touches[0].clientY
-    const currentTime = Date.now()
+    const touch = e.changedTouches[0]
+    const deltaX = touch.clientX - touchStartRef.current.x
+    const deltaY = touch.clientY - touchStartRef.current.y
+    const minSwipeDistance = 60
     
-    touchEndRef.current = { x: currentX, y: currentY }
-    lastTouchRef.current = { x: currentX, y: currentY, time: currentTime }
-
-    const deltaX = currentX - touchStartRef.current.x
-    const deltaY = currentY - touchStartRef.current.y
-    
-    // Only drag horizontally and only in the close direction (left)
-    if (deltaX < 0 && Math.abs(deltaX) > Math.abs(deltaY)) {
-      const maxDrag = window.innerWidth * 0.8 // 80% of viewport width
-      const transform = `translateX(${Math.max(deltaX, -maxDrag)}px)`
-      
-      sidebarRef.current.style.transform = transform
-      sidebarRef.current.style.transition = 'none'
-      isDraggingRef.current = true
-    }
-  }
-  
-  const handleTouchEnd = () => {
-    if (!touchStartRef.current || !touchEndRef.current || !sidebarRef.current) return
-    
-    const deltaX = touchEndRef.current.x - touchStartRef.current.x
-    const deltaY = touchEndRef.current.y - touchStartRef.current.y
-    const dismissThreshold = 100 // Need to drag 100px to dismiss
-    const dragThreshold = 20 // Minimum drag to register as dragging
-    const velocityThreshold = 1.0 // Velocity threshold for quick flicks
-    const counterVelocityThreshold = 0.8 // Threshold for detecting counter-movement
-    
-    let shouldClose = false
-    let wasDragging = false
-    
-    // Calculate velocity if we have recent touch data
-    let velocity = 0
-    let hasRecentTouch = false
-    
-    if (lastTouchRef.current && touchEndRef.current) {
-      const timeDiff = Date.now() - lastTouchRef.current.time
-      if (timeDiff > 0 && timeDiff < 150) {
-        hasRecentTouch = true
-        // For sidebar closing, negative deltaX is dismiss direction (swipe left)
-        velocity = (lastTouchRef.current.x - touchEndRef.current.x) / timeDiff
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+      if (deltaX < -minSwipeDistance) {
+        e.preventDefault()
+        haptics.light()
+        setOpenMobile(false)
       }
     }
     
-    // Only consider horizontal swipes for sidebar
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      wasDragging = deltaX < -dragThreshold // Dragged left
-      
-      // Only dismiss if:
-      // - Dragged far enough left AND not flicking back right strongly
-      // - OR quick leftward flick regardless of distance
-      shouldClose = (deltaX < -dismissThreshold && (!hasRecentTouch || velocity >= -counterVelocityThreshold)) || 
-                    (hasRecentTouch && velocity > velocityThreshold)
-    }
-    
-    // Re-enable transition for snap-back animation
-    sidebarRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
-    
-    if (shouldClose) {
-      haptics.light()
-      setOpenMobile(false)
-    } else if (wasDragging) {
-      // Snap back to original position - animate to translateX(0) first
-      sidebarRef.current.style.transform = 'translateX(0)'
-      haptics.vibrate(25) // Light haptic for snap-back
-      
-      // Remove transform entirely after animation completes
-      setTimeout(() => {
-        if (sidebarRef.current) {
-          sidebarRef.current.style.transform = ''
-          sidebarRef.current.style.transition = ''
-        }
-      }, 300)
-    } else {
-      // If not dragging, still reset transform and transition
-      sidebarRef.current.style.transform = ''
-      sidebarRef.current.style.transition = ''
-    }
-    
-    // Reset touch references
     touchStartRef.current = null
-    touchEndRef.current = null
-    lastTouchRef.current = null
-    isDraggingRef.current = false
   }
 
   React.useEffect(() => {
@@ -210,119 +132,41 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       }
     }
 
-    const handleGlobalTouchMove = (e: TouchEvent) => {
-      if (!touchStartRef.current || !sidebarRef.current) return
-      
-      const sidebar = document.querySelector('[data-sidebar="sidebar"]')
-      if (sidebar && !sidebar.contains(e.target as Node)) {
-        const currentX = e.touches[0].clientX
-        const currentY = e.touches[0].clientY
-        const currentTime = Date.now()
-        
-        touchEndRef.current = { x: currentX, y: currentY }
-        lastTouchRef.current = { x: currentX, y: currentY, time: currentTime }
-
-        const deltaX = currentX - touchStartRef.current.x
-        const deltaY = currentY - touchStartRef.current.y
-        
-        // Only drag horizontally and only in the close direction (left)
-        if (deltaX < 0 && Math.abs(deltaX) > Math.abs(deltaY)) {
-          const maxDrag = window.innerWidth * 0.8 // 80% of viewport width
-          const transform = `translateX(${Math.max(deltaX, -maxDrag)}px)`
-          
-          sidebarRef.current.style.transform = transform
-          sidebarRef.current.style.transition = 'none'
-          isDraggingRef.current = true
-        }
-      }
-    }
-
     const handleGlobalTouchEnd = (e: TouchEvent) => {
       if (!touchStartRef.current) return
       
       const sidebar = document.querySelector('[data-sidebar="sidebar"]')
       if (sidebar && !sidebar.contains(e.target as Node)) {
-        // Use the same logic as the component touch handler
-        if (touchEndRef.current && sidebarRef.current) {
-          const deltaX = touchEndRef.current.x - touchStartRef.current.x
-          const deltaY = touchEndRef.current.y - touchStartRef.current.y
-          const dismissThreshold = 100
-          const dragThreshold = 20
-          const velocityThreshold = 1.0
-          const counterVelocityThreshold = 0.8
-          
-          let shouldClose = false
-          let wasDragging = false
-          
-          // Calculate velocity if we have recent touch data
-          let velocity = 0
-          let hasRecentTouch = false
-          
-          if (lastTouchRef.current && touchEndRef.current) {
-            const timeDiff = Date.now() - lastTouchRef.current.time
-            if (timeDiff > 0 && timeDiff < 150) {
-              hasRecentTouch = true
-              velocity = (lastTouchRef.current.x - touchEndRef.current.x) / timeDiff
-            }
-          }
-          
-          // Only consider horizontal swipes for sidebar
-          if (Math.abs(deltaX) > Math.abs(deltaY)) {
-            wasDragging = deltaX < -dragThreshold
-            shouldClose = (deltaX < -dismissThreshold && (!hasRecentTouch || velocity >= -counterVelocityThreshold)) || 
-                          (hasRecentTouch && velocity > velocityThreshold)
-          }
-          
-          // Re-enable transition for snap-back animation
-          sidebarRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
-          
-          if (shouldClose) {
+        const touch = e.changedTouches[0]
+        const deltaX = touch.clientX - touchStartRef.current.x
+        const deltaY = touch.clientY - touchStartRef.current.y
+        const minSwipeDistance = 60
+        
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+          if (deltaX < -minSwipeDistance) {
             e.preventDefault()
             haptics.light()
             setOpenMobile(false)
-          } else if (wasDragging) {
-            // Snap back to original position - animate to translateX(0) first
-            sidebarRef.current.style.transform = 'translateX(0)'
-            haptics.vibrate(25)
-            
-            // Remove transform entirely after animation completes
-            setTimeout(() => {
-              if (sidebarRef.current) {
-                sidebarRef.current.style.transform = ''
-                sidebarRef.current.style.transition = ''
-              }
-            }, 300)
-          } else {
-            // If not dragging, still reset transform and transition
-            sidebarRef.current.style.transform = ''
-            sidebarRef.current.style.transition = ''
           }
         }
       }
       
-      // Reset touch references
       touchStartRef.current = null
-      touchEndRef.current = null
-      lastTouchRef.current = null
-      isDraggingRef.current = false
     }
 
     document.addEventListener('touchstart', handleGlobalTouchStart, { passive: true })
-    document.addEventListener('touchmove', handleGlobalTouchMove, { passive: true })
     document.addEventListener('touchend', handleGlobalTouchEnd, { passive: false })
 
     return () => {
       document.removeEventListener('touchstart', handleGlobalTouchStart)
-      document.removeEventListener('touchmove', handleGlobalTouchMove)
       document.removeEventListener('touchend', handleGlobalTouchEnd)
     }
   }, [setOpenMobile])
 
   return (
-    <Sidebar ref={sidebarRef} variant="inset" {...props}>
+    <Sidebar variant="inset" {...props}>
       <SidebarHeader
         onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         <SidebarMenu>
@@ -347,7 +191,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent
         onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         <NavMain items={data.navMain} />
