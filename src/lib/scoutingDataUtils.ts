@@ -157,71 +157,22 @@ export const mergeScoutingData = (
 // Load scouting data with Dexie support and localStorage fallback
 export const loadScoutingData = async (): Promise<{ entries: ScoutingDataWithId[] }> => {
   try {
-    // First, try to load from Dexie
-    const { loadAllScoutingEntries, migrateFromLocalStorage, migrateFromIndexedDB } = await import('./dexieDB');
+    // Simply load from Dexie - no complex migration needed
+    const { loadAllScoutingEntries } = await import('./dexieDB');
     
     const existingEntries = await loadAllScoutingEntries();
-    if (existingEntries.length > 0) {
-      // Convert ScoutingEntryDB back to ScoutingDataWithId format
-      const convertedEntries: ScoutingDataWithId[] = existingEntries.map(entry => ({
-        id: entry.id,
-        data: entry.data,
-        timestamp: entry.timestamp
-      }));
-      return { entries: convertedEntries };
-    }
     
-    // If no data in Dexie, try migrating from old IndexedDB first
-    const indexedDBMigration = await migrateFromIndexedDB();
-    if (indexedDBMigration.success && indexedDBMigration.migratedCount > 0) {
-      console.log(`Migrated ${indexedDBMigration.migratedCount} entries from old IndexedDB to Dexie`);
-      const entries = await loadAllScoutingEntries();
-      const convertedEntries: ScoutingDataWithId[] = entries.map(entry => ({
-        id: entry.id,
-        data: entry.data,
-        timestamp: entry.timestamp
-      }));
-      return { entries: convertedEntries };
-    }
+    // Convert ScoutingEntryDB back to ScoutingDataWithId format
+    const convertedEntries: ScoutingDataWithId[] = existingEntries.map(entry => ({
+      id: entry.id,
+      data: entry.data,
+      timestamp: entry.timestamp
+    }));
     
-    // If no data in old IndexedDB, try migrating from localStorage
-    const localStorageMigration = await migrateFromLocalStorage();
-    if (localStorageMigration.success && localStorageMigration.migratedCount > 0) {
-      console.log(`Migrated ${localStorageMigration.migratedCount} entries from localStorage to Dexie`);
-      const entries = await loadAllScoutingEntries();
-      const convertedEntries: ScoutingDataWithId[] = entries.map(entry => ({
-        id: entry.id,
-        data: entry.data,
-        timestamp: entry.timestamp
-      }));
-      return { entries: convertedEntries };
-    }
-    
-    return { entries: [] };
+    return { entries: convertedEntries };
   } catch (error) {
-    console.error('Error loading scouting data from Dexie, falling back to localStorage:', error);
-    
-    // Fallback to localStorage
-    const existingDataStr = localStorage.getItem("scoutingData");
-    
-    if (!existingDataStr) {
-      return { entries: [] };
-    }
-    
-    try {
-      const parsed = JSON.parse(existingDataStr);
-      
-      if (hasIdStructure(parsed)) {
-        return parsed;
-      } else {
-        const migrated = migrateToIdStructure(parsed);
-        saveScoutingData(migrated);
-        return migrated;
-      }
-    } catch (parseError) {
-      console.error("Error parsing scouting data:", parseError);
-      return { entries: [] };
-    }
+    console.error('Error loading scouting data:', error);
+    return { entries: [] };
   }
 };
 

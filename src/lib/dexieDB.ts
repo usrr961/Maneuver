@@ -12,23 +12,19 @@ export interface ScoutingEntryDB {
   timestamp: number;
 }
 
-export class ScoutingAppDB extends Dexie {
+export class SimpleScoutingAppDB extends Dexie {
   scoutingData!: Table<ScoutingEntryDB>;
 
   constructor() {
-    super('ScoutingAppDB');
+    super('SimpleScoutingDB_v2');
     
     this.version(1).stores({
-      scoutingData: 'id, teamNumber, matchNumber, alliance, scouterInitials, timestamp'
-    });
-    
-    this.version(2).stores({
       scoutingData: 'id, teamNumber, matchNumber, alliance, scouterInitials, eventName, timestamp'
     });
   }
 }
 
-export const db = new ScoutingAppDB();
+export const db = new SimpleScoutingAppDB();
 
 const safeStringify = (value: unknown): string | undefined => {
   if (value === null || value === undefined || value === '') {

@@ -1,7 +1,7 @@
 import type { ScoutingDataWithId } from './scoutingDataUtils';
 
-const DB_NAME = 'ScoutingAppDB';
-const DB_VERSION = 2;
+const DB_NAME = 'SimpleScoutingDB_v2';
+const DB_VERSION = 1;
 const STORE_NAME = 'scoutingData';
 
 let dbInstance: IDBDatabase | null = null;
@@ -27,7 +27,6 @@ export const initializeDB = (): Promise<IDBDatabase> => {
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      const oldVersion = event.oldVersion;
       
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
@@ -38,7 +37,7 @@ export const initializeDB = (): Promise<IDBDatabase> => {
         store.createIndex('timestamp', 'timestamp', { unique: false });
         store.createIndex('scouterInitials', 'scouterInitials', { unique: false });
         store.createIndex('eventName', 'eventName', { unique: false });
-      } else if (oldVersion < 2) {
+      } else {
         const transaction = (event.target as IDBOpenDBRequest).transaction;
         if (transaction) {
           const store = transaction.objectStore(STORE_NAME);
@@ -248,18 +247,85 @@ export const deleteScoutingEntry = async (id: string): Promise<void> => {
 
 
 export const clearAllScoutingData = async (): Promise<void> => {
-  const db = await initializeDB();
-  const transaction = db.transaction([STORE_NAME], 'readwrite');
-  const store = transaction.objectStore(STORE_NAME);
-  
-  return new Promise((resolve, reject) => {
-    const request = store.clear();
+  try {
+    const db = await initializeDB();
+    const transaction = db.transaction([STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
     
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
+    return new Promise((resolve, reject) => {
+      const request = store.clear();
+      
+      request.onsuccess = () => {
+        dbInstance = null;
+        resolve();
+      };
+      request.onerror = () => reject(request.error);
+    });
+  } catch (error) {
+    console.error('Error clearing scouting data:', error);
+    throw error;
+  }
+};
+
+export const resetDatabase = async (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (dbInstance) {
+      dbInstance.close();
+      dbInstance = null;
+    }
+    
+    const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+    
+    deleteRequest.onsuccess = async () => {
+      console.log('Database deleted successfully');
+      try {
+        await initializeDB();
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    };
+    
+    deleteRequest.onerror = () => {
+      console.error('Failed to delete database:', deleteRequest.error);
+      reject(deleteRequest.error);
+    };
+    
+    deleteRequest.onblocked = () => {
+      console.warn('Database deletion blocked. Please close all tabs using this application.');
+      reject(new Error('Database deletion blocked'));
+    };
   });
 };
 
+export const clearOldDatabases = async (): Promise<void> => {
+  const oldDbNames = [
+    'ScoutingAppDB',
+    'SimpleScoutingDB',
+    'ScoutingApp-DB', 
+    'ManeuverScoutingDB'
+  ];
+  
+  const deletePromises = oldDbNames.map(dbName => {
+    return new Promise<void>((resolve) => {
+      const deleteRequest = indexedDB.deleteDatabase(dbName);
+      deleteRequest.onsuccess = () => {
+        console.log(`Cleared old database: ${dbName}`);
+        resolve();
+      };
+      deleteRequest.onerror = () => {
+        console.log(`Could not clear database ${dbName} (might not exist)`);
+        resolve(); // Don't fail if the database doesn't exist
+      };
+      deleteRequest.onblocked = () => {
+        console.log(`Database ${dbName} deletion blocked`);
+        resolve();
+      };
+    });
+  });
+  
+  await Promise.all(deletePromises);
+};
 
 export const getDBStats = async (): Promise<{
   totalEntries: number;

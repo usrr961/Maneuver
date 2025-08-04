@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { transformToObjectFormat } from "@/lib/dataTransformation";
 import { generateEntryId } from "@/lib/scoutingDataUtils";
-import { saveScoutingEntry } from "@/lib/indexedDBUtils";
+import { saveScoutingEntry } from "@/lib/dexieDB";
 import type { ScoutingDataWithId } from "@/lib/scoutingDataUtils";
 
 const EndgamePage = () => {

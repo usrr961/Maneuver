@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import demoData from "../app/dashboard/ManeuverData-5_52_53 PM-Blue 1.json";
 import { loadLegacyScoutingData, saveScoutingData, addIdsToScoutingData, loadScoutingData } from "../lib/scoutingDataUtils";
-import { clearAllScoutingData } from "../lib/indexedDBUtils";
+import { clearAllScoutingData } from "../lib/dexieDB";
 import { analytics } from '@/lib/analytics';
 import { haptics } from '@/lib/haptics';
 
@@ -16,7 +16,9 @@ const HomePage = () => {
   useEffect(() => {
     const checkExistingData = async () => {
       try {
+        console.log("HomePage - Checking existing data...");
         const existingData = await loadLegacyScoutingData();
+        console.log("HomePage - Found existing data:", existingData.length, "entries");
         if (existingData.length > 0) {
           setIsLoaded(true);
         }
@@ -33,6 +35,7 @@ const HomePage = () => {
     setIsLoading(true);
 
     try {
+      console.log("HomePage - Starting demo data load...");
       const dataWithoutHeaders = demoData.slice(1);
       console.log("HomePage - Demo data without headers:", dataWithoutHeaders.length, "entries");
 
@@ -55,6 +58,10 @@ const HomePage = () => {
     } catch (error) {
       haptics.error();
       console.error("HomePage - Error loading demo data:", error);
+      // Show error details to help debug
+      if (error instanceof Error) {
+        console.error("Error details:", error.message, error.stack);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -64,11 +71,14 @@ const HomePage = () => {
     haptics.medium();
     
     try {
+      console.log("HomePage - Clearing data...");
       await clearAllScoutingData();
+      console.log("HomePage - Data cleared successfully");
       setIsLoaded(false);
       analytics.trackDemoDataClear();
     } catch (error) {
       console.error("Error clearing data:", error);
+      // Clear localStorage as fallback and update UI anyway
       localStorage.removeItem("scoutingData");
       setIsLoaded(false);
       analytics.trackDemoDataClear();

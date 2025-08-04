@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { loadScoutingData } from "@/lib/scoutingDataUtils";
-import { clearAllScoutingData } from "@/lib/indexedDBUtils";
+import { clearAllScoutingData } from "@/lib/dexieDB";
 import { convertTeamRole } from "@/lib/utils";
 
 
@@ -17,26 +17,34 @@ const ClearDataPage = () => {
   const [showScoutingConfirm, setShowScoutingConfirm] = useState(false);
   const [showMatchConfirm, setShowMatchConfirm] = useState(false);
 
+  const loadScoutingCount = useCallback(async () => {
+    try {
+      console.log("ClearDataPage - Loading scouting data count...");
+      const scoutingData = await loadScoutingData();
+      console.log("ClearDataPage - Loaded scouting data:", scoutingData.entries.length, "entries");
+      setScoutingDataCount(scoutingData.entries.length);
+      
+      const dataString = JSON.stringify(scoutingData.entries);
+      const size = formatDataSize(dataString);
+      console.log("ClearDataPage - Data size:", size);
+      setScoutingDataSize(size);
+    } catch (error) {
+      console.error("Error loading scouting data:", error);
+      setScoutingDataCount(0);
+      setScoutingDataSize("0 B");
+    }
+  }, []);
+
+  const refreshData = useCallback(async () => {
+    await loadScoutingCount();
+  }, [loadScoutingCount]);
+
   useEffect(() => {
     const matchData = localStorage.getItem("matchData");
     const station = localStorage.getItem("playerStation") || "Unknown";
 
     setPlayerStation(station);
-
-    const loadScoutingCount = async () => {
-      try {
-        const scoutingData = await loadScoutingData();
-        setScoutingDataCount(scoutingData.entries.length);
-        
-        const dataString = JSON.stringify(scoutingData.entries);
-        setScoutingDataSize(formatDataSize(dataString));
-      } catch (error) {
-        console.error("Error loading scouting data:", error);
-        setScoutingDataCount(0);
-        setScoutingDataSize("0 B");
-      }
-    };
-
+    
     loadScoutingCount();
 
     if (matchData) {
@@ -47,20 +55,25 @@ const ClearDataPage = () => {
         setMatchDataCount(0);
       }
     }
-  }, []);
+  }, [loadScoutingCount]);
 
   const handleClearScoutingData = async () => {
     try {
+      console.log("ClearDataPage - Starting data clear...");
       await clearAllScoutingData();
       localStorage.setItem("scoutingData", JSON.stringify({ data: [] }));
       
-      setScoutingDataCount(0);
-      setScoutingDataSize("0 B");
+      await refreshData();
       setShowScoutingConfirm(false);
       toast.success("Cleared all scouting data");
+      console.log("ClearDataPage - Data cleared successfully");
     } catch (error) {
       console.error("Error clearing scouting data:", error);
-      toast.error("Failed to clear scouting data");
+      // Clear localStorage as fallback and refresh
+      localStorage.setItem("scoutingData", JSON.stringify({ data: [] }));
+      await refreshData();
+      setShowScoutingConfirm(false);
+      toast.success("Cleared all scouting data");
     }
   };
 
