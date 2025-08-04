@@ -9,19 +9,11 @@ import { toast } from "sonner";
 import GameStartSelectTeam from "@/components/GameStartComponents/GameStartSelectTeam";
 import { EventNameSelector } from "@/components/GameStartComponents/EventNameSelector";
 
-/**
- * Renders a component representing the Game Start Page.
- *
- * To be used before the game starts, collecting information such as match number, scouter initials, and the team that is being scouted.
- *
- * @return {JSX.Element} The component representing the Game Start Page.
- */
 const GameStartPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const states = location.state;
 
-  // Helper function to parse player station and get alliance/position info
   const parsePlayerStation = () => {
     const playerStation = localStorage.getItem("playerStation");
     if (!playerStation) return { alliance: "", teamPosition: 0 };
@@ -32,8 +24,8 @@ const GameStartPage = () => {
     
     const parts = playerStation.split("-");
     if (parts.length === 2) {
-      const alliance = parts[0]; // "red" or "blue"
-      const position = parseInt(parts[1]); // 1, 2, or 3
+      const alliance = parts[0];
+      const position = parseInt(parts[1]);
       return { alliance, teamPosition: position };
     }
     
@@ -42,19 +34,14 @@ const GameStartPage = () => {
 
   const stationInfo = parsePlayerStation();
 
-  // Helper function to get and manage match number
   const getInitialMatchNumber = () => {
-    // Check if there's a match number in navigation state first
     if (states?.inputs?.matchNumber) {
       return states.inputs.matchNumber;
     }
     
-    // Get current match number from localStorage, default to 1
     const storedMatchNumber = localStorage.getItem("currentMatchNumber");
     return storedMatchNumber || "1";
   };
-
-  // Initialize the state with the passed in state from the previous page, or auto-fill from player station
 
   const [alliance, setAlliance] = useState(
     states?.inputs?.alliance || stationInfo.alliance || ""
@@ -81,7 +68,6 @@ const GameStartPage = () => {
     }
   }, [matchNumber]);
 
-  // Get current scouter from localStorage
   const getCurrentScouter = () => {
     return (
       localStorage.getItem("currentScouter") ||
@@ -128,11 +114,9 @@ const GameStartPage = () => {
     localStorage.setItem("selectTeam", selectTeam);
     localStorage.setItem("alliance", alliance);
 
-    // Clear state stacks (from ProceedBackButton logic)
     localStorage.setItem("autoStateStack", JSON.stringify([]));
     localStorage.setItem("teleopStateStack", JSON.stringify([]));
 
-    // Navigate to auto-start with inputs
     navigate("/auto-start", {
       state: {
         inputs: {
@@ -151,13 +135,10 @@ const GameStartPage = () => {
   };
 
 
-  // Debounced match number update
   const handleMatchNumberChange = (value: string) => {
     setMatchNumber(value);
-    // No immediate localStorage update; handled by debounced effect
   };
 
-  // Debounce localStorage update for matchNumber
   useEffect(() => {
     if (!matchNumber) return;
     const timeout = setTimeout(() => {
@@ -172,7 +153,6 @@ const GameStartPage = () => {
     <div className="h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
       <div className="flex flex-col items-center gap-6 max-w-2xl w-full h-full min-h-0 pb-4">
         
-        {/* Scouter Status */}
         {!currentScouter && (
           <Card className="w-full border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20">
             <CardContent>
@@ -199,7 +179,6 @@ const GameStartPage = () => {
           </CardHeader>
           <CardContent className="space-y-6">
             
-            {/* Event Name */}
             <div className="space-y-2">
               <Label>Event Name/Code</Label>
               <EventNameSelector
@@ -211,7 +190,6 @@ const GameStartPage = () => {
               </p>
             </div>
 
-            {/* Match Number */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="match-number">Match Number</Label>

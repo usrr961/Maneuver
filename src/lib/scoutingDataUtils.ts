@@ -1,66 +1,48 @@
-/**
- * Utilities for handling scouting data deduplication and unique ID generation
- */
-
-// Generate a deterministic ID based on scouting entry data content
 export const generateEntryId = (entryData: Record<string, unknown> | unknown[]): string => {
-  // Create a deterministic hash from ALL the scouting data
-  // This ensures the same data always generates the same ID across devices
   const dataString = JSON.stringify(entryData);
   
-  // Generate multiple hash values to create a 16-character hex string
   let hash1 = 0;
   let hash2 = 0;
   
   for (let i = 0; i < dataString.length; i++) {
     const char = dataString.charCodeAt(i);
     hash1 = ((hash1 << 5) - hash1) + char;
-    hash1 = hash1 & hash1; // Convert to 32-bit integer
+    hash1 = hash1 & hash1;
     hash2 = ((hash2 << 3) + hash2) + char;
-    hash2 = hash2 & hash2; // Convert to 32-bit integer
+    hash2 = hash2 & hash2;
   }
   
-  // Create 16-character hex string from both hashes
   const part1 = Math.abs(hash1).toString(16).padStart(8, '0').substring(0, 8);
   const part2 = Math.abs(hash2).toString(16).padStart(8, '0').substring(0, 8);
   
   return part1 + part2;
 };
 
-// Enhanced scouting data structure with ID
 export interface ScoutingDataWithId {
   id: string;
-  data: Record<string, unknown>; // Changed from unknown[] to object
-  timestamp?: number; // When this entry was created/imported
+  data: Record<string, unknown>;
+  timestamp?: number;
 }
 
-// Convert legacy data arrays or objects to data with IDs
 export const addIdsToScoutingData = (legacyData: (unknown[] | Record<string, unknown>)[]): ScoutingDataWithId[] => {
   return legacyData.map(entryData => {
     let cleanData: Record<string, unknown>;
     
     if (Array.isArray(entryData)) {
-      // Legacy array format - this shouldn't happen with the new object format
-      // but we'll handle it for backward compatibility
       console.warn('Legacy array format detected, this should not happen with object-based data');
       
-      // Clean the data array by removing any embedded ID (if it exists at the beginning)
       let cleanArray = entryData;
       const firstElement = entryData[0];
       
-      // Check if first element looks like an embedded ID (16-char hex string)
       if (typeof firstElement === 'string' && firstElement.length === 16 && /^[0-9a-f]+$/i.test(firstElement)) {
         cleanArray = entryData.slice(1);
       }
       
-      // Convert array to object (this would need proper field mapping - not recommended)
       cleanData = { legacyArrayData: cleanArray };
     } else {
-      // New object format - just use as-is
       cleanData = { ...entryData };
     }
     
-    // Generate a unique ID for this entry
     const generatedId = generateEntryId(cleanData);
     return {
       id: generatedId,
@@ -70,12 +52,10 @@ export const addIdsToScoutingData = (legacyData: (unknown[] | Record<string, unk
   });
 };
 
-// Convert data with IDs back to legacy format (objects instead of arrays now)
 export const extractLegacyData = (dataWithIds: ScoutingDataWithId[]): Record<string, unknown>[] => {
   return dataWithIds.map(entry => entry.data);
 };
 
-// Check if existing data has ID structure
 export const hasIdStructure = (data: unknown): data is { entries: ScoutingDataWithId[] } => {
   if (typeof data !== 'object' || data === null || !('entries' in data)) {
     return false;
@@ -95,42 +75,31 @@ export const hasIdStructure = (data: unknown): data is { entries: ScoutingDataWi
   );
 };
 
-// Migrate legacy data to new ID-based structure
 export const migrateToIdStructure = (legacyData: unknown): { entries: ScoutingDataWithId[] } => {
   let dataEntries: (unknown[] | Record<string, unknown>)[] = [];
   
-  // Handle different legacy formats
   if (Array.isArray(legacyData)) {
-    // Check if it's an array of objects (new format) or array of arrays (old format)
     if (legacyData.length > 0) {
       if (typeof legacyData[0] === 'object' && legacyData[0] !== null && !Array.isArray(legacyData[0])) {
-        // New object format
         dataEntries = legacyData as Record<string, unknown>[];
       } else if (Array.isArray(legacyData[0])) {
-        // Old array format
         dataEntries = legacyData as unknown[][];
       }
     }
-  } else if (typeof legacyData === 'object' && legacyData !== null && 'data' in legacyData) {
-    // Wrapped in data object
+    } else if (typeof legacyData === 'object' && legacyData !== null && 'data' in legacyData) {
     const wrapped = legacyData as { data: unknown[] };
     if (Array.isArray(wrapped.data) && wrapped.data.length > 0) {
       if (typeof wrapped.data[0] === 'object' && wrapped.data[0] !== null && !Array.isArray(wrapped.data[0])) {
-        // New object format wrapped
         dataEntries = wrapped.data as Record<string, unknown>[];
       } else if (Array.isArray(wrapped.data[0])) {
-        // Old array format wrapped
         dataEntries = wrapped.data as unknown[][];
       }
     }
-  }
-  
-  return {
+  }  return {
     entries: addIdsToScoutingData(dataEntries)
   };
 };
 
-// Deduplicate and merge scouting data
 export const mergeScoutingData = (
   existingData: ScoutingDataWithId[],
   newData: ScoutingDataWithId[],
@@ -157,7 +126,6 @@ export const mergeScoutingData = (
   }
   
   if (mode === 'append') {
-    // Simple append without deduplication
     return {
       merged: [...existingData, ...newData],
       stats: {
@@ -169,7 +137,6 @@ export const mergeScoutingData = (
     };
   }
   
-  // Smart merge mode - deduplicate based on IDs
   const existingIds = new Set(existingData.map(entry => entry.id));
   const uniqueNewData = newData.filter(entry => !existingIds.has(entry.id));
   const duplicateCount = newData.length - uniqueNewData.length;

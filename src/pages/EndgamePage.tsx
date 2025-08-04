@@ -16,7 +16,6 @@ const EndgamePage = () => {
   const navigate = useNavigate();
   const states = location.state;
 
-  // Endgame states
   const [shallowClimbAttempted, setShallowClimbAttempted] = useState(false);
   const [deepClimbAttempted, setDeepClimbAttempted] = useState(false);
   const [parkAttempted, setParkAttempted] = useState(false);
@@ -24,7 +23,6 @@ const EndgamePage = () => {
   const [brokeDown, setBrokeDown] = useState(false);
   const [comment, setComment] = useState("");
 
-  // Get saved actions from localStorage
   const getActionsFromLocalStorage = (phase: string) => {
     const saved = localStorage.getItem(`${phase}StateStack`);
     return saved ? JSON.parse(saved) : [];
@@ -32,11 +30,9 @@ const EndgamePage = () => {
 
   const handleSubmit = async () => {
     try {
-      // Get all the collected data
       const autoActions = getActionsFromLocalStorage("auto");
       const teleopActions = getActionsFromLocalStorage("teleop");
       
-      // Prepare the input data
       const scoutingInputs = {
         matchNumber: states?.inputs?.matchNumber || "",
         alliance: states?.inputs?.alliance || "",
@@ -56,27 +52,20 @@ const EndgamePage = () => {
         comment
       };
 
-      // Transform to object format for the new system
       const objectData = transformToObjectFormat(scoutingInputs);
-
-      // Generate unique ID for this entry
       const uniqueId = generateEntryId(objectData);
       
-      // Create entry with ID structure
       const entryWithId: ScoutingDataWithId = {
         id: uniqueId,
         data: objectData,
         timestamp: Date.now()
       };
 
-      // Save to IndexedDB
       await saveScoutingEntry(entryWithId);
 
-      // Clear the state stacks
       localStorage.removeItem("autoStateStack");
       localStorage.removeItem("teleopStateStack");
 
-      // Increment match number for next scouting session
       const currentMatchNumber = localStorage.getItem("currentMatchNumber") || "1";
       const nextMatchNumber = (parseInt(currentMatchNumber) + 1).toString();
       localStorage.setItem("currentMatchNumber", nextMatchNumber);

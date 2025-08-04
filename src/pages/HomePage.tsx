@@ -13,7 +13,6 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Check if demo data is already loaded on component mount
   useEffect(() => {
     const checkExistingData = async () => {
       try {
@@ -30,37 +29,31 @@ const HomePage = () => {
   }, []);
 
   const loadDemoData = async () => {
-    haptics.medium(); // Feedback on button press
+    haptics.medium();
     setIsLoading(true);
 
     try {
-      // Exclude the first row (column headers) from the demo data
       const dataWithoutHeaders = demoData.slice(1);
       console.log("HomePage - Demo data without headers:", dataWithoutHeaders.length, "entries");
 
-      // Add IDs to the data for IndexedDB compatibility
       const dataWithIds = addIdsToScoutingData(dataWithoutHeaders);
       console.log("HomePage - Demo data with IDs:", dataWithIds.length, "entries");
       console.log("HomePage - Sample entry with ID:", dataWithIds[0]);
 
-      // Store using IndexedDB through the utility function
       await saveScoutingData({ entries: dataWithIds });
       console.log("HomePage - Demo data saved to IndexedDB successfully");
 
-      // Verify the data was saved by loading it back
       const verifyData = await loadScoutingData();
       console.log("HomePage - Verification: loaded", verifyData.entries.length, "entries from IndexedDB");
 
-      // Simulate loading delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       setIsLoaded(true);
-      haptics.success(); // Success feedback
-      // Track demo data load
+      haptics.success();
       analytics.trackDemoDataLoad();
       
     } catch (error) {
-      haptics.error(); // Error feedback
+      haptics.error();
       console.error("HomePage - Error loading demo data:", error);
     } finally {
       setIsLoading(false);
@@ -71,15 +64,11 @@ const HomePage = () => {
     haptics.medium();
     
     try {
-      // Clear data from IndexedDB and fallback to localStorage
       await clearAllScoutingData();
       setIsLoaded(false);
-      
-      // Track demo data clear
       analytics.trackDemoDataClear();
     } catch (error) {
       console.error("Error clearing data:", error);
-      // Fallback: clear localStorage directly if IndexedDB fails
       localStorage.removeItem("scoutingData");
       setIsLoaded(false);
       analytics.trackDemoDataClear();

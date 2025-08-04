@@ -1,18 +1,11 @@
-/**
- * IndexedDB utilities for scouting data storage
- * Replaces localStorage with more robust, scalable storage
- */
-
 import type { ScoutingDataWithId } from './scoutingDataUtils';
 
 const DB_NAME = 'ScoutingAppDB';
 const DB_VERSION = 2;
 const STORE_NAME = 'scoutingData';
 
-// IndexedDB database instance
 let dbInstance: IDBDatabase | null = null;
 
-// Initialize IndexedDB
 export const initializeDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
     if (dbInstance) {
@@ -36,11 +29,9 @@ export const initializeDB = (): Promise<IDBDatabase> => {
       const db = (event.target as IDBOpenDBRequest).result;
       const oldVersion = event.oldVersion;
       
-      // Create object store if it doesn't exist
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
         
-        // Create indexes for common queries
         store.createIndex('teamNumber', 'teamNumber', { unique: false });
         store.createIndex('matchNumber', 'matchNumber', { unique: false });
         store.createIndex('alliance', 'alliance', { unique: false });
@@ -48,7 +39,6 @@ export const initializeDB = (): Promise<IDBDatabase> => {
         store.createIndex('scouterInitials', 'scouterInitials', { unique: false });
         store.createIndex('eventName', 'eventName', { unique: false });
       } else if (oldVersion < 2) {
-        // Upgrade from version 1 to 2: add eventName index
         const transaction = (event.target as IDBOpenDBRequest).transaction;
         if (transaction) {
           const store = transaction.objectStore(STORE_NAME);
@@ -61,23 +51,18 @@ export const initializeDB = (): Promise<IDBDatabase> => {
   });
 };
 
-// Enhanced scouting entry for IndexedDB with metadata
 export interface ScoutingEntryDB {
   id: string;
-  // Extracted fields for easier querying
   teamNumber?: string;
   matchNumber?: string;
   alliance?: string;
   scouterInitials?: string;
   eventName?: string;
-  // Keep original data structure (now objects instead of arrays)
   data: Record<string, unknown>;
   timestamp: number;
 }
 
-// Convert ScoutingDataWithId to ScoutingEntryDB
 const enhanceEntry = (entry: ScoutingDataWithId): ScoutingEntryDB => {
-  // Helper function to safely convert to string, handling undefined/null/empty values
   const safeStringify = (value: unknown): string | undefined => {
     if (value === null || value === undefined || value === '') {
       return undefined;
@@ -86,15 +71,11 @@ const enhanceEntry = (entry: ScoutingDataWithId): ScoutingEntryDB => {
     return str === '' ? undefined : str;
   };
 
-  // Extract metadata from data object properties
   const data = entry.data;
   
-  // Handle different data structures that might come from transfers
   let actualData = data;
   
-  // If data has nested structure, try to find the actual scouting data
   if (data && typeof data === 'object') {
-    // Check if data is wrapped in another data property
     if ('data' in data && typeof data.data === 'object') {
       actualData = data.data as Record<string, unknown>;
     }
@@ -130,7 +111,7 @@ const enhanceEntry = (entry: ScoutingDataWithId): ScoutingEntryDB => {
   };
 };
 
-// Save single scouting entry
+
 export const saveScoutingEntry = async (entry: ScoutingDataWithId): Promise<void> => {
   const db = await initializeDB();
   const transaction = db.transaction([STORE_NAME], 'readwrite');
@@ -146,7 +127,7 @@ export const saveScoutingEntry = async (entry: ScoutingDataWithId): Promise<void
   });
 };
 
-// Save multiple scouting entries
+
 export const saveScoutingEntries = async (entries: ScoutingDataWithId[]): Promise<void> => {
   console.log(`Saving ${entries.length} entries to IndexedDB`);
   
@@ -180,7 +161,7 @@ export const saveScoutingEntries = async (entries: ScoutingDataWithId[]): Promis
   });
 };
 
-// Load all scouting entries
+
 export const loadAllScoutingEntries = async (): Promise<ScoutingEntryDB[]> => {
   const db = await initializeDB();
   const transaction = db.transaction([STORE_NAME], 'readonly');
@@ -197,7 +178,7 @@ export const loadAllScoutingEntries = async (): Promise<ScoutingEntryDB[]> => {
   });
 };
 
-// Load scouting entries by team
+
 export const loadScoutingEntriesByTeam = async (teamNumber: string): Promise<ScoutingEntryDB[]> => {
   const db = await initializeDB();
   const transaction = db.transaction([STORE_NAME], 'readonly');
@@ -215,7 +196,7 @@ export const loadScoutingEntriesByTeam = async (teamNumber: string): Promise<Sco
   });
 };
 
-// Load scouting entries by match
+
 export const loadScoutingEntriesByMatch = async (matchNumber: string): Promise<ScoutingEntryDB[]> => {
   const db = await initializeDB();
   const transaction = db.transaction([STORE_NAME], 'readonly');
@@ -233,7 +214,7 @@ export const loadScoutingEntriesByMatch = async (matchNumber: string): Promise<S
   });
 };
 
-// Load scouting entries by event
+
 export const loadScoutingEntriesByEvent = async (eventName: string): Promise<ScoutingEntryDB[]> => {
   const db = await initializeDB();
   const transaction = db.transaction([STORE_NAME], 'readonly');
@@ -251,7 +232,7 @@ export const loadScoutingEntriesByEvent = async (eventName: string): Promise<Sco
   });
 };
 
-// Delete scouting entry by ID
+
 export const deleteScoutingEntry = async (id: string): Promise<void> => {
   const db = await initializeDB();
   const transaction = db.transaction([STORE_NAME], 'readwrite');
@@ -265,7 +246,7 @@ export const deleteScoutingEntry = async (id: string): Promise<void> => {
   });
 };
 
-// Clear all scouting data
+
 export const clearAllScoutingData = async (): Promise<void> => {
   const db = await initializeDB();
   const transaction = db.transaction([STORE_NAME], 'readwrite');
@@ -279,7 +260,7 @@ export const clearAllScoutingData = async (): Promise<void> => {
   });
 };
 
-// Get database statistics
+
 export const getDBStats = async (): Promise<{
   totalEntries: number;
   teams: string[];
@@ -323,7 +304,7 @@ export const getDBStats = async (): Promise<{
   };
 };
 
-// Migration function to move data from localStorage to IndexedDB
+
 export const migrateFromLocalStorage = async (): Promise<{
   success: boolean;
   migratedCount: number;
@@ -368,7 +349,7 @@ export const migrateFromLocalStorage = async (): Promise<{
   }
 };
 
-// Export data for backup/sharing
+
 export const exportScoutingData = async (): Promise<{
   entries: ScoutingEntryDB[];
   exportedAt: number;
@@ -383,7 +364,7 @@ export const exportScoutingData = async (): Promise<{
   };
 };
 
-// Import data from backup/sharing
+
 export const importScoutingData = async (
   importData: { entries: ScoutingEntryDB[] },
   mode: 'append' | 'overwrite' = 'append'

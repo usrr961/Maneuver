@@ -17,13 +17,11 @@ const ClearDataPage = () => {
   const [showMatchConfirm, setShowMatchConfirm] = useState(false);
 
   useEffect(() => {
-    // Load data counts and info
     const matchData = localStorage.getItem("matchData");
     const station = localStorage.getItem("playerStation") || "Unknown";
 
     setPlayerStation(station);
 
-    // Count scouting entries using the new system
     const loadScoutingCount = async () => {
       try {
         const scoutingData = await loadScoutingData();
@@ -36,7 +34,6 @@ const ClearDataPage = () => {
 
     loadScoutingCount();
 
-    // Count match entries
     if (matchData) {
       try {
         const parsed = JSON.parse(matchData);
@@ -49,9 +46,7 @@ const ClearDataPage = () => {
 
   const handleClearScoutingData = async () => {
     try {
-      // Clear IndexedDB data
       await clearAllScoutingData();
-      // Also clear localStorage as fallback/backup
       localStorage.setItem("scoutingData", JSON.stringify({ data: [] }));
       
       setScoutingDataCount(0);

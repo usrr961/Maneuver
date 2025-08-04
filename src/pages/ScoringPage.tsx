@@ -12,52 +12,40 @@ interface ScoringPageProps {
   phase: "auto" | "teleop";
 }
 
-/**
- * Unified scoring page for both autonomous and teleoperated phases.
- * Handles scoring actions, piece tracking, and navigation between phases.
- */
 const ScoringPage = ({ phase }: ScoringPageProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const states = location.state;
 
-  // Get saved state from localStorage
   const getSavedState = () => {
     const stateKey = `${phase}StateStack`;
     const saved = localStorage.getItem(stateKey);
     return saved ? JSON.parse(saved) : [];
   };
 
-  // Initialize scoring state
   const [scoringActions, setScoringActions] = useState(getSavedState());
-  const [currentCoral, setCurrentCoral] = useState(0); // 0 or 1 coral
-  const [currentAlgae, setCurrentAlgae] = useState(0); // 0 or 1 algae
+  const [currentCoral, setCurrentCoral] = useState(0);
+  const [currentAlgae, setCurrentAlgae] = useState(0);
   const [showFlashing, setShowFlashing] = useState(false);
-  
-  // Toggle states for true/false actions
   const [passedStartLine, setPassedStartLine] = useState(false);
   const [playedDefense, setPlayedDefense] = useState(false);
 
-  // Auto phase timing for button flashing (15 seconds)
   useEffect(() => {
     if (phase === "auto") {
       const timer = setTimeout(() => {
         setShowFlashing(true);
-      }, 15000); // 15 seconds
+      }, 15000);
 
       return () => clearTimeout(timer);
     }
   }, [phase]);
 
-  // Save state to localStorage whenever it changes
   useEffect(() => {
     const stateKey = `${phase}StateStack`;
     localStorage.setItem(stateKey, JSON.stringify(scoringActions));
   }, [scoringActions, phase]);
 
-  // Initialize piece counts from saved data
   useEffect(() => {
-    // Calculate current pieces from saved actions
     let coralCount = 0;
     let algaeCount = 0;
     
@@ -69,7 +57,6 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
           algaeCount = Math.min(1, algaeCount + 1);
         }
       } else if (action.type === "score" || action.type === "action") {
-        // ALL scoring actions consume pieces (including miss)
         if (action.pieceType === "coral") {
           coralCount = Math.max(0, coralCount - 1);
         } else if (action.pieceType === "algae") {
@@ -82,7 +69,6 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
     setCurrentAlgae(algaeCount);
   }, [scoringActions]);
 
-  // Initialize toggle states from saved data
   useEffect(() => {
     const savedPassedStartLine = scoringActions.some((action: { type: string; }) => action.type === "passed_start_line");
     const savedPlayedDefense = scoringActions.some((action: { type: string; }) => action.type === "defense");
@@ -93,10 +79,8 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
   const addScoringAction = (action: any) => {
     const newAction = { ...action, timestamp: Date.now() };
     
-    // Auto-toggle passed starting line when scoring in auto phase
     if (action.type === "score" && phase === "auto" && !passedStartLine) {
       setPassedStartLine(true);
-      // Add both actions at once to avoid race condition
       setScoringActions((prev: any) => [...prev, newAction, {
         type: "passed_start_line",
         value: true,
@@ -117,8 +101,6 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
     const lastAction = scoringActions[scoringActions.length - 1];
     setScoringActions((prev: string | any[]) => prev.slice(0, -1));
 
-    // Don't manually update piece counts - let the useEffect handle it
-    // Handle toggle state reversals
     if (lastAction.type === "passed_start_line") {
       setPassedStartLine(false);
     } else if (lastAction.type === "defense") {
@@ -156,21 +138,18 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
     });
   };
 
-  // Handle toggle actions
   const handleToggleAction = (actionType: string) => {
     if (actionType === "passed_start_line") {
       const newValue = !passedStartLine;
       setPassedStartLine(newValue);
       
       if (newValue) {
-        // Add action
         addScoringAction({
           type: actionType,
           value: true,
           phase
         });
       } else {
-        // Remove action
         setScoringActions((prev: any[]) => prev.filter((action: { type: string; }) => action.type !== actionType));
       }
     } else if (actionType === "defense") {
@@ -178,14 +157,12 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
       setPlayedDefense(newValue);
       
       if (newValue) {
-        // Add action
         addScoringAction({
           type: actionType,
           value: true,
           phase
         });
       } else {
-        // Remove action
         setScoringActions((prev: any[]) => prev.filter((action: { type: string; }) => action.type !== actionType));
       }
     }

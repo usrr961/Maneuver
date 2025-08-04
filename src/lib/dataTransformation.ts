@@ -1,8 +1,3 @@
-/**
- * Transforms the new action-based scoring data into the legacy format
- * expected by the VScouterData system (values only, no headers)
- */
-
 interface ScoringAction {
   type: string;
   location: string;
@@ -33,7 +28,6 @@ interface ScoutingInputs {
 }
 
 export const transformToLegacyFormat = (inputs: ScoutingInputs) => {
-  // Initialize all count values to 0
   let autoCoralPlaceL1Count = 0;
   let autoCoralPlaceL2Count = 0;
   let autoCoralPlaceL3Count = 0;

@@ -1,5 +1,4 @@
 
-// Default header row for scouting data export (update if your schema changes)
 export const SCOUTING_DATA_HEADER = [
   "id","matchNumber","alliance","scouterInitials","selectTeam",
   "startPoses0","startPoses1","startPoses2","startPoses3","startPoses4","startPoses5",
@@ -17,19 +16,10 @@ export const SCOUTING_DATA_HEADER = [
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/**
- * Converts an array of arrays (parsed JSON data) into a CSV string.
- * Each row is an array of values (strings or numbers).
- * Escapes quotes and joins with commas/newlines.
- *
- * @param {Array<Array<string|number>>} data - The data to convert to CSV.
- * @returns {string} The CSV string.
- */
 export function convertArrayOfArraysToCSV(data: (string | number)[][]): string {
   return data
     .map((row) =>

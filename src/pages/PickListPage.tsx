@@ -18,10 +18,9 @@ import LogoConfused from "../assets/confused.png";
 interface TeamStats {
   teamNumber: string;
   matchesPlayed: number;
-  // Coral stats
   avgAutoCoralTotal: number;
   avgTeleopCoralTotal: number;
-  avgTotalCoralTotal: number; // New combined metric
+  avgTotalCoralTotal: number;
   avgAutoCoralL1: number;
   avgAutoCoralL2: number;
   avgAutoCoralL3: number;
@@ -30,24 +29,21 @@ interface TeamStats {
   avgTeleopCoralL2: number;
   avgTeleopCoralL3: number;
   avgTeleopCoralL4: number;
-  avgTotalCoralL1: number; // New combined metrics
+  avgTotalCoralL1: number;
   avgTotalCoralL2: number;
   avgTotalCoralL3: number;
   avgTotalCoralL4: number;
-  // Algae stats
   avgAutoAlgaeTotal: number;
   avgTeleopAlgaeTotal: number;
-  avgTotalAlgaeTotal: number; // New combined metric
+  avgTotalAlgaeTotal: number;
   avgAutoAlgaeNet: number;
   avgAutoAlgaeProcessor: number;
   avgTeleopAlgaeNet: number;
   avgTeleopAlgaeProcessor: number;
-  // Other stats
   climbRate: number;
   breakdownRate: number;
   defenseRate: number;
   mobilityRate: number;
-  // Starting positions
   startPositions: {
     position0: number;
     position1: number;
@@ -73,7 +69,6 @@ const PickListPage = () => {
   const [sortBy, setSortBy] = useState<"number" | "totalCoral" | "totalAlgae" | "autoCorals" | "teleopCorals" | "coralL1" | "coralL2" | "coralL3" | "coralL4" | "climb" | "matches">("number");
   const isMobile = useIsMobile();
 
-  // Load persistent pick lists from localStorage
   useEffect(() => {
     const savedLists = localStorage.getItem("pickLists");
     if (savedLists) {
@@ -81,7 +76,6 @@ const PickListPage = () => {
         setPickLists(JSON.parse(savedLists));
       } catch (error) {
         console.error("Error loading pick lists:", error);
-        // Initialize with default list if loading fails
         setPickLists([{
           id: 1,
           name: "Primary Pick List",
@@ -90,7 +84,6 @@ const PickListPage = () => {
         }]);
       }
     } else {
-      // Initialize with default list
       setPickLists([{
         id: 1,
         name: "Primary Pick List", 
@@ -100,7 +93,6 @@ const PickListPage = () => {
     }
   }, []);
 
-  // Save pick lists to localStorage whenever they change
   useEffect(() => {
     if (pickLists.length > 0) {
       localStorage.setItem("pickLists", JSON.stringify(pickLists));

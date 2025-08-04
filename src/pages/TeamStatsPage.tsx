@@ -19,38 +19,36 @@ interface ScoutingEntry {
   scouterInitials: string;
   selectTeam: string;
   eventName: string;
-  // Starting positions
   startPoses0: boolean;
   startPoses1: boolean;
   startPoses2: boolean;
   startPoses3: boolean;
   startPoses4: boolean;
   startPoses5: boolean;
-  // Auto coral placement
   autoCoralPlaceL1Count: number;
   autoCoralPlaceL2Count: number;
   autoCoralPlaceL3Count: number;
   autoCoralPlaceL4Count: number;
   autoCoralPlaceDropMissCount: number;
-  // Auto coral pickup
+
   autoCoralPickPreloadCount: number;
   autoCoralPickStationCount: number;
   autoCoralPickMark1Count: number;
   autoCoralPickMark2Count: number;
   autoCoralPickMark3Count: number;
-  // Auto algae
+
   autoAlgaePlaceNetShot: number;
   autoAlgaePlaceProcessor: number;
   autoAlgaePlaceDropMiss: number;
   autoAlgaePlaceRemove: number;
-  // Auto algae pickup
+
   autoAlgaePickReefCount: number;
   autoAlgaePickMark1Count: number;
   autoAlgaePickMark2Count: number;
   autoAlgaePickMark3Count: number;
-  // Auto mobility
+
   autoPassedStartLine: boolean;
-  // Teleop coral
+
   teleopCoralPlaceL1Count: number;
   teleopCoralPlaceL2Count: number;
   teleopCoralPlaceL3Count: number;
@@ -58,19 +56,19 @@ interface ScoutingEntry {
   teleopCoralPlaceDropMissCount: number;
   teleopCoralPickStationCount: number;
   teleopCoralPickCarpetCount: number;
-  // Teleop algae
+
   teleopAlgaePlaceNetShot: number;
   teleopAlgaePlaceProcessor: number;
   teleopAlgaePlaceDropMiss: number;
   teleopAlgaePlaceRemove: number;
   teleopAlgaePickReefCount: number;
   teleopAlgaePickCarpetCount: number;
-  // Endgame
+
   shallowClimbAttempted: boolean;
   deepClimbAttempted: boolean;
   parkAttempted: boolean;
   climbFailed: boolean;
-  // Other
+
   playedDefense: boolean;
   brokeDown: boolean;
   comment: string;
@@ -78,7 +76,7 @@ interface ScoutingEntry {
 
 interface TeamStats {
   matchesPlayed: number;
-  // Scoring stats
+
   avgAutoCoralL1: number;
   avgAutoCoralL2: number;
   avgAutoCoralL3: number;
@@ -91,22 +89,22 @@ interface TeamStats {
   avgAutoAlgaeProcessor: number;
   avgTeleopAlgaeNet: number;
   avgTeleopAlgaeProcessor: number;
-  // Performance stats
+
   avgTotalPoints: number;
   avgAutoPoints: number;
   avgTeleopPoints: number;
   avgEndgamePoints: number;
-  // Rates
+
   mobilityRate: number;
   climbRate: number;
   defenseRate: number;
   breakdownRate: number;
-  // Climb specifics
+
   shallowClimbRate: number;
   deepClimbRate: number;
   parkRate: number;
   climbFailRate: number;
-  // Starting positions
+
   startPositions: {
     position0: number;
     position1: number;
@@ -115,7 +113,7 @@ interface TeamStats {
     position4: number;
     position5: number;
   };
-  // Match results
+
   matchResults: {
     matchNumber: string;
     alliance: string;
@@ -264,17 +262,17 @@ const TeamStatsPage = () => {
       acc.autoCoralL3 += entry.autoCoralPlaceL3Count;
       acc.autoCoralL4 += entry.autoCoralPlaceL4Count;
       
-      // Teleop coral
+
       acc.teleopCoralL1 += entry.teleopCoralPlaceL1Count;
       acc.teleopCoralL2 += entry.teleopCoralPlaceL2Count;
       acc.teleopCoralL3 += entry.teleopCoralPlaceL3Count;
       acc.teleopCoralL4 += entry.teleopCoralPlaceL4Count;
       
-      // Auto algae
+
       acc.autoAlgaeNet += entry.autoAlgaePlaceNetShot;
       acc.autoAlgaeProcessor += entry.autoAlgaePlaceProcessor;
       
-      // Teleop algae
+
       acc.teleopAlgaeNet += entry.teleopAlgaePlaceNetShot;
       acc.teleopAlgaeProcessor += entry.teleopAlgaePlaceProcessor;
       
@@ -287,7 +285,7 @@ const TeamStatsPage = () => {
       acc.park += entry.parkAttempted ? 1 : 0;
       acc.climbFail += entry.climbFailed ? 1 : 0;
       
-      // Starting positions
+
       acc.startPos0 += entry.startPoses0 ? 1 : 0;
       acc.startPos1 += entry.startPoses1 ? 1 : 0;
       acc.startPos2 += entry.startPoses2 ? 1 : 0;
@@ -319,7 +317,6 @@ const TeamStatsPage = () => {
       const teleopAlgaePoints = (entry.teleopAlgaePlaceNetShot * 4) + (entry.teleopAlgaePlaceProcessor * 2);
       const teleopPoints = teleopCoralPoints + teleopAlgaePoints;
       
-      // Endgame points
       let endgamePoints = 0;
       if ((entry.parkAttempted && !entry.climbFailed) || (entry.shallowClimbAttempted && entry.climbFailed) || (entry.deepClimbAttempted && entry.climbFailed)) endgamePoints += 2;
       if (entry.shallowClimbAttempted && !entry.climbFailed) endgamePoints += 6;

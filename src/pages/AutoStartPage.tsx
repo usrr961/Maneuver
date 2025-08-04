@@ -6,19 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import AutoStartMap from "@/components/AutoComponents/AutoStartMap";
 
-/**
- * Renders a component representing the Auto Start page.
- *
- * To be used before the auto starts, collecting information such as if the robot showed up and where the robot started.
- *
- * @return {JSX.Element} The component representing the Auto Start page.
- */
 const AutoStartPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const states = location.state;
 
-  // Initialize the state with the passed in state from the previous page, or null if no state was passed in
   const [startPos1, setStartPos1] = useState(
     states?.inputs?.startPoses?.[0] || null
   );
@@ -92,7 +84,6 @@ const AutoStartPage = () => {
     });
   };
 
-  // Get selected position for display
   const selectedPosition = startPoses.findIndex(pos => pos === true);
   const hasSelection = startPoses.some(pos => pos === true);
 

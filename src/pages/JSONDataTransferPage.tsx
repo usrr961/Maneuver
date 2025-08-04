@@ -18,10 +18,8 @@ const JSONDataTransferPage = () => {
     );
   }
 
-  // Handler to download scouting data as CSV
   const handleDownloadCSV = async () => {
     try {
-      // Load data from IndexedDB
       const scoutingDataWithIds = await loadScoutingData();
       console.log("JSONDataTransferPage CSV - Loaded data:", scoutingDataWithIds.entries.length, "entries");
       
@@ -30,13 +28,10 @@ const JSONDataTransferPage = () => {
         return;
       }
 
-      // Convert to legacy format
       const dataArr = extractLegacyData(scoutingDataWithIds.entries);
       console.log("JSONDataTransferPage CSV - Legacy data:", dataArr.length, "entries");
       
       const defaultHeader = SCOUTING_DATA_HEADER;
-      
-      // Ensure header row is present as first row
       const finalDataArr = [defaultHeader, ...dataArr];
       
       const csv = convertArrayOfArraysToCSV(finalDataArr as (string | number)[][]);
@@ -71,7 +66,6 @@ const JSONDataTransferPage = () => {
           <Button
             onClick={async () => {
               try {
-                // Load data from IndexedDB
                 const scoutingDataWithIds = await loadScoutingData();
                 console.log("JSONDataTransferPage JSON - Loaded data:", scoutingDataWithIds.entries.length, "entries");
                 

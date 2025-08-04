@@ -13,66 +13,55 @@ import FieldCanvas from "@/components/MatchStrategyComponents/FieldCanvas";
 import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
 
 interface ScoutingEntry {
-  matchNumber: string;                    // index 0
-  alliance: string;                       // index 1
-  scouterInitials: string;               // index 2
-  selectTeam: string;                    // index 3
-  // Starting positions (indices 4-9)
-  startPoses0: boolean;                  // index 4
-  startPoses1: boolean;                  // index 5
-  startPoses2: boolean;                  // index 6
-  startPoses3: boolean;                  // index 7
-  startPoses4: boolean;                  // index 8
-  startPoses5: boolean;                  // index 9
-  // Auto coral placement (indices 10-14)
-  autoCoralPlaceL1Count: number;         // index 10
-  autoCoralPlaceL2Count: number;         // index 11
-  autoCoralPlaceL3Count: number;         // index 12
-  autoCoralPlaceL4Count: number;         // index 13
-  autoCoralPlaceDropMissCount: number;   // index 14
-  // Auto coral pickup (indices 15-19)
-  autoCoralPickPreloadCount: number;     // index 15
-  autoCoralPickStationCount: number;     // index 16
-  autoCoralPickMark1Count: number;       // index 17
-  autoCoralPickMark2Count: number;       // index 18
-  autoCoralPickMark3Count: number;       // index 19
-  // Auto algae (indices 20-24)
-  autoAlgaePlaceNetShot: number;         // index 20
-  autoAlgaePlaceProcessor: number;       // index 21
-  autoAlgaePlaceDropMiss: number;        // index 22
-  autoAlgaePlaceRemove: number;          // index 23
-  // Auto algae pickup (indices 24-27)
-  autoAlgaePickReefCount: number;        // index 24
-  autoAlgaePickMark1Count: number;       // index 25
-  autoAlgaePickMark2Count: number;       // index 26
-  autoAlgaePickMark3Count: number;       // index 27
-  // Auto mobility (index 28)
-  autoPassedStartLine: boolean;          // index 28
-  // Teleop coral (indices 29-34)
-  teleopCoralPlaceL1Count: number;       // index 29
-  teleopCoralPlaceL2Count: number;       // index 30
-  teleopCoralPlaceL3Count: number;       // index 31
-  teleopCoralPlaceL4Count: number;       // index 32
-  teleopCoralPlaceDropMissCount: number; // index 33
-  teleopCoralPickStationCount: number;   // index 34
-  teleopCoralPickCarpetCount: number;    // index 35
-  // Teleop algae (indices 36-41)
-  teleopAlgaePlaceNetShot: number;       // index 36
-  teleopAlgaePlaceProcessor: number;     // index 37
-  teleopAlgaePlaceDropMiss: number;      // index 38
-  teleopAlgaePlaceRemove: number;        // index 39
-  teleopAlgaePickReefCount: number;      // index 40
-  teleopAlgaePickCarpetCount: number;    // index 41
-  // Endgame (indices 42-46)
-  shallowClimbAttempted: boolean;        // index 42
-  deepClimbAttempted: boolean;           // index 43
-  parkAttempted: boolean;                // index 44
-  climbFailed: boolean;                  // index 45
-  // Other actions (indices 46-48)
-  playedDefense: boolean;                // index 46
-  brokeDown: boolean;                    // index 47
-  // Comments (index 48)
-  comment: string;                       // index 48
+  matchNumber: string;
+  alliance: string;
+  scouterInitials: string;
+  selectTeam: string;
+  startPoses0: boolean;
+  startPoses1: boolean;
+  startPoses2: boolean;
+  startPoses3: boolean;
+  startPoses4: boolean;
+  startPoses5: boolean;
+  autoCoralPlaceL1Count: number;
+  autoCoralPlaceL2Count: number;
+  autoCoralPlaceL3Count: number;
+  autoCoralPlaceL4Count: number;
+  autoCoralPlaceDropMissCount: number;
+  autoCoralPickPreloadCount: number;
+  autoCoralPickStationCount: number;
+  autoCoralPickMark1Count: number;
+  autoCoralPickMark2Count: number;
+  autoCoralPickMark3Count: number;
+  autoAlgaePlaceNetShot: number;
+  autoAlgaePlaceProcessor: number;
+  autoAlgaePlaceDropMiss: number;
+  autoAlgaePlaceRemove: number;
+  autoAlgaePickReefCount: number;
+  autoAlgaePickMark1Count: number;
+  autoAlgaePickMark2Count: number;
+  autoAlgaePickMark3Count: number;
+  autoPassedStartLine: boolean;
+  teleopCoralPlaceL1Count: number;
+  teleopCoralPlaceL2Count: number;
+  teleopCoralPlaceL3Count: number;
+  teleopCoralPlaceL4Count: number;
+  teleopCoralPlaceDropMissCount: number;
+  teleopCoralPickStationCount: number;
+  teleopCoralPickCarpetCount: number;
+  teleopAlgaePlaceNetShot: number;
+  teleopAlgaePlaceProcessor: number;
+  teleopAlgaePlaceDropMiss: number;
+  teleopAlgaePlaceRemove: number;
+  teleopAlgaePickReefCount: number;
+  teleopAlgaePickCarpetCount: number;
+  shallowClimbAttempted: boolean;
+  deepClimbAttempted: boolean;
+  parkAttempted: boolean;
+  climbFailed: boolean;
+  playedDefense: boolean;
+  brokeDown: boolean;
+  comment: string;
 }
 
 const MatchStrategyPage = () => {

@@ -9,7 +9,6 @@ const MatchDataPage = () => {
   const navigate = useNavigate();
   const [selectedData, setSelectedData] = useState("");
   
-  // Direct API input states
   const [apiKey, setApiKey] = useState("");
   const [eventKey, setEventKey] = useState("");
 
@@ -66,15 +65,12 @@ const MatchDataPage = () => {
         }
       }
       
-      // Sort the match data by matchNum
       qualMatchesCleaned.sort((a, b) => a.matchNum - b.matchNum);
 
       localStorage.setItem("matchData", JSON.stringify(qualMatchesCleaned));
 
-      // Auto-set the event name/code when fetching from TBA
       localStorage.setItem("eventName", tbaEventKey);
       
-      // Add the event to the events list if it's not already there
       const savedEvents = localStorage.getItem("eventsList");
       let eventsList: string[] = [];
       
