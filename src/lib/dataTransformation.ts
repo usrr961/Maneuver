@@ -18,6 +18,7 @@ interface ScoutingInputs {
   alliance: string;
   scouterInitials: string;
   selectTeam: string;
+  eventName?: string;
   startPoses: boolean[];
   autoActions: ScoringAction[];
   teleopActions: ScoringAction[];
@@ -301,6 +302,7 @@ export const transformToObjectFormat = (inputs: ScoutingInputs): Record<string, 
     alliance: inputs.alliance === "red" ? "redAlliance" : "blueAlliance",
     scouterInitials: inputs.scouterInitials,
     selectTeam: inputs.selectTeam,
+    eventName: inputs.eventName || "",
     
     // Starting positions (6 positions)
     startPoses0: inputs.startPoses[0] || false,

@@ -42,6 +42,7 @@ const EndgamePage = () => {
         alliance: states?.inputs?.alliance || "",
         scouterInitials: states?.inputs?.scouterInitials || "",
         selectTeam: states?.inputs?.selectTeam || "",
+        eventName: states?.inputs?.eventName || localStorage.getItem("eventName") || "",
         startPoses: states?.inputs?.startPoses || [false, false, false, false, false, false],
         autoActions: autoActions,
         teleopActions: teleopActions,
@@ -117,6 +118,12 @@ const EndgamePage = () => {
               <CardTitle className="text-lg">Match Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
+              {states.inputs.eventName && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Event:</span>
+                  <span className="font-medium">{states.inputs.eventName}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Match:</span>
                 <span className="font-medium">{states.inputs.matchNumber}</span>

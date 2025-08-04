@@ -71,6 +71,27 @@ const MatchDataPage = () => {
 
       localStorage.setItem("matchData", JSON.stringify(qualMatchesCleaned));
 
+      // Auto-set the event name/code when fetching from TBA
+      localStorage.setItem("eventName", tbaEventKey);
+      
+      // Add the event to the events list if it's not already there
+      const savedEvents = localStorage.getItem("eventsList");
+      let eventsList: string[] = [];
+      
+      if (savedEvents) {
+        try {
+          eventsList = JSON.parse(savedEvents);
+        } catch {
+          eventsList = [];
+        }
+      }
+      
+      if (!eventsList.includes(tbaEventKey)) {
+        eventsList.push(tbaEventKey);
+        eventsList.sort();
+        localStorage.setItem("eventsList", JSON.stringify(eventsList));
+      }
+
       const matchDataStr = localStorage.getItem("matchData");
       let fetchedMsg = "Match Data Fetched";
       if (matchDataStr) {

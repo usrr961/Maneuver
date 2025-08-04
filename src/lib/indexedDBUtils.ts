@@ -6,7 +6,7 @@
 import type { ScoutingDataWithId } from './scoutingDataUtils';
 
 const DB_NAME = 'ScoutingAppDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'scoutingData';
 
 // IndexedDB database instance
@@ -34,6 +34,7 @@ export const initializeDB = (): Promise<IDBDatabase> => {
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
+      const oldVersion = event.oldVersion;
       
       // Create object store if it doesn't exist
       if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -45,6 +46,16 @@ export const initializeDB = (): Promise<IDBDatabase> => {
         store.createIndex('alliance', 'alliance', { unique: false });
         store.createIndex('timestamp', 'timestamp', { unique: false });
         store.createIndex('scouterInitials', 'scouterInitials', { unique: false });
+        store.createIndex('eventName', 'eventName', { unique: false });
+      } else if (oldVersion < 2) {
+        // Upgrade from version 1 to 2: add eventName index
+        const transaction = (event.target as IDBOpenDBRequest).transaction;
+        if (transaction) {
+          const store = transaction.objectStore(STORE_NAME);
+          if (!store.indexNames.contains('eventName')) {
+            store.createIndex('eventName', 'eventName', { unique: false });
+          }
+        }
       }
     };
   });
@@ -58,6 +69,7 @@ export interface ScoutingEntryDB {
   matchNumber?: string;
   alliance?: string;
   scouterInitials?: string;
+  eventName?: string;
   // Keep original data structure (now objects instead of arrays)
   data: Record<string, unknown>;
   timestamp: number;
@@ -96,6 +108,7 @@ const enhanceEntry = (entry: ScoutingDataWithId): ScoutingEntryDB => {
       selectTeam: safeStringify(actualData?.selectTeam),
       alliance: safeStringify(actualData?.alliance),
       scouterInitials: safeStringify(actualData?.scouterInitials),
+      eventName: safeStringify(actualData?.eventName),
     }
   });
   
@@ -103,6 +116,7 @@ const enhanceEntry = (entry: ScoutingDataWithId): ScoutingEntryDB => {
   const alliance = safeStringify(actualData?.alliance);
   const scouterInitials = safeStringify(actualData?.scouterInitials);
   const teamNumber = safeStringify(actualData?.selectTeam); // Team number is stored in selectTeam field
+  const eventName = safeStringify(actualData?.eventName);
 
   return {
     id: entry.id,
@@ -110,6 +124,7 @@ const enhanceEntry = (entry: ScoutingDataWithId): ScoutingEntryDB => {
     matchNumber,
     alliance,
     scouterInitials,
+    eventName,
     data: actualData || data, // Use the actual data, fallback to original
     timestamp: entry.timestamp || Date.now()
   };
@@ -218,6 +233,24 @@ export const loadScoutingEntriesByMatch = async (matchNumber: string): Promise<S
   });
 };
 
+// Load scouting entries by event
+export const loadScoutingEntriesByEvent = async (eventName: string): Promise<ScoutingEntryDB[]> => {
+  const db = await initializeDB();
+  const transaction = db.transaction([STORE_NAME], 'readonly');
+  const store = transaction.objectStore(STORE_NAME);
+  const index = store.index('eventName');
+  
+  return new Promise((resolve, reject) => {
+    const request = index.getAll(eventName);
+    
+    request.onsuccess = () => {
+      resolve(request.result || []);
+    };
+    
+    request.onerror = () => reject(request.error);
+  });
+};
+
 // Delete scouting entry by ID
 export const deleteScoutingEntry = async (id: string): Promise<void> => {
   const db = await initializeDB();
@@ -252,6 +285,7 @@ export const getDBStats = async (): Promise<{
   teams: string[];
   matches: string[];
   scouters: string[];
+  events: string[];
   oldestEntry?: number;
   newestEntry?: number;
 }> => {
@@ -260,6 +294,7 @@ export const getDBStats = async (): Promise<{
   const teams = new Set<string>();
   const matches = new Set<string>();
   const scouters = new Set<string>();
+  const events = new Set<string>();
   let oldestEntry: number | undefined;
   let newestEntry: number | undefined;
   
@@ -267,6 +302,7 @@ export const getDBStats = async (): Promise<{
     if (entry.teamNumber) teams.add(entry.teamNumber);
     if (entry.matchNumber) matches.add(entry.matchNumber);
     if (entry.scouterInitials) scouters.add(entry.scouterInitials);
+    if (entry.eventName) events.add(entry.eventName);
     
     if (!oldestEntry || entry.timestamp < oldestEntry) {
       oldestEntry = entry.timestamp;
@@ -281,6 +317,7 @@ export const getDBStats = async (): Promise<{
     teams: Array.from(teams).sort((a, b) => Number(a) - Number(b)),
     matches: Array.from(matches).sort((a, b) => Number(a) - Number(b)),
     scouters: Array.from(scouters).sort(),
+    events: Array.from(events).sort(),
     oldestEntry,
     newestEntry
   };

@@ -18,6 +18,7 @@ interface ScoutingEntry {
   alliance: string;
   scouterInitials: string;
   selectTeam: string;
+  eventName: string;
   // Starting positions
   startPoses0: boolean;
   startPoses1: boolean;
@@ -118,6 +119,7 @@ interface TeamStats {
   matchResults: {
     matchNumber: string;
     alliance: string;
+    eventName: string;
     totalPoints: number;
     autoPoints: number;
     teleopPoints: number;
@@ -133,7 +135,9 @@ const TeamStatsPage = () => {
   const [scoutingData, setScoutingData] = useState<any[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<string>("");
   const [compareTeam, setCompareTeam] = useState<string>("");
+  const [selectedEvent, setSelectedEvent] = useState<string>("all");
   const [availableTeams, setAvailableTeams] = useState<string[]>([]);
+  const [availableEvents, setAvailableEvents] = useState<string[]>([]);
   const [teamStats, setTeamStats] = useState<TeamStats | null>(null);
   const [compareStats, setCompareStats] = useState<TeamStats | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
@@ -146,10 +150,10 @@ const TeamStatsPage = () => {
         const data = await loadLegacyScoutingData();
         setScoutingData(data);
         
-        // Get unique team numbers from selectTeam field
-        const teams = [...new Set(data.map((entry: Record<string, unknown>) => entry.selectTeam?.toString()).filter(Boolean))];
-        teams.sort((a, b) => Number(a) - Number(b));
-        setAvailableTeams(teams as string[]);
+        // Get unique event names
+        const events = [...new Set(data.map((entry: Record<string, unknown>) => entry.eventName?.toString()).filter(Boolean))];
+        events.sort();
+        setAvailableEvents(events as string[]);
       } catch (error) {
         console.error("Error loading scouting data:", error);
       }
@@ -158,6 +162,27 @@ const TeamStatsPage = () => {
     loadData();
   }, []);
 
+  useEffect(() => {
+    // Update available teams based on selected event
+    let filteredData = scoutingData;
+    
+    if (selectedEvent && selectedEvent !== "all") {
+      filteredData = scoutingData.filter((entry: Record<string, unknown>) => entry.eventName?.toString() === selectedEvent);
+    }
+    
+    const teams = [...new Set(filteredData.map((entry: Record<string, unknown>) => entry.selectTeam?.toString()).filter(Boolean))];
+    teams.sort((a, b) => Number(a) - Number(b));
+    setAvailableTeams(teams as string[]);
+    
+    // Reset team selections if current selections are no longer available
+    if (selectedTeam && !teams.includes(selectedTeam)) {
+      setSelectedTeam("");
+    }
+    if (compareTeam && compareTeam !== "none" && !teams.includes(compareTeam)) {
+      setCompareTeam("none");
+    }
+  }, [scoutingData, selectedEvent, selectedTeam, compareTeam]);
+
   const parseScoutingEntry = (dataObject: Record<string, unknown>): ScoutingEntry => {
     // Convert object properties to ScoutingEntry structure
     return {
@@ -165,6 +190,7 @@ const TeamStatsPage = () => {
       alliance: dataObject.alliance?.toString() || "",
       scouterInitials: dataObject.scouterInitials?.toString() || "",
       selectTeam: dataObject.selectTeam?.toString() || "",
+      eventName: dataObject.eventName?.toString() || "",
       startPoses0: Boolean(dataObject.startPoses0),
       startPoses1: Boolean(dataObject.startPoses1),
       startPoses2: Boolean(dataObject.startPoses2),
@@ -216,7 +242,12 @@ const TeamStatsPage = () => {
   const calculateTeamStats = useCallback((teamNumber: string): TeamStats | null => {
     if (!teamNumber) return null;
 
-    const teamDataObjects = scoutingData.filter((dataObject: Record<string, unknown>) => dataObject.selectTeam?.toString() === teamNumber);
+    let teamDataObjects = scoutingData.filter((dataObject: Record<string, unknown>) => dataObject.selectTeam?.toString() === teamNumber);
+    
+    // Filter by event if one is selected
+    if (selectedEvent && selectedEvent !== "all") {
+      teamDataObjects = teamDataObjects.filter((dataObject: Record<string, unknown>) => dataObject.eventName?.toString() === selectedEvent);
+    }
     
     if (teamDataObjects.length === 0) {
       return null;
@@ -306,6 +337,7 @@ const TeamStatsPage = () => {
       return {
         matchNumber: entry.matchNumber,
         alliance: entry.alliance,
+        eventName: entry.eventName,
         totalPoints: autoPoints + teleopPoints + endgamePoints,
         autoPoints,
         teleopPoints,
@@ -358,7 +390,7 @@ const TeamStatsPage = () => {
       },
       matchResults: matchResults.sort((a, b) => Number(a.matchNumber) - Number(b.matchNumber))
     };
-  }, [scoutingData]);
+  }, [scoutingData, selectedEvent]);
 
   useEffect(() => {
     if (selectedTeam) {
@@ -462,7 +494,11 @@ const TeamStatsPage = () => {
               className="w-40 justify-between"
             >
               <span className="truncate">
-                {value && value !== "none" ? `Team ${value}` : placeholder}
+                {value === "all" ? "All events" : 
+                 value === "none" ? "None" :
+                 value && value !== "none" ? 
+                   (availableOptions.includes("all") ? value : `Team ${value}`) : 
+                   placeholder}
               </span>
               <ChevronDownIcon className="h-4 w-4 opacity-50" />
             </Button>
@@ -473,23 +509,36 @@ const TeamStatsPage = () => {
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-4">
               <div className="space-y-2">
-                <SheetClose asChild>
-                  <Button 
-                    variant={!value || value === "none" ? "default" : "outline"}
-                    className="w-full justify-start h-12 px-4"
-                    onClick={() => onValueChange("none")}
-                  >
-                    None
-                  </Button>
-                </SheetClose>
-                {availableOptions.map((teamNum) => (
-                  <SheetClose key={teamNum} asChild>
+                {availableOptions.includes("all") && (
+                  <SheetClose asChild>
                     <Button 
-                      variant={value === teamNum ? "default" : "outline"}
+                      variant={value === "all" ? "default" : "outline"}
                       className="w-full justify-start h-12 px-4"
-                      onClick={() => onValueChange(teamNum)}
+                      onClick={() => onValueChange("all")}
                     >
-                      Team {teamNum}
+                      All events
+                    </Button>
+                  </SheetClose>
+                )}
+                {availableOptions.includes("none") && (
+                  <SheetClose asChild>
+                    <Button 
+                      variant={(!value || value === "none") ? "default" : "outline"}
+                      className="w-full justify-start h-12 px-4"
+                      onClick={() => onValueChange("none")}
+                    >
+                      None
+                    </Button>
+                  </SheetClose>
+                )}
+                {availableOptions.filter(option => option !== "all" && option !== "none").map((option) => (
+                  <SheetClose key={option} asChild>
+                    <Button 
+                      variant={value === option ? "default" : "outline"}
+                      className="w-full justify-start h-12 px-4"
+                      onClick={() => onValueChange(option)}
+                    >
+                      {availableOptions.includes("all") ? option : `Team ${option}`}
                     </Button>
                   </SheetClose>
                 ))}
@@ -507,10 +556,11 @@ const TeamStatsPage = () => {
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="none">None</SelectItem>
-          {availableOptions.map((teamNum) => (
-            <SelectItem key={teamNum} value={teamNum}>
-              Team {teamNum}
+          {availableOptions.includes("all") && <SelectItem value="all">All events</SelectItem>}
+          {availableOptions.includes("none") && <SelectItem value="none">None</SelectItem>}
+          {availableOptions.filter(option => option !== "all" && option !== "none").map((option) => (
+            <SelectItem key={option} value={option}>
+              {availableOptions.includes("all") ? option : `Team ${option}`}
             </SelectItem>
           ))}
         </SelectContent>
@@ -535,7 +585,6 @@ const TeamStatsPage = () => {
                 placeholder="Choose team"
               />
             </div>
-            
             <div className="flex items-center gap-2">
               <label className="font-medium">Compare to:</label>
               <TeamSelector
@@ -544,6 +593,16 @@ const TeamStatsPage = () => {
                 onValueChange={setCompareTeam}
                 availableOptions={availableTeams.filter(teamNum => teamNum !== selectedTeam)}
                 placeholder="Optional"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="font-medium">Event:</label>
+              <TeamSelector
+                label="Select Event"
+                value={selectedEvent}
+                onValueChange={setSelectedEvent}
+                availableOptions={["all", ...availableEvents]}
+                placeholder="All events"
               />
             </div>
           </div>
@@ -694,6 +753,11 @@ const TeamStatsPage = () => {
                         .map((match, index) => (
                           <div key={index} className="flex flex-col p-3 border rounded gap-2">
                             <div className="flex items-center gap-2">
+                              {match.eventName && (
+                                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                  {match.eventName}
+                                </Badge>
+                              )}
                               <Badge variant="outline">Match {match.matchNumber}</Badge>
                               <Badge variant={match.alliance === "red" ? "destructive" : "default"}>
                                 {match.alliance}
@@ -1036,6 +1100,11 @@ const TeamStatsPage = () => {
                           <div key={index} className="flex flex-col p-3 border rounded gap-3">
                             <div className="flex flex-col gap-2">
                               <div className="flex flex-wrap items-center gap-2">
+                                {match.eventName && (
+                                  <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    {match.eventName}
+                                  </Badge>
+                                )}
                                 <Badge variant="outline">Match {match.matchNumber}</Badge>
                                 <Badge variant={match.alliance === "red" ? "destructive" : "default"}>
                                   {match.alliance}

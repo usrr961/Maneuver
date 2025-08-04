@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import GameStartSelectTeam from "@/components/GameStartComponents/GameStartSelectTeam";
+import { EventNameSelector } from "@/components/GameStartComponents/EventNameSelector";
 
 /**
  * Renders a component representing the Game Start Page.
@@ -61,6 +62,9 @@ const GameStartPage = () => {
   const [matchNumber, setMatchNumber] = useState(getInitialMatchNumber());
   const [debouncedMatchNumber, setDebouncedMatchNumber] = useState(matchNumber);
   const [selectTeam, setSelectTeam] = useState(states?.inputs?.selectTeam || "");
+  const [eventName, setEventName] = useState(
+    states?.inputs?.eventName || localStorage.getItem("eventName") || ""
+  );
 
   // Debounce matchNumber for team selection
   useEffect(() => {
@@ -93,11 +97,17 @@ const GameStartPage = () => {
       alliance,
       selectTeam,
       scouterInitials: currentScouter,
+      eventName,
     };
     const hasNull = Object.values(inputs).some((val) => !val || val === "");
 
     if (!currentScouter) {
       toast.error("Please select a scouter from the sidebar first");
+      return false;
+    }
+
+    if (!eventName) {
+      toast.error("Please set an event name/code first");
       return false;
     }
 
@@ -130,6 +140,7 @@ const GameStartPage = () => {
           alliance,
           scouterInitials: currentScouter,
           selectTeam,
+          eventName,
         },
       },
     });
@@ -188,6 +199,18 @@ const GameStartPage = () => {
           </CardHeader>
           <CardContent className="space-y-6">
             
+            {/* Event Name */}
+            <div className="space-y-2">
+              <Label>Event Name/Code</Label>
+              <EventNameSelector
+                currentEventName={eventName}
+                onEventNameChange={setEventName}
+              />
+              <p className="text-xs text-muted-foreground">
+                Event name will be included in all scouting data for this session
+              </p>
+            </div>
+
             {/* Match Number */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -269,20 +292,20 @@ const GameStartPage = () => {
           <Button
             onClick={handleStartScouting}
             className="flex-2 h-12 text-lg font-semibold"
-            disabled={!matchNumber || !alliance || !selectTeam || !currentScouter}
+            disabled={!matchNumber || !alliance || !selectTeam || !currentScouter || !eventName}
           >
             Start Scouting
           </Button>
         </div>
 
         {/* Status Indicator */}
-        {matchNumber && alliance && selectTeam && currentScouter && (
+        {matchNumber && alliance && selectTeam && currentScouter && eventName && (
           <Card className="w-full border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20">
             <CardContent>
               <div className="flex items-center gap-2">
                 <Badge className="bg-green-600">Ready</Badge>
                 <span className="text-sm text-green-700 dark:text-green-300">
-                  Match {matchNumber} •{" "}
+                  {eventName} • Match {matchNumber} •{" "}
                   {alliance.charAt(0).toUpperCase() + alliance.slice(1)} Alliance
                   • Team {selectTeam} • {currentScouter}
                 </span>

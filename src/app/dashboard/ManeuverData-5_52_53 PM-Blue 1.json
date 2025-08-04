@@ -48,7 +48,8 @@
     "climbFailed": true,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 53: was beached for half the match"
+    "comment": "Match 53: was beached for half the match",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "56",
@@ -99,7 +100,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 56: can pick up algae off the ground, picked up their two misses"
+    "comment": "Match 56: can pick up algae off the ground, picked up their two misses",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "60",
@@ -150,7 +152,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "107",
@@ -201,7 +204,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 107: got beached going after an algae for 10-15 seconds"
+    "comment": "Match 107: got beached going after an algae for 10-15 seconds",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "115",
@@ -252,7 +256,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "40",
@@ -303,7 +308,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 40: fast af climb"
+    "comment": "Match 40: fast af climb",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "44",
@@ -354,7 +360,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 44: going for the RP"
+    "comment": "Match 44: going for the RP",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "52",
@@ -405,7 +412,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 52: going for rp, had a little trouble climbing, but made it after third attempt up"
+    "comment": "Match 52: going for rp, had a little trouble climbing, but made it after third attempt up",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "107",
@@ -456,7 +464,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "115",
@@ -507,7 +516,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "43",
@@ -558,7 +568,8 @@
     "climbFailed": true,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 43: went to the feeder a lot for a team that has a ground pick up"
+    "comment": "Match 43: went to the feeder a lot for a team that has a ground pick up",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "46",
@@ -609,7 +620,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 46: alignment didn't seem to be working"
+    "comment": "Match 46: alignment didn't seem to be working",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "50",
@@ -660,7 +672,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "107",
@@ -711,7 +724,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "115",
@@ -762,7 +776,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "42",
@@ -813,7 +828,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 42: had to be very precise at the feeder"
+    "comment": "Match 42: had to be very precise at the feeder",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "45",
@@ -864,7 +880,8 @@
     "climbFailed": true,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 45: went for another piece, didn't have a enough time to put it on and then missed the park"
+    "comment": "Match 45: went for another piece, didn't have a enough time to put it on and then missed the park",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "49",
@@ -915,7 +932,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 49: lost comms for a while after auto"
+    "comment": "Match 49: lost comms for a while after auto",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "107",
@@ -966,7 +984,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 107: was beached for 20ish seconds"
+    "comment": "Match 107: was beached for 20ish seconds",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "112",
@@ -1017,7 +1036,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 112: had trouble loading under defense"
+    "comment": "Match 112: had trouble loading under defense",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "42",
@@ -1068,7 +1088,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "46",
@@ -1119,7 +1140,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "49",
@@ -1170,7 +1192,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 49: similar to redbird"
+    "comment": "Match 49: similar to redbird",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "108",
@@ -1221,7 +1244,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "115",
@@ -1272,7 +1296,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "50",
@@ -1323,7 +1348,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 50: fast climb"
+    "comment": "Match 50: fast climb",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "56",
@@ -1374,7 +1400,8 @@
     "climbFailed": true,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 56: could not align with the cage (was swinging)"
+    "comment": "Match 56: could not align with the cage (was swinging)",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "60",
@@ -1425,7 +1452,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 60: was beached for a bit, was freed"
+    "comment": "Match 60: was beached for a bit, was freed",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "107",
@@ -1476,7 +1504,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "116",
@@ -1527,7 +1556,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "54",
@@ -1578,7 +1608,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 54: went for the rp"
+    "comment": "Match 54: went for the rp",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "61",
@@ -1629,7 +1660,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 61: did really well going for the coral rp"
+    "comment": "Match 61: did really well going for the coral rp",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "66",
@@ -1680,7 +1712,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 66: pretty fast climb"
+    "comment": "Match 66: pretty fast climb",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "102",
@@ -1731,7 +1764,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "105",
@@ -1782,7 +1816,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "51",
@@ -1833,7 +1868,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 51: went for the ranking point"
+    "comment": "Match 51: went for the ranking point",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "55",
@@ -1884,7 +1920,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 55: only scored l4 this match (11), no endgame"
+    "comment": "Match 55: only scored l4 this match (11), no endgame",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "61",
@@ -1935,7 +1972,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 61: auto did not go as planned"
+    "comment": "Match 61: auto did not go as planned",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "108",
@@ -1986,7 +2024,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 108: accuracy on the lower levels is lower than l4"
+    "comment": "Match 108: accuracy on the lower levels is lower than l4",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "113",
@@ -2037,7 +2076,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "54",
@@ -2088,7 +2128,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "61",
@@ -2139,7 +2180,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 61: interesting manipulator"
+    "comment": "Match 61: interesting manipulator",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "64",
@@ -2190,7 +2232,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 64: defense made holding the coral difficult"
+    "comment": "Match 64: defense made holding the coral difficult",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "108",
@@ -2241,7 +2284,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 108: had comms issues"
+    "comment": "Match 108: had comms issues",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "110",
@@ -2292,7 +2336,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "52",
@@ -2343,7 +2388,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "55",
@@ -2394,7 +2440,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "64",
@@ -2445,7 +2492,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "107",
@@ -2496,7 +2544,8 @@
     "climbFailed": true,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 107: looks like climber broke"
+    "comment": "Match 107: looks like climber broke",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "115",
@@ -2547,7 +2596,8 @@
     "climbFailed": true,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "55",
@@ -2598,7 +2648,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 55: Very fast climb"
+    "comment": "Match 55: Very fast climb",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "58",
@@ -2649,7 +2700,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 58: elevator seemed slow"
+    "comment": "Match 58: elevator seemed slow",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "62",
@@ -2700,7 +2752,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": ""
+    "comment": "",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "103",
@@ -2751,7 +2804,8 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 103: elevator looked shakey"
+    "comment": "Match 103: elevator looked shakey",
+    "eventName": "2025mrcmp"
   },
   {
     "matchNumber": "106",
@@ -2802,6 +2856,7 @@
     "climbFailed": false,
     "playedDefense": false,
     "brokeDown": false,
-    "comment": "Match 106: great climber"
+    "comment": "Match 106: great climber",
+    "eventName": "2025mrcmp"
   }
 ]
