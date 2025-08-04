@@ -187,27 +187,52 @@ export const mergeScoutingData = (
   };
 };
 
-// Load scouting data with IndexedDB support and localStorage fallback
+// Load scouting data with Dexie support and localStorage fallback
 export const loadScoutingData = async (): Promise<{ entries: ScoutingDataWithId[] }> => {
   try {
-    // First, try to load from IndexedDB
-    const { loadAllScoutingEntries, migrateFromLocalStorage } = await import('./indexedDBUtils');
+    // First, try to load from Dexie
+    const { loadAllScoutingEntries, migrateFromLocalStorage, migrateFromIndexedDB } = await import('./dexieDB');
     
     const existingEntries = await loadAllScoutingEntries();
     if (existingEntries.length > 0) {
-      return { entries: existingEntries };
+      // Convert ScoutingEntryDB back to ScoutingDataWithId format
+      const convertedEntries: ScoutingDataWithId[] = existingEntries.map(entry => ({
+        id: entry.id,
+        data: entry.data,
+        timestamp: entry.timestamp
+      }));
+      return { entries: convertedEntries };
     }
     
-    // If no data in IndexedDB, try migrating from localStorage
-    const migrationResult = await migrateFromLocalStorage();
-    if (migrationResult.success && migrationResult.migratedCount > 0) {
+    // If no data in Dexie, try migrating from old IndexedDB first
+    const indexedDBMigration = await migrateFromIndexedDB();
+    if (indexedDBMigration.success && indexedDBMigration.migratedCount > 0) {
+      console.log(`Migrated ${indexedDBMigration.migratedCount} entries from old IndexedDB to Dexie`);
       const entries = await loadAllScoutingEntries();
-      return { entries };
+      const convertedEntries: ScoutingDataWithId[] = entries.map(entry => ({
+        id: entry.id,
+        data: entry.data,
+        timestamp: entry.timestamp
+      }));
+      return { entries: convertedEntries };
+    }
+    
+    // If no data in old IndexedDB, try migrating from localStorage
+    const localStorageMigration = await migrateFromLocalStorage();
+    if (localStorageMigration.success && localStorageMigration.migratedCount > 0) {
+      console.log(`Migrated ${localStorageMigration.migratedCount} entries from localStorage to Dexie`);
+      const entries = await loadAllScoutingEntries();
+      const convertedEntries: ScoutingDataWithId[] = entries.map(entry => ({
+        id: entry.id,
+        data: entry.data,
+        timestamp: entry.timestamp
+      }));
+      return { entries: convertedEntries };
     }
     
     return { entries: [] };
   } catch (error) {
-    console.error('Error loading scouting data from IndexedDB, falling back to localStorage:', error);
+    console.error('Error loading scouting data from Dexie, falling back to localStorage:', error);
     
     // Fallback to localStorage
     const existingDataStr = localStorage.getItem("scoutingData");
@@ -239,14 +264,14 @@ export const loadLegacyScoutingData = async (): Promise<Record<string, unknown>[
   return extractLegacyData(data.entries);
 };
 
-// Save scouting data using IndexedDB with localStorage fallback
+// Save scouting data using Dexie with localStorage fallback
 export const saveScoutingData = async (data: { entries: ScoutingDataWithId[] }): Promise<void> => {
   try {
-    // Try to save to IndexedDB first
-    const { saveScoutingEntries } = await import('./indexedDBUtils');
+    // Try to save to Dexie first
+    const { saveScoutingEntries } = await import('./dexieDB');
     await saveScoutingEntries(data.entries);
   } catch (error) {
-    console.error('Error saving to IndexedDB, falling back to localStorage:', error);
+    console.error('Error saving to Dexie, falling back to localStorage:', error);
     
     // Fallback to localStorage (legacy format)
     const legacyData = extractLegacyData(data.entries);
