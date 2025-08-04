@@ -13,6 +13,7 @@ const ClearDataPage = () => {
   const [scoutingDataCount, setScoutingDataCount] = useState(0);
   const [matchDataCount, setMatchDataCount] = useState(0);
   const [playerStation, setPlayerStation] = useState("");
+  const [scoutingDataSize, setScoutingDataSize] = useState("0 B");
   const [showScoutingConfirm, setShowScoutingConfirm] = useState(false);
   const [showMatchConfirm, setShowMatchConfirm] = useState(false);
 
@@ -26,9 +27,13 @@ const ClearDataPage = () => {
       try {
         const scoutingData = await loadScoutingData();
         setScoutingDataCount(scoutingData.entries.length);
+        
+        const dataString = JSON.stringify(scoutingData.entries);
+        setScoutingDataSize(formatDataSize(dataString));
       } catch (error) {
         console.error("Error loading scouting data:", error);
         setScoutingDataCount(0);
+        setScoutingDataSize("0 B");
       }
     };
 
@@ -50,6 +55,7 @@ const ClearDataPage = () => {
       localStorage.setItem("scoutingData", JSON.stringify({ data: [] }));
       
       setScoutingDataCount(0);
+      setScoutingDataSize("0 B");
       setShowScoutingConfirm(false);
       toast.success("Cleared all scouting data");
     } catch (error) {
@@ -71,11 +77,6 @@ const ClearDataPage = () => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
-  const getScoutingDataSize = () => {
-    const data = localStorage.getItem("scoutingData");
-    return formatDataSize(data);
   };
 
   const getMatchDataSize = () => {
@@ -117,7 +118,7 @@ const ClearDataPage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              <span className="font-medium">Storage size:</span> {getScoutingDataSize()}
+              <span className="font-medium">Storage size:</span> {scoutingDataSize}
             </p>
 
             {!showScoutingConfirm ? (
