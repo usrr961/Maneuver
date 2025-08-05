@@ -88,7 +88,7 @@ const AutoStartPage = () => {
   const hasSelection = startPoses.some(pos => pos === true);
 
   return (
-    <div className="h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
+    <div className="min-h-screen w-full flex flex-col items-center px-4 pt-6 pb-8 md:pb-6">
       <div className="flex flex-col lg:flex-row items-start gap-6 max-w-7xl w-full h-full min-h-0">
         
         {/* Field Map Section */}

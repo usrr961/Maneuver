@@ -124,7 +124,25 @@ const MatchDataPage = () => {
           accept=".json"
           style={{ display: "none" }}
           onChange={handleFileSelect}
-        />  
+        />
+
+        <Button
+          type="button"
+          variant={"secondary"}
+          className="flex w-full max-w-md h-16 items-center justify-center text-xl text-center"
+          onClick={() => {
+            const input = document.getElementById("selectFiles");
+            if (input) input.click();
+          }}
+        >
+          Upload Match Data JSON
+        </Button>
+
+        <div className="flex items-center justify-center gap-4 w-full max-w-md">
+          <Separator className="flex-1" />
+          <p className="text-center text-xl font-bold">OR</p>
+          <Separator className="flex-1" />
+        </div>
 
         <div className="w-full max-w-md space-y-3">
           <div className="space-y-1">
@@ -157,24 +175,6 @@ const MatchDataPage = () => {
             Get your API key from <a href="https://www.thebluealliance.com/account" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">The Blue Alliance</a>
           </p>
         </div>
-        
-        <div className="flex items-center justify-center gap-4 w-full max-w-md">
-          <Separator className="flex-1" />
-          <p className="text-center text-xl font-bold">OR</p>
-          <Separator className="flex-1" />
-        </div>
-        
-        <Button
-          type="button"
-          variant={"secondary"}
-          className="flex w-full max-w-md h-16 items-center justify-center text-xl text-center"
-          onClick={() => {
-            const input = document.getElementById("selectFiles");
-            if (input) input.click();
-          }}
-        >
-          Upload Match Data JSON
-        </Button>
         
         <Button
           className="flex w-full max-w-md h-16 items-center justify-center text-xl text-center mt-8"

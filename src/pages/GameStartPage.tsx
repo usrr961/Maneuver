@@ -150,8 +150,8 @@ const GameStartPage = () => {
   const currentScouter = getCurrentScouter();
 
   return (
-    <div className="h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
-      <div className="flex flex-col items-center gap-6 max-w-2xl w-full h-full min-h-0 pb-4">
+    <div className="min-h-screen w-full flex flex-col items-center px-4 pt-6 pb-8 md:pb-6">
+      <div className="flex flex-col items-center gap-6 max-w-2xl w-full flex-1 pb-8 md:pb-4">
         
         {!currentScouter && (
           <Card className="w-full border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20">
@@ -293,7 +293,7 @@ const GameStartPage = () => {
         )}
 
         {/* Bottom spacing for mobile */}
-        <div className="h-6" />
+        <div className="h-8 md:h-6" />
       </div>
     </div>
   );
