@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Maximize2, Minimize2, ChevronLeft, ChevronRight } from "lucide-react";
 import fieldImage from "@/assets/field.png";
@@ -26,12 +26,12 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
   const [currentStageId, setCurrentStageId] = useState(stageId); // Internal stage tracking
   const backgroundImageRef = useRef<HTMLImageElement | null>(null); // Store background image reference
 
-  // Available stages for switching
-  const stages = [
+  // Available stages for switching - memoized to prevent recreating on every render
+  const stages = useMemo(() => [
     { id: 'autonomous', label: 'Autonomous' },
     { id: 'teleop', label: 'Teleop' },
     { id: 'endgame', label: 'Endgame' }
-  ];
+  ], []);
 
   const currentStageIndex = stages.findIndex(stage => stage.id === currentStageId);
   const currentStage = stages[currentStageIndex];
@@ -43,7 +43,7 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
     }
   }, [stageId, isFullscreen]);
 
-  const setupCanvas = () => {
+  const setupCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const container = isFullscreen ? fullscreenRef.current : containerRef.current;
     if (!canvas || !container) return;
@@ -117,7 +117,7 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
       }
     };
     img.src = fieldImage;
-  };
+  }, [currentStageId, isFullscreen]);
 
   useEffect(() => {
     setupCanvas();
@@ -131,10 +131,10 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [currentStageId, isFullscreen]); // Use currentStageId instead of stageId
+  }, [currentStageId, isFullscreen, setupCanvas]); // Use currentStageId instead of stageId
 
   // Handle fullscreen toggle
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
     if (!isFullscreen) {
       setIsFullscreen(true);
       document.body.style.overflow = 'hidden';
@@ -146,10 +146,29 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
         onStageChange(currentStageId);
       }
     }
-  };
+  }, [isFullscreen, onStageChange, currentStageId, stageId]);
+
+  // Save canvas function - defined here so switchStage can use it
+  const saveCanvas = useCallback((showAlert = true) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const dataURL = canvas.toDataURL('image/png');
+    
+    if (showAlert) {
+      // Manual save - download file
+      const link = document.createElement('a');
+      link.download = `field-strategy-${currentStageId}-${new Date().toISOString().slice(0, 10)}.png`;
+      link.href = dataURL;
+      link.click();
+    }
+
+    // Auto-save to localStorage - use currentStageId
+    localStorage.setItem(`fieldStrategy_${currentStageId}`, dataURL);
+  }, [currentStageId]);
 
   // Handle stage switching in fullscreen
-  const switchStage = (direction: 'prev' | 'next') => {
+  const switchStage = useCallback((direction: 'prev' | 'next') => {
     const currentIndex = stages.findIndex(stage => stage.id === currentStageId);
     let newIndex;
     
@@ -171,7 +190,7 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
     if (!isFullscreen && onStageChange) {
       onStageChange(newStageId);
     }
-  };
+  }, [currentStageId, isFullscreen, onStageChange, stages, saveCanvas]);
 
   // Handle escape key to exit fullscreen
   useEffect(() => {
@@ -196,9 +215,9 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isFullscreen, currentStageId]);
+  }, [isFullscreen, currentStageId, switchStage, toggleFullscreen]);
 
-  const getPointFromEvent = (e: React.MouseEvent | React.TouchEvent | React.PointerEvent): Point => {
+  const getPointFromEvent = (e: React.MouseEvent | React.PointerEvent): Point => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
 
@@ -206,32 +225,23 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
-    let clientX: number, clientY: number;
-
-    if ('touches' in e) {
-      // Touch event
-      const touch = e.touches[0] || e.changedTouches[0];
-      clientX = touch.clientX;
-      clientY = touch.clientY;
-    } else {
-      // Mouse or Pointer event
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
-
     return {
-      x: (clientX - rect.left) * scaleX,
-      y: (clientY - rect.top) * scaleY
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
     };
   };
 
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
+  const startDrawing = (e: React.MouseEvent | React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // For touch events, prevent scrolling immediately
-    if ('touches' in e) {
-      document.body.style.overflow = 'hidden';
+    // Capture the pointer to prevent other elements from receiving pointer events
+    if ('setPointerCapture' in e.currentTarget && e.currentTarget instanceof HTMLElement) {
+      try {
+        e.currentTarget.setPointerCapture((e as React.PointerEvent).pointerId);
+      } catch {
+        // Ignore errors if pointer capture fails
+      }
     }
     
     setIsDrawing(true);
@@ -239,7 +249,7 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
     setLastPoint(point);
   };
 
-  const draw = (e: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
+  const draw = (e: React.MouseEvent | React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -295,14 +305,20 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
     setLastPoint(currentPoint);
   };
 
-  const stopDrawing = (e?: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
+  const stopDrawing = (e?: React.MouseEvent | React.PointerEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
+      
+      // Release pointer capture if it was set
+      if ('releasePointerCapture' in e.currentTarget && e.currentTarget instanceof HTMLElement) {
+        try {
+          e.currentTarget.releasePointerCapture((e as React.PointerEvent).pointerId);
+        } catch {
+          // Ignore errors if pointer capture release fails
+        }
+      }
     }
-    
-    // Restore body scroll
-    document.body.style.overflow = '';
     
     if (isDrawing) {
       // Auto-save when drawing stops
@@ -327,30 +343,15 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
     localStorage.removeItem(`fieldStrategy_${currentStageId}`);
   };
 
-  const saveCanvas = (showAlert = true) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const dataURL = canvas.toDataURL('image/png');
-    
-    if (showAlert) {
-      // Manual save - download file
-      const link = document.createElement('a');
-      link.download = `field-strategy-${currentStageId}-${new Date().toISOString().slice(0, 10)}.png`;
-      link.href = dataURL;
-      link.click();
-    }
-
-    // Auto-save to localStorage - use currentStageId
-    localStorage.setItem(`fieldStrategy_${currentStageId}`, dataURL);
-  };
-
   const canvasStyle: React.CSSProperties = {
     userSelect: 'none',
     WebkitUserSelect: 'none',
     MozUserSelect: 'none',
     msUserSelect: 'none',
-    display: 'block'
+    display: 'block',
+    touchAction: 'none', // Prevent all touch gestures
+    WebkitTouchCallout: 'none', // Disable iOS callout
+    WebkitTapHighlightColor: 'transparent' // Remove tap highlight on mobile
   };
 
   const DrawingControls = () => (
@@ -512,7 +513,16 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
         </div>
 
         {/* Fullscreen Canvas - Flexible height */}
-        <div className="flex-1 flex items-center justify-center p-2 md:p-4 bg-green-50 dark:bg-green-950/20 overflow-hidden">
+        <div 
+          className="flex-1 flex items-center justify-center p-2 md:p-4 bg-green-50 dark:bg-green-950/20 overflow-hidden"
+          style={{ touchAction: 'none' }}
+        >
+        <div 
+          className="w-full h-full flex items-center justify-center"
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
+        >
           <canvas
             ref={canvasRef}
             style={{
@@ -524,16 +534,13 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
             onMouseMove={draw}
             onMouseUp={stopDrawing}
             onMouseLeave={stopDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={stopDrawing}
-            onTouchCancel={stopDrawing}
             onPointerDown={startDrawing}
             onPointerMove={draw}
             onPointerUp={stopDrawing}
             onPointerLeave={stopDrawing}
             onPointerCancel={stopDrawing}
           />
+        </div>
         </div>
 
         {/* Fullscreen Footer - Fixed height */}
@@ -548,7 +555,11 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
   }
 
   return (
-    <div className="w-full h-full flex flex-col" data-stage={stageId}>
+    <div 
+      className="w-full h-full flex flex-col" 
+      data-stage={stageId}
+      style={{ touchAction: 'pan-x pan-y' }} // Allow normal scrolling but prevent other gestures
+    >
       {/* Normal Drawing Controls */}
       <DrawingControls />
 
@@ -556,28 +567,32 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
       <div 
         ref={containerRef}
         className="flex-1 flex items-center justify-center border rounded-lg bg-green-50 dark:bg-green-950/20 min-h-0 p-4"
+        style={{ touchAction: 'none' }}
       >
-        <canvas
-          ref={canvasRef}
-          style={{
-            ...canvasStyle,
-            touchAction: 'none'  // Always prevent touch gestures
-          }}
-          className="border border-gray-300 rounded-lg cursor-crosshair max-w-full max-h-full"
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
-          onTouchCancel={stopDrawing}
-          onPointerDown={startDrawing}
-          onPointerMove={draw}
-          onPointerUp={stopDrawing}
-          onPointerLeave={stopDrawing}
-          onPointerCancel={stopDrawing}
-        />
+        <div 
+          className="w-full h-full flex items-center justify-center"
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
+        >
+          <canvas
+            ref={canvasRef}
+            style={{
+              ...canvasStyle,
+              touchAction: 'none'  // Always prevent touch gestures
+            }}
+            className="border border-gray-300 rounded-lg cursor-crosshair max-w-full max-h-full"
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            onPointerDown={startDrawing}
+            onPointerMove={draw}
+            onPointerUp={stopDrawing}
+            onPointerLeave={stopDrawing}
+            onPointerCancel={stopDrawing}
+          />
+        </div>
       </div>
     </div>
   );

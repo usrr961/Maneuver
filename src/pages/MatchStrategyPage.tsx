@@ -1,68 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/animate-ui/radix/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { ChevronDownIcon } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
 import FieldCanvas from "@/components/MatchStrategyComponents/FieldCanvas";
+import { AllianceCard } from "@/components/MatchStrategyComponents/AllianceCard";
 import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
-
-interface ScoutingEntry {
-  matchNumber: string;
-  alliance: string;
-  scouterInitials: string;
-  selectTeam: string;
-  startPoses0: boolean;
-  startPoses1: boolean;
-  startPoses2: boolean;
-  startPoses3: boolean;
-  startPoses4: boolean;
-  startPoses5: boolean;
-  autoCoralPlaceL1Count: number;
-  autoCoralPlaceL2Count: number;
-  autoCoralPlaceL3Count: number;
-  autoCoralPlaceL4Count: number;
-  autoCoralPlaceDropMissCount: number;
-  autoCoralPickPreloadCount: number;
-  autoCoralPickStationCount: number;
-  autoCoralPickMark1Count: number;
-  autoCoralPickMark2Count: number;
-  autoCoralPickMark3Count: number;
-  autoAlgaePlaceNetShot: number;
-  autoAlgaePlaceProcessor: number;
-  autoAlgaePlaceDropMiss: number;
-  autoAlgaePlaceRemove: number;
-  autoAlgaePickReefCount: number;
-  autoAlgaePickMark1Count: number;
-  autoAlgaePickMark2Count: number;
-  autoAlgaePickMark3Count: number;
-  autoPassedStartLine: boolean;
-  teleopCoralPlaceL1Count: number;
-  teleopCoralPlaceL2Count: number;
-  teleopCoralPlaceL3Count: number;
-  teleopCoralPlaceL4Count: number;
-  teleopCoralPlaceDropMissCount: number;
-  teleopCoralPickStationCount: number;
-  teleopCoralPickCarpetCount: number;
-  teleopAlgaePlaceNetShot: number;
-  teleopAlgaePlaceProcessor: number;
-  teleopAlgaePlaceDropMiss: number;
-  teleopAlgaePlaceRemove: number;
-  teleopAlgaePickReefCount: number;
-  teleopAlgaePickCarpetCount: number;
-  shallowClimbAttempted: boolean;
-  deepClimbAttempted: boolean;
-  parkAttempted: boolean;
-  climbFailed: boolean;
-  playedDefense: boolean;
-  brokeDown: boolean;
-  comment: string;
-}
+import { createTeamStatsCalculator } from "@/lib/matchStrategyUtils";
+import { clearAllStrategies, saveAllStrategyCanvases } from "@/lib/strategyCanvasUtils";
 
 const MatchStrategyPage = () => {
   const [scoutingData, setScoutingData] = useState<any[]>([]);
@@ -71,7 +17,9 @@ const MatchStrategyPage = () => {
   const [activeTab, setActiveTab] = useState("autonomous");
   const [matchNumber, setMatchNumber] = useState<string>("");
   const [activeStatsTab, setActiveStatsTab] = useState("overall");
-  const isMobile = useIsMobile();
+  
+  // Create the team stats calculator function
+  const getTeamStats = createTeamStatsCalculator(scoutingData);
 
   useEffect(() => {
     // Load scouting data using the new deduplication utilities
@@ -91,232 +39,6 @@ const MatchStrategyPage = () => {
 
     loadData();
   }, []);
-
-  const parseScoutingEntry = (dataObject: Record<string, unknown>): ScoutingEntry => {
-    // Convert object properties to ScoutingEntry structure
-    return {
-      matchNumber: dataObject.matchNumber?.toString() || "",
-      alliance: dataObject.alliance?.toString() || "",
-      scouterInitials: dataObject.scouterInitials?.toString() || "",
-      selectTeam: dataObject.selectTeam?.toString() || "",
-      startPoses0: Boolean(dataObject.startPoses0),
-      startPoses1: Boolean(dataObject.startPoses1),
-      startPoses2: Boolean(dataObject.startPoses2),
-      startPoses3: Boolean(dataObject.startPoses3),
-      startPoses4: Boolean(dataObject.startPoses4),
-      startPoses5: Boolean(dataObject.startPoses5),
-      autoCoralPlaceL1Count: Number(dataObject.autoCoralPlaceL1Count) || 0,
-      autoCoralPlaceL2Count: Number(dataObject.autoCoralPlaceL2Count) || 0,
-      autoCoralPlaceL3Count: Number(dataObject.autoCoralPlaceL3Count) || 0,
-      autoCoralPlaceL4Count: Number(dataObject.autoCoralPlaceL4Count) || 0,
-      autoCoralPlaceDropMissCount: Number(dataObject.autoCoralPlaceDropMissCount) || 0,
-      autoCoralPickPreloadCount: Number(dataObject.autoCoralPickPreloadCount) || 0,
-      autoCoralPickStationCount: Number(dataObject.autoCoralPickStationCount) || 0,
-      autoCoralPickMark1Count: Number(dataObject.autoCoralPickMark1Count) || 0,
-      autoCoralPickMark2Count: Number(dataObject.autoCoralPickMark2Count) || 0,
-      autoCoralPickMark3Count: Number(dataObject.autoCoralPickMark3Count) || 0,
-      autoAlgaePlaceNetShot: Number(dataObject.autoAlgaePlaceNetShot) || 0,
-      autoAlgaePlaceProcessor: Number(dataObject.autoAlgaePlaceProcessor) || 0,
-      autoAlgaePlaceDropMiss: Number(dataObject.autoAlgaePlaceDropMiss) || 0,
-      autoAlgaePlaceRemove: Number(dataObject.autoAlgaePlaceRemove) || 0,
-      autoAlgaePickReefCount: Number(dataObject.autoAlgaePickReefCount) || 0,
-      autoAlgaePickMark1Count: Number(dataObject.autoAlgaePickMark1Count) || 0,
-      autoAlgaePickMark2Count: Number(dataObject.autoAlgaePickMark2Count) || 0,
-      autoAlgaePickMark3Count: Number(dataObject.autoAlgaePickMark3Count) || 0,
-      autoPassedStartLine: Boolean(dataObject.autoPassedStartLine),
-      teleopCoralPlaceL1Count: Number(dataObject.teleopCoralPlaceL1Count) || 0,
-      teleopCoralPlaceL2Count: Number(dataObject.teleopCoralPlaceL2Count) || 0,
-      teleopCoralPlaceL3Count: Number(dataObject.teleopCoralPlaceL3Count) || 0,
-      teleopCoralPlaceL4Count: Number(dataObject.teleopCoralPlaceL4Count) || 0,
-      teleopCoralPlaceDropMissCount: Number(dataObject.teleopCoralPlaceDropMissCount) || 0,
-      teleopCoralPickStationCount: Number(dataObject.teleopCoralPickStationCount) || 0,
-      teleopCoralPickCarpetCount: Number(dataObject.teleopCoralPickCarpetCount) || 0,
-      teleopAlgaePlaceNetShot: Number(dataObject.teleopAlgaePlaceNetShot) || 0,
-      teleopAlgaePlaceProcessor: Number(dataObject.teleopAlgaePlaceProcessor) || 0,
-      teleopAlgaePlaceDropMiss: Number(dataObject.teleopAlgaePlaceDropMiss) || 0,
-      teleopAlgaePlaceRemove: Number(dataObject.teleopAlgaePlaceRemove) || 0,
-      teleopAlgaePickReefCount: Number(dataObject.teleopAlgaePickReefCount) || 0,
-      teleopAlgaePickCarpetCount: Number(dataObject.teleopAlgaePickCarpetCount) || 0,
-      shallowClimbAttempted: Boolean(dataObject.shallowClimbAttempted),
-      deepClimbAttempted: Boolean(dataObject.deepClimbAttempted),
-      parkAttempted: Boolean(dataObject.parkAttempted),
-      climbFailed: Boolean(dataObject.climbFailed),
-      playedDefense: Boolean(dataObject.playedDefense),
-      brokeDown: Boolean(dataObject.brokeDown),
-      comment: dataObject.comment?.toString() || ""
-    };
-  };
-
-  const getTeamStats = (teamNumber: string) => {
-    if (!teamNumber) return null;
-
-    const teamDataObjects = scoutingData.filter((dataObject: Record<string, unknown>) => dataObject.selectTeam?.toString() === teamNumber);
-    
-    if (teamDataObjects.length === 0) {
-      return {
-        matchesPlayed: 0,
-        overall: {
-          totalPiecesScored: 0,
-          avgTotalPoints: 0,
-          avgCoral: 0,
-          avgAlgae: 0
-        },
-        auto: {
-          mobilityRate: 0,
-          avgCoral: 0,
-          avgAlgae: 0,
-          startingPositions: [],
-          avgTotalPoints: 0
-        },
-        teleop: {
-          avgCoral: 0,
-          avgAlgae: 0,
-          avgTotalPoints: 0
-        },
-        endgame: {
-          climbRate: 0,
-          parkRate: 0,
-          shallowClimbRate: 0,
-          deepClimbRate: 0,
-          avgTotalPoints: 0
-        }
-      };
-    }
-
-    const teamEntries = teamDataObjects.map(parseScoutingEntry);
-    const matchCount = teamEntries.length;
-
-    // Calculate overall stats
-    const totalPiecesScored = teamEntries.reduce((sum, entry) => {
-      const autoCoralScored = entry.autoCoralPlaceL1Count + entry.autoCoralPlaceL2Count + 
-                           entry.autoCoralPlaceL3Count + entry.autoCoralPlaceL4Count;
-      const teleopCoralScored = entry.teleopCoralPlaceL1Count + entry.teleopCoralPlaceL2Count + 
-                             entry.teleopCoralPlaceL3Count + entry.teleopCoralPlaceL4Count;
-      const autoAlgaeScored = entry.autoAlgaePlaceNetShot + entry.autoAlgaePlaceProcessor;
-      const teleopAlgaeScored = entry.teleopAlgaePlaceNetShot + entry.teleopAlgaePlaceProcessor;
-      
-      return sum + autoCoralScored + teleopCoralScored + autoAlgaeScored + teleopAlgaeScored;
-    }, 0);
-
-    const totalCoral = teamEntries.reduce((sum, entry) => {
-      return sum + entry.autoCoralPlaceL1Count + entry.autoCoralPlaceL2Count + 
-             entry.autoCoralPlaceL3Count + entry.autoCoralPlaceL4Count +
-             entry.teleopCoralPlaceL1Count + entry.teleopCoralPlaceL2Count + 
-             entry.teleopCoralPlaceL3Count + entry.teleopCoralPlaceL4Count;
-    }, 0);
-
-    const totalAlgae = teamEntries.reduce((sum, entry) => {
-      return sum + entry.autoAlgaePlaceNetShot + entry.autoAlgaePlaceProcessor +
-             entry.teleopAlgaePlaceNetShot + entry.teleopAlgaePlaceProcessor;
-    }, 0);
-
-    const autoPoints = teamEntries.reduce((sum, entry) => {
-      // Auto points
-      const autoCoralPoints = (entry.autoCoralPlaceL1Count * 3) + (entry.autoCoralPlaceL2Count * 4) + 
-                           (entry.autoCoralPlaceL3Count * 6) + (entry.autoCoralPlaceL4Count * 7);
-      const autoAlgaePoints = (entry.autoAlgaePlaceNetShot * 4) + (entry.autoAlgaePlaceProcessor * 2);
-      const autoMobilityPoints = entry.autoPassedStartLine ? 3 : 0;
-
-      return sum + autoCoralPoints + autoAlgaePoints + autoMobilityPoints;
-    }, 0);
-
-    const teleopPoints = teamEntries.reduce((sum, entry) => {
-      // Teleop points
-      const teleopCoralPoints = (entry.teleopCoralPlaceL1Count * 2) + (entry.teleopCoralPlaceL2Count * 3) + 
-                             (entry.teleopCoralPlaceL3Count * 4) + (entry.teleopCoralPlaceL4Count * 5);
-      const teleopAlgaePoints = (entry.teleopAlgaePlaceNetShot * 4) + (entry.teleopAlgaePlaceProcessor * 2);
-
-      return sum + teleopCoralPoints + teleopAlgaePoints;
-    }, 0);
-
-    const endgamePoints = teamEntries.reduce((sum, entry) => {
-      // Endgame points
-      let points = 0;
-      if ((entry.parkAttempted && !entry.climbFailed) || (entry.shallowClimbAttempted && entry.climbFailed) || (entry.deepClimbAttempted && entry.climbFailed)) points += 2;
-      if (entry.shallowClimbAttempted && !entry.climbFailed) points += 6;
-      if (entry.deepClimbAttempted && !entry.climbFailed) points += 12;
-
-      return sum + points;
-    }, 0);
-
-    // Calculate average total points
-    const totalPoints = autoPoints + teleopPoints + endgamePoints;
-
-    // Calculate auto stats
-    const mobilityCount = teamEntries.filter(entry => entry.autoPassedStartLine).length;
-    const autoCoralTotal = teamEntries.reduce((sum, entry) => {
-      return sum + entry.autoCoralPlaceL1Count + entry.autoCoralPlaceL2Count + 
-             entry.autoCoralPlaceL3Count + entry.autoCoralPlaceL4Count;
-    }, 0);
-    const autoAlgaeTotal = teamEntries.reduce((sum, entry) => {
-      return sum + entry.autoAlgaePlaceNetShot + entry.autoAlgaePlaceProcessor;
-    }, 0);
-
-    // Calculate starting positions
-    const startingPositions = [];
-    const positions = ['Pos 0', 'Pos 1', 'Pos 2', 'Pos 3', 'Pos 4', 'Pos 5'];
-    const positionCounts = [
-      teamEntries.filter(entry => entry.startPoses0).length,
-      teamEntries.filter(entry => entry.startPoses1).length,
-      teamEntries.filter(entry => entry.startPoses2).length,
-      teamEntries.filter(entry => entry.startPoses3).length,
-      teamEntries.filter(entry => entry.startPoses4).length,
-      teamEntries.filter(entry => entry.startPoses5).length
-    ];
-
-    for (let i = 0; i < positions.length; i++) {
-      const percentage = Math.round((positionCounts[i] / matchCount) * 100);
-      if (percentage > 0) {
-        startingPositions.push({ position: positions[i], percentage });
-      }
-    }
-
-    // Calculate teleop stats
-    const teleopCoralTotal = teamEntries.reduce((sum, entry) => {
-      return sum + entry.teleopCoralPlaceL1Count + entry.teleopCoralPlaceL2Count + 
-             entry.teleopCoralPlaceL3Count + entry.teleopCoralPlaceL4Count;
-    }, 0);
-    const teleopAlgaeTotal = teamEntries.reduce((sum, entry) => {
-      return sum + entry.teleopAlgaePlaceNetShot + entry.teleopAlgaePlaceProcessor;
-    }, 0);
-
-    // Calculate endgame stats
-    const successfulClimbs = teamEntries.filter(entry => 
-      (entry.shallowClimbAttempted || entry.deepClimbAttempted) && !entry.climbFailed
-    ).length;
-    const parkCount = teamEntries.filter(entry => entry.parkAttempted && !entry.climbFailed).length;
-    const shallowClimbCount = teamEntries.filter(entry => entry.shallowClimbAttempted && !entry.climbFailed).length;
-    const deepClimbCount = teamEntries.filter(entry => entry.deepClimbAttempted && !entry.climbFailed).length;
-
-    return {
-      matchesPlayed: matchCount,
-      overall: {
-        totalPiecesScored: Math.round((totalPiecesScored / matchCount) * 10) / 10,
-        avgTotalPoints: Math.round((totalPoints / matchCount) * 10) / 10,
-        avgCoral: Math.round((totalCoral / matchCount) * 10) / 10,
-        avgAlgae: Math.round((totalAlgae / matchCount) * 10) / 10
-      },
-      auto: {
-        mobilityRate: Math.round((mobilityCount / matchCount) * 100),
-        avgCoral: Math.round((autoCoralTotal / matchCount) * 10) / 10,
-        avgAlgae: Math.round((autoAlgaeTotal / matchCount) * 10) / 10,
-        avgTotalPoints: Math.round((autoPoints / matchCount) * 10) / 10,
-        startingPositions
-      },
-      teleop: {
-        avgCoral: Math.round((teleopCoralTotal / matchCount) * 10) / 10,
-        avgAlgae: Math.round((teleopAlgaeTotal / matchCount) * 10) / 10,
-        avgTotalPoints: Math.round((teleopPoints / matchCount) * 10) / 10
-      },
-      endgame: {
-        climbRate: Math.round((successfulClimbs / matchCount) * 100),
-        parkRate: Math.round((parkCount / matchCount) * 100),
-        shallowClimbRate: Math.round((shallowClimbCount / matchCount) * 100),
-        deepClimbRate: Math.round((deepClimbCount / matchCount) * 100),
-        avgTotalPoints: Math.round((endgamePoints / matchCount) * 10) / 10
-      }
-    };
-  };
 
   const handleTeamChange = (index: number, teamNumber: string) => {
     const newSelectedTeams = [...selectedTeams];
@@ -367,426 +89,6 @@ const MatchStrategyPage = () => {
     touchStartRef.current = null;
   };
 
-  // Responsive Team Selector Component
-  const TeamSelector = ({ 
-    label, 
-    value, 
-    onValueChange 
-  }: {
-    index: number;
-    label: string;
-    labelColor: string;
-    value: string;
-    onValueChange: (value: string) => void;
-  }) => {
-    if (isMobile) {
-      return (
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button 
-              variant="outline" 
-              className="flex-1 justify-between h-10"
-            >
-              <span className="truncate">
-                {value ? `Team ${value}` : "Select team"}
-              </span>
-              <ChevronDownIcon className="h-4 w-4 opacity-50" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="h-[60vh] pb-8">
-            <SheetHeader>
-              <SheetTitle>{label}</SheetTitle>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-4">
-              <div className="space-y-2">
-                <SheetClose asChild>
-                  <Button 
-                    variant={!value ? "default" : "outline"}
-                    className="w-full justify-start h-12 px-4"
-                    onClick={() => onValueChange("none")}
-                  >
-                    No team
-                  </Button>
-                </SheetClose>
-                {availableTeams.map((teamNum) => (
-                  <SheetClose key={teamNum} asChild>
-                    <Button 
-                      variant={value === teamNum ? "default" : "outline"}
-                      className="w-full justify-start h-12 px-4"
-                      onClick={() => onValueChange(teamNum)}
-                    >
-                      Team {teamNum}
-                    </Button>
-                  </SheetClose>
-                ))}
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-      );
-    }
-
-    // Desktop version - keep existing Select
-    return (
-      <Select 
-        value={value || "none"} 
-        onValueChange={onValueChange}
-      >
-        <SelectTrigger className="flex-1">
-          <SelectValue placeholder="Select team" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="none">No team</SelectItem>
-          {availableTeams.map((teamNum) => (
-            <SelectItem key={teamNum} value={teamNum}>
-              Team {teamNum}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    );
-  };
-
-  const TeamStatsHeaders = ({ alliance, activeStatsTab }: {
-    alliance: 'red' | 'blue',
-    activeStatsTab: string
-  }) => {
-    // Get the correct team slice based on alliance
-    const teamSlice = alliance === 'red' ? selectedTeams.slice(0, 3) : selectedTeams.slice(3, 6);
-    
-    const renderStatsHeader = () => {
-      switch (activeStatsTab) {
-        case "overall":
-          return(
-            <div className="text-right text-sm h-12 flex flex-col justify-center">
-              <div className="font-bold text-lg">
-                {Math.round(teamSlice.reduce((sum, team) => {
-                  const stats = getTeamStats(team);
-                  return sum + (stats?.overall.avgTotalPoints || 0);
-                }, 0))} pts
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {teamSlice.filter(team => {
-                  const stats = getTeamStats(team);
-                  return stats && stats.endgame.climbRate > 50;
-                }).length}/3 climbers
-              </div>
-            </div>
-          );
-        case "auto":
-          return (
-            <div className="text-right text-sm h-12 flex flex-col justify-center">
-              <div className="font-bold text-lg">
-                {Math.round(teamSlice.reduce((sum, team) => {
-                  const stats = getTeamStats(team);
-                  return sum + (stats?.auto.avgTotalPoints || 0);
-                }, 0))} pts
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {teamSlice.filter(team => {
-                  const stats = getTeamStats(team);
-                  return stats && stats.auto.mobilityRate > 50;
-                }).length}/3 mobile
-              </div>
-            </div>
-          );
-        case "teleop":
-          return (
-            <div className="text-right text-sm h-12 flex flex-col justify-center">
-              <div className="font-bold text-lg">
-                {Math.round(teamSlice.reduce((sum, team) => {
-                  const stats = getTeamStats(team);
-                  return sum + (stats?.teleop.avgTotalPoints || 0);
-                }, 0))} pts
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {Math.round(teamSlice.reduce((sum, team) => {
-                  const stats = getTeamStats(team);
-                  return sum + (stats?.teleop.avgCoral || 0);
-                }, 0) * 10) / 10} coral | {Math.round(teamSlice.reduce((sum, team) => {
-                  const stats = getTeamStats(team);
-                  return sum + (stats?.teleop.avgAlgae || 0);
-                }, 0) * 10) / 10} algae
-              </div>
-            </div>
-          );
-        case "endgame":
-          return (
-            <div className="text-right text-sm h-12 flex flex-col justify-center">
-              <div className="font-bold text-lg">
-                {Math.round(teamSlice.reduce((sum, team) => {
-                  const stats = getTeamStats(team);
-                  return sum + (stats?.endgame.avgTotalPoints || 0);
-                }, 0))} pts
-              </div>
-               <div className="text-xs text-muted-foreground">
-                {teamSlice.filter(team => {
-                  const stats = getTeamStats(team);
-                  return stats && stats.endgame.climbRate > 50;
-                }).length}/3 climbers
-              </div>
-            </div>
-          );
-      }
-    }
-
-    return (
-      <>
-        {renderStatsHeader()}
-      </>
-    );
-  };
-
-  // Helper component to render team stats for the active phase
-  const TeamStatsDetail = ({ stats, activeStatsTab }: { 
-    stats: any, 
-    activeStatsTab: string
-  }) => {
-    if (!stats) return null;
-
-    const renderStatsContent = () => {
-      switch (activeStatsTab) {
-        case "overall":
-          return (
-            <div className="h-24 flex items-center">
-              <div className="grid grid-cols-3 gap-2 text-sm w-full">
-                <div className="text-center">
-                  <p className="font-medium text-xs">Coral</p>
-                  <p className="text-lg font-bold text-orange-600">{stats.overall.avgCoral}</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-medium text-xs">Algae</p>
-                  <p className="text-lg font-bold text-green-600">{stats.overall.avgAlgae}</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-medium text-xs">Avg Points</p>
-                  <p className="text-lg font-bold text-blue-600">{stats.overall.avgTotalPoints}</p>
-                </div>
-              </div>
-            </div>
-          );
-
-        case "auto":
-          return (
-            <div className="h-24 flex flex-col justify-center">
-              <div className="grid grid-cols-3 gap-2 text-sm mb-2">
-                <div className="text-center">
-                  <p className="font-medium text-xs">Mobility</p>
-                  <p className="text-lg font-bold text-blue-600">{stats.auto.mobilityRate}%</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-medium text-xs">Coral</p>
-                  <p className="text-lg font-bold text-orange-600">{stats.auto.avgCoral}</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-medium text-xs">Algae</p>
-                  <p className="text-lg font-bold text-green-600">{stats.auto.avgAlgae}</p>
-                </div>
-              </div>
-              {stats.auto.startingPositions.length > 0 && (
-                <div className="flex flex-col items-center">
-                  <p className="font-medium text-xs mb-1">Starting Positions:</p>
-                  <div className="flex flex-wrap gap-1 justify-center max-h-8 overflow-hidden">
-                    {stats.auto.startingPositions.slice(0, 4).map((pos: { position: string, percentage: number }, idx: number) => (
-                      <Badge key={idx} variant="secondary" className="text-xs">
-                        {pos.position}: {pos.percentage}%
-                      </Badge>
-                    ))}
-                    {stats.auto.startingPositions.length > 4 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{stats.auto.startingPositions.length - 4} more
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-
-        case "teleop":
-          return (
-            <div className="h-24 flex items-center">
-              <div className="grid grid-cols-2 gap-2 text-sm w-full">
-                <div className="text-center">
-                  <p className="font-medium text-xs">Coral</p>
-                  <p className="text-lg font-bold text-orange-600">{stats.teleop.avgCoral}</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-medium text-xs">Algae</p>
-                  <p className="text-lg font-bold text-green-600">{stats.teleop.avgAlgae}</p>
-                </div>
-              </div>
-            </div>
-          );
-
-        case "endgame":
-          return (
-            <div className="h-24 flex items-center">
-              <div className="grid grid-cols-2 gap-2 text-sm w-full">
-                <div className="text-center">
-                  <p className="font-medium text-xs">Overall Climb</p>
-                  <p className="text-lg font-bold text-purple-600">{stats.endgame.climbRate}%</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-medium text-xs">Park</p>
-                  <p className="text-sm font-bold text-gray-600">{stats.endgame.parkRate}%</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-medium text-xs">Shallow</p>
-                  <p className="text-sm font-bold text-blue-600">{stats.endgame.shallowClimbRate}%</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-medium text-xs">Deep</p>
-                  <p className="text-sm font-bold text-red-600">{stats.endgame.deepClimbRate}%</p>
-                </div>
-              </div>
-            </div>
-          );
-
-        default:
-          return null;
-      }
-    };
-
-    return (
-      <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-        {renderStatsContent()}
-        <div className="text-center text-xs text-muted-foreground mt-2">
-          {stats.matchesPlayed} matches played
-        </div>
-      </div>
-    );
-  };
-
-  const clearAllStrategies = () => {
-    // Clear all localStorage data for the three stages
-    localStorage.removeItem('fieldStrategy_autonomous');
-    localStorage.removeItem('fieldStrategy_teleop');
-    localStorage.removeItem('fieldStrategy_endgame');
-    
-    // Force refresh of all canvases by changing the activeTab and back
-    const currentTab = activeTab;
-    setActiveTab('');
-    setTimeout(() => {
-      setActiveTab(currentTab);
-    }, 50);
-    
-    console.log('All strategy canvases cleared');
-  };
-
-  const saveAllStrategyCanvases = () => {
-    // Add a small delay to ensure all canvases are rendered
-    setTimeout(() => {
-      // Try to get from localStorage first since it's more reliable
-      const autonomousData = localStorage.getItem('fieldStrategy_autonomous');
-      const teleopData = localStorage.getItem('fieldStrategy_teleop');
-      const endgameData = localStorage.getItem('fieldStrategy_endgame');
-
-      if (!autonomousData || !teleopData || !endgameData) {
-        alert('Please draw on all three strategy tabs (Autonomous, Teleop, and Endgame) before saving');
-        return;
-      }
-
-      // Create a new canvas to composite all three images
-      const compositeCanvas = document.createElement('canvas');
-      const ctx = compositeCanvas.getContext('2d');
-      if (!ctx) return;
-
-      // Load all three images
-      const autonomousImg = new Image();
-      const teleopImg = new Image();
-      const endgameImg = new Image();
-
-      let loadedCount = 0;
-      const totalImages = 3;
-
-      const onImageLoad = () => {
-        loadedCount++;
-        if (loadedCount === totalImages) {
-          // All images loaded, now composite them
-          const imgWidth = autonomousImg.width;
-          const imgHeight = autonomousImg.height;
-          
-          // Set composite canvas size (3x height for stacking + extra space for match number)
-          const topMargin = matchNumber ? 60 : 40; // Extra space if match number exists
-          compositeCanvas.width = imgWidth;
-          compositeCanvas.height = imgHeight * 3 + topMargin;
-
-          // Clear canvas with white background
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
-
-          // Add match number at the very top if provided
-          if (matchNumber) {
-            ctx.fillStyle = '#000000';
-            ctx.textAlign = 'center';
-            ctx.font = 'bold 20px Arial';
-            ctx.fillText(`Match ${matchNumber}`, imgWidth / 2, 30);
-          }
-
-          // Draw title labels for each section
-          ctx.fillStyle = '#000000';
-          ctx.font = 'bold 24px Arial';
-          ctx.textAlign = 'center';
-
-          // Draw Autonomous section
-          ctx.fillText('AUTONOMOUS', imgWidth / 2, topMargin + 30);
-          ctx.drawImage(autonomousImg, 0, topMargin + 40, imgWidth, imgHeight - 40);
-
-          // Draw Teleop section
-          ctx.fillText('TELEOP', imgWidth / 2, topMargin + imgHeight + 30);
-          ctx.drawImage(teleopImg, 0, topMargin + imgHeight + 40, imgWidth, imgHeight - 40);
-
-          // Draw Endgame section
-          ctx.fillText('ENDGAME', imgWidth / 2, topMargin + (imgHeight * 2) + 30);
-          ctx.drawImage(endgameImg, 0, topMargin + (imgHeight * 2) + 40, imgWidth, imgHeight - 40);
-
-          // Add team information at the top - corrected positioning and alliance sides
-          ctx.font = 'bold 16px Arial';
-          const blueTeams = selectedTeams.slice(3, 6).filter(Boolean); // Blue teams (originally index 3-5)
-          const redTeams = selectedTeams.slice(0, 3).filter(Boolean);  // Red teams (originally index 0-2)
-          
-          if (blueTeams.length > 0 || redTeams.length > 0) {
-            const teamInfoY = matchNumber ? 50 : 20; // Position below match number if it exists
-            
-            // Blue alliance on left side
-            ctx.fillStyle = '#0000ff';
-            ctx.textAlign = 'left';
-            ctx.fillText(`Blue: ${blueTeams.join(', ')}`, 10, teamInfoY);
-            
-            // Red alliance on right side
-            ctx.fillStyle = '#ff0000';
-            ctx.textAlign = 'right';
-            ctx.fillText(`Red: ${redTeams.join(', ')}`, imgWidth - 10, teamInfoY);
-          }
-
-          // Download the composite image
-          const dataURL = compositeCanvas.toDataURL('image/png');
-          const link = document.createElement('a');
-          link.href = dataURL;
-          const filename = matchNumber 
-            ? `match-${matchNumber}-strategy-${new Date().toISOString().slice(0, 10)}.png`
-            : `match-strategy-complete-${new Date().toISOString().slice(0, 10)}.png`;
-          link.download = filename;
-          link.click();
-
-          console.log('Composite strategy image saved successfully');
-        }
-      };
-
-      // Set up image load handlers
-      autonomousImg.onload = onImageLoad;
-      teleopImg.onload = onImageLoad;
-      endgameImg.onload = onImageLoad;
-
-      // Load the images
-      autonomousImg.src = autonomousData;
-      teleopImg.src = teleopData;
-      endgameImg.src = endgameData;
-
-    }, 100); // Small delay to ensure DOM is ready
-  };
-
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
       <div className="flex flex-col items-center gap-4 max-w-7xl w-full">
@@ -806,10 +108,18 @@ const MatchStrategyPage = () => {
             />
           </div>
           <div className="flex items-center md:justify-end w-full md:w-auto gap-2">
-            <Button onClick={clearAllStrategies} variant="outline" className="flex-1 md:flex-none px-3 py-2">
+            <Button 
+              onClick={() => clearAllStrategies(setActiveTab, activeTab)} 
+              variant="outline" 
+              className="flex-1 md:flex-none px-3 py-2"
+            >
               Clear All
             </Button>
-            <Button onClick={saveAllStrategyCanvases} variant="outline" className="flex-1 md:flex-none px-3 py-2">
+            <Button 
+              onClick={() => saveAllStrategyCanvases(matchNumber, selectedTeams)} 
+              variant="outline" 
+              className="flex-1 md:flex-none px-3 py-2"
+            >
               Save All
             </Button>
           </div>
@@ -875,113 +185,31 @@ const MatchStrategyPage = () => {
               {/* Alliance Split Layout */}
               <div className="flex flex-col lg:flex-row gap-6">
                 {/* Blue Alliance */}
-                <div className="flex-1" onTouchStart={handleAllianceCardTouchStart} onTouchEnd={handleAllianceCardTouchEnd}>
-                  <div className="border rounded-lg border-blue-200 dark:border-blue-800">
-                    <div className="p-4 border-b border-blue-200 dark:border-blue-800">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400">Blue Alliance</h3>
-                        <TeamStatsHeaders
-                          alliance="blue" 
-                          activeStatsTab={activeStatsTab}
-                        />
-                      </div>
-                    </div>
-                    <div className="p-4 space-y-3">
-                      {Array.from({ length: 3 }, (_, index) => {
-                        const team = selectedTeams[index + 3];
-                        const stats = getTeamStats(team);
-
-                        return (
-                          <Card key={index + 3} className="p-3">
-                            <div className="space-y-3">
-                              {/* Team Selector */}
-                              <div className="flex items-center gap-3">
-                                <label className="text-sm font-medium text-blue-600 dark:text-blue-400 min-w-0">
-                                  Blue Team {index + 1}:
-                                </label>
-                                <TeamSelector
-                                  index={index + 3}
-                                  label={`Blue Team ${index + 1}`}
-                                  labelColor="text-blue-600 dark:text-blue-400"
-                                  value={selectedTeams[index + 3]}
-                                  onValueChange={(value) => handleTeamChange(index + 3, value)}
-                                />
-                              </div>
-
-                              {/* Team Stats */}
-                              {team && stats ? (
-                                <TeamStatsDetail 
-                                  stats={stats} 
-                                  activeStatsTab={activeStatsTab} 
-                                />
-                              ) : (
-                                <div className="text-center py-2 text-muted-foreground text-sm">
-                                  {team ? "No data available" : "No team selected"}
-                                </div>
-                              )}
-                            </div>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+                <AllianceCard
+                  alliance="blue"
+                  selectedTeams={selectedTeams}
+                  availableTeams={availableTeams}
+                  activeStatsTab={activeStatsTab}
+                  getTeamStats={getTeamStats}
+                  onTeamChange={handleTeamChange}
+                  onTouchStart={handleAllianceCardTouchStart}
+                  onTouchEnd={handleAllianceCardTouchEnd}
+                />
 
                 {/* Separator - Vertical on lg, horizontal on smaller screens */}
                 <div className="lg:w-px lg:bg-border lg:mx-0 lg:h-auto h-px bg-border w-full my-0 lg:my-4"></div>
                 
                 {/* Red Alliance */}
-                <div className="flex-1" onTouchStart={handleAllianceCardTouchStart} onTouchEnd={handleAllianceCardTouchEnd}>
-                  <div className="border rounded-lg border-red-200 dark:border-red-800">
-                    <div className="p-4 border-b border-red-200 dark:border-red-800">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Red Alliance</h3>
-                        <TeamStatsHeaders
-                          alliance="red" 
-                          activeStatsTab={activeStatsTab}
-                        />
-                      </div>
-                    </div>
-                    <div className="p-4 space-y-3">
-                      {Array.from({ length: 3 }, (_, index) => {
-                        const team = selectedTeams[index];
-                        const stats = getTeamStats(team);
-
-                        return (
-                          <Card key={index} className="p-3">
-                            <div className="space-y-3">
-                              {/* Team Selector */}
-                              <div className="flex items-center gap-3">
-                                <label className="text-sm font-medium text-red-600 dark:text-red-400 min-w-0">
-                                  Red Team {index + 1}:
-                                </label>
-                                <TeamSelector
-                                  index={index}
-                                  label={`Red Team ${index + 1}`}
-                                  labelColor="text-red-600 dark:text-red-400"
-                                  value={selectedTeams[index]}
-                                  onValueChange={(value) => handleTeamChange(index, value)}
-                                />
-                              </div>
-
-                              {/* Team Stats */}
-                              {team && stats ? (
-                                <TeamStatsDetail 
-                                  stats={stats} 
-                                  activeStatsTab={activeStatsTab} 
-                                />
-                              ) : (
-                                <div className="text-center py-2 text-muted-foreground text-sm">
-                                  {team ? "No data available" : "No team selected"}
-                                </div>
-                              )}
-                            </div>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+                <AllianceCard
+                  alliance="red"
+                  selectedTeams={selectedTeams}
+                  availableTeams={availableTeams}
+                  activeStatsTab={activeStatsTab}
+                  getTeamStats={getTeamStats}
+                  onTeamChange={handleTeamChange}
+                  onTouchStart={handleAllianceCardTouchStart}
+                  onTouchEnd={handleAllianceCardTouchEnd}
+                />
               </div>
             </CardContent>
           </Card>
