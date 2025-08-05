@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { GenericSelector } from "@/components/ui/generic-selector";
 import { BarChart3 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell, ScatterChart, Scatter } from "recharts";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
@@ -51,6 +51,10 @@ export const StrategyChart = ({
   columnConfig,
   chartConfig,
 }: StrategyChartProps) => {
+  const handleChartTypeChange = (value: string) => {
+    onChartTypeChange(value as "bar" | "scatter");
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -71,65 +75,56 @@ export const StrategyChart = ({
             {/* Chart Type Selector */}
             <div className="flex items-center gap-2">
             <p className="whitespace-nowrap">Chart:</p>
-              <Select value={chartType} onValueChange={onChartTypeChange}>
-                <SelectTrigger className="w-auto max-w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bar">Bar Chart</SelectItem>
-                  <SelectItem value="scatter">Scatter Plot</SelectItem>
-                </SelectContent>
-              </Select>
+              <GenericSelector
+                label="Select Chart Type"
+                value={chartType}
+                availableOptions={["bar", "scatter"]}
+                onValueChange={handleChartTypeChange}
+                placeholder="Chart type"
+                displayFormat={(val) => val === "bar" ? "Bar Chart" : "Scatter Plot"}
+                className="w-auto max-w-32"
+              />
             </div>
 
             {chartType === "scatter" ? (
               <div className="flex gap-2 md:flex-none items-center">
                 {/* X-Axis Metric */}
                 <p className="whitespace-nowrap">X-Axis:</p>
-                <Select value={scatterXMetric} onValueChange={onScatterXMetricChange}>
-                  <SelectTrigger className="w-auto max-w-40">
-                    <SelectValue placeholder="X-Axis" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {columnConfig.filter(col => col.numeric || col.key === 'teamNumber').map(col => (
-                      <SelectItem key={col.key} value={col.key}>
-                        {col.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <GenericSelector
+                  label="Select X-Axis Metric"
+                  value={scatterXMetric}
+                  availableOptions={columnConfig.filter(col => col.numeric || col.key === 'teamNumber').map(col => col.key)}
+                  onValueChange={onScatterXMetricChange}
+                  placeholder="X-Axis"
+                  displayFormat={(key) => columnConfig.find(col => col.key === key)?.label || key}
+                  className="w-auto max-w-40"
+                />
                 
                 {/* Y-Axis Metric */}
                 <p className="whitespace-nowrap">Y-Axis:</p>
-                <Select value={scatterYMetric} onValueChange={onScatterYMetricChange}>
-                  <SelectTrigger className="w-auto max-w-40">
-                    <SelectValue placeholder="Y-Axis" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {columnConfig.filter(col => col.numeric || col.key === 'teamNumber').map(col => (
-                      <SelectItem key={col.key} value={col.key}>
-                        {col.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <GenericSelector
+                  label="Select Y-Axis Metric"
+                  value={scatterYMetric}
+                  availableOptions={columnConfig.filter(col => col.numeric || col.key === 'teamNumber').map(col => col.key)}
+                  onValueChange={onScatterYMetricChange}
+                  placeholder="Y-Axis"
+                  displayFormat={(key) => columnConfig.find(col => col.key === key)?.label || key}
+                  className="w-auto max-w-40"
+                />
               </div>
             ) : (
               /* Bar Chart Metric */
               <div className="flex gap-2 md:flex-none items-center">
                 <p className="whitespace-nowrap">Metric:</p>
-                <Select value={chartMetric} onValueChange={onChartMetricChange}>
-                  <SelectTrigger className="w-full md:w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {columnConfig.filter(col => col.numeric || col.key === 'teamNumber').map(col => (
-                      <SelectItem key={col.key} value={col.key}>
-                        {col.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <GenericSelector
+                  label="Select Metric"
+                  value={chartMetric}
+                  availableOptions={columnConfig.filter(col => col.numeric || col.key === 'teamNumber').map(col => col.key)}
+                  onValueChange={onChartMetricChange}
+                  placeholder="Select metric"
+                  displayFormat={(key) => columnConfig.find(col => col.key === key)?.label || key}
+                  className="w-full md:w-48"
+                />
               </div>
             )}
           </div>

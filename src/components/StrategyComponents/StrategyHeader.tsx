@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { GenericSelector } from "@/components/ui/generic-selector";
 import { Settings, X } from "lucide-react";
 
 type AggregationType = "average" | "median" | "max" | "75th";
@@ -36,6 +36,14 @@ export const StrategyHeader = ({
   chartType,
   onChartTypeChange,
 }: StrategyHeaderProps) => {
+  const handleAggregationTypeChange = (value: string) => {
+    onAggregationTypeChange(value as AggregationType);
+  };
+
+  const handleChartTypeChange = (value: string) => {
+    onChartTypeChange(value as "bar" | "scatter");
+  };
+
   return (
     <div className="flex flex-col md:flex-row justify-between">
       <div>
@@ -61,32 +69,34 @@ export const StrategyHeader = ({
       
       <div className="flex gap-2 pb-4 items-center">
         {/* Event Filter */}
-        <Select value={selectedEvent} onValueChange={onEventChange}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Select event" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Events</SelectItem>
-            {availableEvents.map(event => (
-              <SelectItem key={event} value={event}>
-                {event}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <GenericSelector
+          label="Select Event"
+          value={selectedEvent}
+          availableOptions={["all", ...availableEvents]}
+          onValueChange={onEventChange}
+          placeholder="All Events"
+          displayFormat={(val) => val}
+          className="w-48"
+        />
 
         {/* Aggregation Type */}
-        <Select value={aggregationType} onValueChange={onAggregationTypeChange}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="average">Average</SelectItem>
-            <SelectItem value="median">Median</SelectItem>
-            <SelectItem value="max">Max</SelectItem>
-            <SelectItem value="75th">75th %</SelectItem>
-          </SelectContent>
-        </Select>
+        <GenericSelector
+          label="Select Aggregation Type"
+          value={aggregationType}
+          availableOptions={["average", "median", "max", "75th"]}
+          onValueChange={handleAggregationTypeChange}
+          placeholder="Aggregation type"
+          displayFormat={(val) => {
+            switch (val) {
+              case "average": return "Average";
+              case "median": return "Median";
+              case "max": return "Max";
+              case "75th": return "75th %";
+              default: return val;
+            }
+          }}
+          className="w-32"
+        />
 
         {/* Settings */}
         <Sheet open={isSettingsOpen} onOpenChange={onSettingsOpenChange}>
@@ -111,15 +121,15 @@ export const StrategyHeader = ({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium">Default Chart Type</label>
-                    <Select value={chartType} onValueChange={onChartTypeChange}>
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="bar">Bar Chart</SelectItem>
-                        <SelectItem value="scatter">Scatter Plot</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <GenericSelector
+                      label="Select Chart Type"
+                      value={chartType}
+                      availableOptions={["bar", "scatter"]}
+                      onValueChange={handleChartTypeChange}
+                      placeholder="Chart type"
+                      displayFormat={(val) => val === "bar" ? "Bar Chart" : "Scatter Plot"}
+                      className="w-32"
+                    />
                   </div>
                 </div>
               </div>
