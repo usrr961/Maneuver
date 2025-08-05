@@ -1,0 +1,273 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BarChart3 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell, ScatterChart, Scatter } from "recharts";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
+
+interface ColumnConfig {
+  key: string;
+  label: string;
+  category: string;
+  visible: boolean;
+  numeric: boolean;
+}
+
+interface ChartData {
+  team: string;
+  value?: number;
+  x?: number;
+  y?: number;
+  eventName: string;
+}
+
+interface StrategyChartProps {
+  chartData: ChartData[];
+  chartType: "bar" | "scatter";
+  onChartTypeChange: (type: "bar" | "scatter") => void;
+  chartMetric: string;
+  onChartMetricChange: (metric: string) => void;
+  scatterXMetric: string;
+  onScatterXMetricChange: (metric: string) => void;
+  scatterYMetric: string;
+  onScatterYMetricChange: (metric: string) => void;
+  columnConfig: ColumnConfig[];
+  chartConfig: {
+    value: { label: string; color: string };
+    x: { label: string; color: string };
+    y: { label: string; color: string };
+  };
+}
+
+export const StrategyChart = ({
+  chartData,
+  chartType,
+  onChartTypeChange,
+  chartMetric,
+  onChartMetricChange,
+  scatterXMetric,
+  onScatterXMetricChange,
+  scatterYMetric,
+  onScatterYMetricChange,
+  columnConfig,
+  chartConfig,
+}: StrategyChartProps) => {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col w-full justify-between md:flex-row items-start md:items-center gap-4">
+          <div className="flex flex-col w-full">
+            <CardTitle className="flex items-start gap-2 pb-2">
+              <BarChart3 className="h-5 w-5" />
+              Team Performance Chart
+            </CardTitle>
+            <CardDescription className="px-4">
+              {chartType === "scatter" 
+                ? "Compare two metrics across all teams" 
+                : "Top performing teams by selected metric"
+              }
+            </CardDescription>
+          </div>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-end gap-2 w-full">
+            {/* Chart Type Selector */}
+            <div className="flex items-center gap-2">
+            <p className="whitespace-nowrap">Chart:</p>
+              <Select value={chartType} onValueChange={onChartTypeChange}>
+                <SelectTrigger className="w-auto max-w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bar">Bar Chart</SelectItem>
+                  <SelectItem value="scatter">Scatter Plot</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {chartType === "scatter" ? (
+              <div className="flex gap-2 md:flex-none items-center">
+                {/* X-Axis Metric */}
+                <p className="whitespace-nowrap">X-Axis:</p>
+                <Select value={scatterXMetric} onValueChange={onScatterXMetricChange}>
+                  <SelectTrigger className="w-auto max-w-40">
+                    <SelectValue placeholder="X-Axis" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {columnConfig.filter(col => col.numeric || col.key === 'teamNumber').map(col => (
+                      <SelectItem key={col.key} value={col.key}>
+                        {col.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                {/* Y-Axis Metric */}
+                <p className="whitespace-nowrap">Y-Axis:</p>
+                <Select value={scatterYMetric} onValueChange={onScatterYMetricChange}>
+                  <SelectTrigger className="w-auto max-w-40">
+                    <SelectValue placeholder="Y-Axis" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {columnConfig.filter(col => col.numeric || col.key === 'teamNumber').map(col => (
+                      <SelectItem key={col.key} value={col.key}>
+                        {col.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              /* Bar Chart Metric */
+              <div className="flex gap-2 md:flex-none items-center">
+                <p className="whitespace-nowrap">Metric:</p>
+                <Select value={chartMetric} onValueChange={onChartMetricChange}>
+                  <SelectTrigger className="w-full md:w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {columnConfig.filter(col => col.numeric || col.key === 'teamNumber').map(col => (
+                      <SelectItem key={col.key} value={col.key}>
+                        {col.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <ChartContainer config={chartConfig} className="h-64 w-full">
+          {chartType === "scatter" ? (
+            <ScatterChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                type="number"
+                dataKey="x"
+                name={chartConfig.x.label}
+                tickLine={false}
+                axisLine={false}
+                className="text-xs"
+                label={{ 
+                  value: chartConfig.x.label, 
+                  position: 'insideBottom', 
+                  offset: -5,
+                  style: { textAnchor: 'middle', fontSize: '12px', fill: 'currentColor' }
+                }}
+              />
+              <YAxis 
+                type="number"
+                dataKey="y"
+                name={chartConfig.y.label}
+                tickLine={false}
+                axisLine={false}
+                className="text-xs"
+                label={{ 
+                  value: chartConfig.y.label, 
+                  angle: -90, 
+                  position: 'insideLeft',
+                  style: { textAnchor: 'middle', fontSize: '12px', fill: 'currentColor' }
+                }}
+              />
+              <ChartTooltip 
+                content={({ active, payload }) => {
+                  if (!active || !payload || !payload.length) return null;
+                  
+                  const data = payload[0].payload;
+                  
+                  return (
+                    <div className="bg-background border border-border rounded-lg shadow-lg p-3 min-w-[200px]">
+                      <div className="font-medium text-foreground mb-2">
+                        Team {data.team}
+                      </div>
+                      <div className="text-sm text-muted-foreground mb-1">
+                        {data.eventName}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">{chartConfig.x.label}:</span>
+                          <span className="font-medium">{typeof data.x === 'number' ? data.x.toFixed(1) : data.x}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">{chartConfig.y.label}:</span>
+                          <span className="font-medium">{typeof data.y === 'number' ? data.y.toFixed(1) : data.y}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }}
+                cursor={{ strokeDasharray: '3 3' }}
+              />
+              <Scatter 
+                dataKey="y" 
+                fill="var(--color-y)"
+              >
+                {chartData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={`hsl(${(index * 137.5) % 360}, 70%, 50%)`} />
+                ))}
+              </Scatter>
+            </ScatterChart>
+          ) : (
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="team" 
+                tickLine={false}
+                axisLine={false}
+                className="text-xs"
+                label={{ 
+                  value: "Team", 
+                  position: 'insideBottom', 
+                  offset: -5,
+                  style: { textAnchor: 'middle', fontSize: '12px', fill: 'currentColor' }
+                }}
+              />
+              <YAxis 
+                tickLine={false}
+                axisLine={false}
+                className="text-xs"
+                label={{ 
+                  value: chartConfig.value.label, 
+                  angle: -90, 
+                  position: 'insideLeft',
+                  style: { textAnchor: 'middle', fontSize: '12px', fill: 'currentColor' }
+                }}
+              />
+              <ChartTooltip 
+                content={({ active, payload }) => {
+                  if (!active || !payload || !payload.length) return null;
+                  
+                  const data = payload[0].payload;
+                  
+                  return (
+                    <div className="bg-background border border-border rounded-lg shadow-lg p-3 min-w-[180px]">
+                      <div className="font-medium text-foreground mb-2">
+                        Team {data.team}
+                      </div>
+                      <div className="text-sm text-muted-foreground mb-1">
+                        {data.eventName}
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">{chartConfig.value.label}:</span>
+                        <span className="font-medium">{typeof data.value === 'number' ? data.value.toFixed(1) : data.value}</span>
+                      </div>
+                    </div>
+                  );
+                }}
+                cursor={{ fill: "rgba(0, 0, 0, 0.1)" }}
+              />
+              <Bar 
+                dataKey="value" 
+                fill="var(--color-value)"
+                radius={[4, 4, 0, 0]}
+              >
+                {chartData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={`hsl(${210 + index * 15}, 70%, 50%)`} />
+                ))}
+              </Bar>
+            </BarChart>
+          )}
+        </ChartContainer>
+      </CardContent>
+    </Card>
+  );
+};

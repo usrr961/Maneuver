@@ -65,6 +65,10 @@ const data = {
       icon: SquarePen,
       items: [
         {
+          title: "Strategy Overview",
+          url: "/strategy-overview",
+        },
+        {
           title: "Match Strategy",
           url: "/match-strategy",
         },

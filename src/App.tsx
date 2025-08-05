@@ -25,6 +25,7 @@ import { AutoScoringPage, TeleopScoringPage } from "@/pages/ScoringPage";
 import EndgamePage from "@/pages/EndgamePage";
 import TeamStatsPage from "@/pages/TeamStatsPage";
 import PickListPage from "./pages/PickListPage";
+import StrategyOverviewPage from "./pages/StrategyOverviewPage";
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { StatusBarSpacer } from '@/components/StatusBarSpacer';
 import { SplashScreen } from '@/components/SplashScreen';
@@ -49,6 +50,7 @@ function App() {
         <Route path="/teleop-scoring" element={<TeleopScoringPage />} />
         <Route path="/endgame" element={<EndgamePage />} />
         <Route path="/team-stats" element={<TeamStatsPage />} />
+        <Route path="/strategy-overview" element={<StrategyOverviewPage />} />
         <Route path="/pick-list" element={<PickListPage />} />
         {/* Add more routes as needed */}
         <Route path="*" element={<NotFoundPage />} />
