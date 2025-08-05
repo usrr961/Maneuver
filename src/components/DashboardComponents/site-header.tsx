@@ -2,6 +2,7 @@ import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { PageHelpTooltip } from "@/components/PageHelpTooltip";
 
 const PAGE_TITLES: Record<string, string> = {
     "/": "",
@@ -37,6 +38,10 @@ export function SiteHeader() {
         />
         <h1 className="text-base font-medium">{title}</h1>
         <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center justify-center">
+            <span className="flex items-center justify-center">Help</span>
+            <PageHelpTooltip />
+          </div>
           <Button variant="ghost" className="hidden sm:flex w-auto h-auto px-6">
             <a
               href="https://github.com/ShinyShips/Maneuver"
