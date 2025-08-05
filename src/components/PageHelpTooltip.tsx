@@ -80,15 +80,29 @@ export const PageHelpTooltip = ({ title, content, useDialog = false }: PageHelpT
                   const [, alt, src] = match;
                   return (
                     <div key={index} className="text-center my-6">
-                      <div className="bg-muted rounded-lg p-8 mb-2">
+                      <div className="bg-muted rounded-lg p-6 mb-2">
                         <div className="text-muted-foreground text-sm space-y-2">
                           <div className="w-16 h-16 mx-auto bg-muted-foreground/20 rounded-lg flex items-center justify-center mb-4">
-                            <BookOpen className="w-8 h-8 text-muted-foreground/40" />
+                            {!navigator.onLine ? (
+                              <div className="text-center">
+                                <BookOpen className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                                <div className="w-3 h-3 bg-red-500 rounded-full mx-auto" title="Offline" />
+                              </div>
+                            ) : (
+                              <BookOpen className="w-8 h-8 text-muted-foreground/40" />
+                            )}
                           </div>
-                          <p className="font-medium">Tutorial GIF: {alt}</p>
-                          <p className="text-xs">Coming Soon: {src}</p>
+                          <p className="font-medium">
+                            {!navigator.onLine ? 'Offline Mode' : 'Tutorial Visual'}: {alt}
+                          </p>
+                          <p className="text-xs">
+                            {!navigator.onLine ? 'Available when online' : 'Coming Soon'}: {src}
+                          </p>
                           <p className="text-xs text-muted-foreground/70">
-                            This will show an interactive demonstration of the process
+                            {!navigator.onLine 
+                              ? 'Follow the numbered steps below - visuals will load when back online'
+                              : 'This will show an interactive demonstration of the process'
+                            }
                           </p>
                         </div>
                       </div>
