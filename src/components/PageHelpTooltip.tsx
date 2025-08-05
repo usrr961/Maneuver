@@ -60,7 +60,7 @@ export const PageHelpTooltip = ({ title, content, useDialog = false }: PageHelpT
             <HelpCircle className="h-4 w-4" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center gap-2">
               <DialogTitle className="text-xl">{finalTitle}</DialogTitle>

@@ -12,7 +12,10 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
       "This is the home page of Maneuver, your comprehensive FRC scouting solution.",
       "To get started, you can load demo data to explore the app's features, or use the sidebar menu to navigate to different sections.",
       "Demo data includes 51 sample matches and 14 teams to help you understand how the scouting system works.",
-      "Use the sidebar menu to access scouting forms, data management, and strategy tools."
+      "Use the sidebar menu to access scouting forms, data management, and strategy tools.",
+      "Each page has detailed help available via tooltips or dialogs.",
+      "Click the ❓ icon on each page for quick tips or in-depth tutorials.",
+      "For more information, visit our GitHub repository."
     ]
   },
   "/game-start": {
@@ -31,7 +34,7 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
     ]
   },
   "/auto-start": {
-    title: "Autonomous Phase Setup",
+    title: "Autonomous Position Setup",
     useDialog: true,
     content: [
       "![Autonomous Demo](./assets/tutorials/auto-phase-demo.gif)",
@@ -75,7 +78,7 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
     ]
   },
   "/endgame": {
-    title: "Endgame & Match Completion",
+    title: "Endgame",
     useDialog: true,
     content: [
       "![Endgame Demo](./assets/tutorials/endgame-demo.gif)",
@@ -154,7 +157,7 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
     ]
   },
   "/scout-data-qr": {
-    title: "QR Data Transfer - Scouting Data",
+    title: "QR Scouting Data Transfer",
     useDialog: true,
     content: [
       "![QR Scouting Demo](./assets/tutorials/qr-scouting-demo.gif)",
@@ -169,7 +172,7 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
     ]
   },
   "/match-data-qr": {
-    title: "QR Data Transfer - Match Data",
+    title: "QR Match Data Transfer",
     useDialog: true,
     content: [
       "![QR Match Data Demo](./assets/tutorials/qr-match-data-demo.gif)",
@@ -184,7 +187,7 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
     ]
   },
   "/strategy-overview": {
-    title: "Strategy Overview & Team Analysis",
+    title: "Strategy Overview",
     useDialog: true,
     content: [
       "![Strategy Overview Demo](./assets/tutorials/strategy-overview-demo.gif)",
