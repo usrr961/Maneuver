@@ -220,7 +220,8 @@ const InitialSelectTeam = ({
             </h2>
             <Input
               className="w-full h-12 text-xl rounded-lg"
-              type="text"
+              type="number"
+              inputMode="numeric"
               placeholder="Team #"
               value={customTeamValue}
               onChange={(e) => setCustomTeamValue(e.target.value)}

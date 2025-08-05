@@ -200,6 +200,7 @@ const GameStartPage = () => {
               <Input
                 id="match-number"
                 type="number"
+                inputMode="numeric"
                 placeholder="Enter match number"
                 value={matchNumber}
                 onChange={(e) => handleMatchNumberChange(e.target.value)}

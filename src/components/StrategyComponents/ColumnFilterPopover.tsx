@@ -109,6 +109,7 @@ export const ColumnFilterPopover = ({
             
             <Input
               type="number"
+              inputMode="numeric"
               step="0.1"
               placeholder="Value"
               value={tempValue}
