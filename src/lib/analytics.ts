@@ -1,127 +1,116 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-interface GAEvent {
-  name: string;
-  parameters: Record<string, any>;
-  timestamp: number;
-}
 
-class OfflineGA4 {
+class SimpleGA4 {
   private measurementId = 'G-QC65PEFPDJ';
-  private storageKey = 'ga4-offline-queue';
-  private sessionId: string;
-  private clientId: string;
+  private initialized = false;
 
   constructor() {
-    this.sessionId = this.generateSessionId();
-    this.clientId = this.getOrCreateClientId();
     this.initializeGA4();
   }
 
   private initializeGA4() {
+    if (this.initialized) return;
+    
     try {
-      console.log('Initializing GA4...');
+      console.log('🔄 Initializing GA4...');
       
       // Load gtag script
       const script = document.createElement('script');
       script.async = true;
       script.src = `https://www.googletagmanager.com/gtag/js?id=${this.measurementId}`;
-      script.onload = () => console.log('✅ GA4 script loaded');
-      script.onerror = (e) => console.error('❌ Failed to load GA4 script', e);
-      document.head.appendChild(script);
-
-      // Initialize gtag
-      window.dataLayer = window.dataLayer || [];
-      function gtag(...args: any[]) {
-        window.dataLayer.push(args);
-      }
-      window.gtag = gtag;
-
-      gtag('js', new Date());
-      gtag('config', this.measurementId, {
-        send_page_view: false,
-        client_id: this.clientId,
-        session_id: this.sessionId,
-      });
-
-      console.log('✅ GA4 initialized successfully');
       
-      // Listen for online events to flush queue
-      window.addEventListener('online', () => this.flushQueue());
+      script.onload = () => {
+        console.log('✅ GA4 script loaded successfully');
+        this.setupGtag();
+      };
+      
+      script.onerror = (e) => {
+        console.error('❌ Failed to load GA4 script:', e);
+      };
+      
+      document.head.appendChild(script);
+      
     } catch (error) {
       console.error('❌ Error initializing GA4:', error);
     }
   }
 
-  private generateSessionId(): string {
-    return Date.now().toString();
-  }
+  private setupGtag() {
+    try {
+      // Initialize gtag
+      window.dataLayer = window.dataLayer || [];
+      
+      function gtag(...args: any[]) {
+        window.dataLayer.push(args);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('📊 gtag called:', args);
+        }
+      }
+      
+      window.gtag = gtag;
 
-  private getOrCreateClientId(): string {
-    let clientId = localStorage.getItem('ga4-client-id');
-    if (!clientId) {
-      clientId = 'client-' + Math.random().toString(36).substring(2) + Date.now().toString(36);
-      localStorage.setItem('ga4-client-id', clientId);
+      gtag('js', new Date());
+      gtag('config', this.measurementId, {
+        // Enable basic tracking
+        page_title: document.title,
+        page_location: window.location.href,
+        app_name: 'Maneuver Scouting App',
+        app_version: '2025.1.0',
+        debug_mode: process.env.NODE_ENV === 'development',
+      });
+
+      this.initialized = true;
+      console.log('✅ GA4 initialized and configured');
+      
+      // Track initial page view
+      this.trackPageView();
+      
+    } catch (error) {
+      console.error('❌ Error setting up gtag:', error);
     }
-    return clientId;
   }
 
   // Track page view
-  trackPageView(pagePath: string = window.location.pathname) {
-    this.trackEvent('page_view', {
-      page_path: pagePath,
-      page_title: document.title,
-      app_version: '2025.1.0',
-    });
+  trackPageView(pagePath?: string, pageTitle?: string) {
+    if (!this.isReady()) return;
+
+    const path = pagePath || window.location.pathname;
+    const title = pageTitle || document.title;
+    
+    try {
+      window.gtag('config', this.measurementId, {
+        page_path: path,
+        page_title: title,
+      });
+      
+      console.log('📊 Page view tracked:', path);
+    } catch (error) {
+      console.error('❌ Error tracking page view:', error);
+    }
   }
 
   // Track custom events
   trackEvent(eventName: string, parameters: Record<string, any> = {}) {
-    const event: GAEvent = {
-      name: eventName,
-      parameters: {
-        ...parameters,
-        client_id: this.clientId,
-        session_id: this.sessionId,
-        timestamp_micros: Date.now() * 1000,
-      },
-      timestamp: Date.now(),
-    };
-
-    if (navigator.onLine && window.gtag) {
-      window.gtag('event', eventName, parameters);
-    } else {
-      this.addToQueue(event);
+    if (!this.isReady()) {
+      console.log('⏳ GA4 not ready, skipping event:', eventName);
+      return;
     }
-  }
 
-  private addToQueue(event: GAEvent) {
-    const queue = this.getQueue();
-    queue.push(event);
-    localStorage.setItem(this.storageKey, JSON.stringify(queue));
-  }
-
-  private getQueue(): GAEvent[] {
     try {
-      const stored = localStorage.getItem(this.storageKey);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
+      window.gtag('event', eventName, {
+        app_name: 'Maneuver Scouting App',
+        app_version: '2025.1.0',
+        ...parameters,
+      });
+      
+      console.log('📊 Event tracked:', eventName, parameters);
+    } catch (error) {
+      console.error('❌ Error tracking event:', error);
     }
   }
 
-  private async flushQueue() {
-    const queue = this.getQueue();
-    if (queue.length === 0 || !window.gtag) return;
-
-    console.log(`Flushing ${queue.length} queued analytics events`);
-    
-    // Send all queued events
-    queue.forEach(event => {
-      window.gtag('event', event.name, event.parameters);
-    });
-
-    // Clear the queue
-    localStorage.removeItem(this.storageKey);
+  private isReady(): boolean {
+    return this.initialized && !!window.gtag && navigator.onLine;
   }
 
   // Specific tracking methods for your app
@@ -129,23 +118,13 @@ class OfflineGA4 {
     this.trackEvent('demo_data_load', {
       event_category: 'engagement',
       event_label: 'demo_data',
-      value: 1,
     });
   }
 
   trackDemoDataClear() {
     this.trackEvent('demo_data_clear', {
-      event_category: 'engagement',
+      event_category: 'engagement', 
       event_label: 'demo_data',
-      value: 0,
-    });
-  }
-
-  trackPWAUpdate() {
-    this.trackEvent('pwa_update', {
-      event_category: 'app',
-      event_label: 'update',
-      app_version: '2025.1.0',
     });
   }
 
@@ -153,7 +132,48 @@ class OfflineGA4 {
     this.trackEvent('pwa_install', {
       event_category: 'app',
       event_label: 'install',
-      app_version: '2025.1.0',
+    });
+  }
+
+  trackPWAUpdate() {
+    this.trackEvent('pwa_update', {
+      event_category: 'app',
+      event_label: 'update',
+    });
+  }
+
+  trackPWALaunched() {
+    this.trackEvent('pwa_launched', {
+      event_category: 'app',
+      event_label: 'launch',
+    });
+  }
+
+  trackPageNavigation(pageName: string) {
+    this.trackEvent('page_navigation', {
+      event_category: 'navigation',
+      event_label: pageName,
+    });
+  }
+
+  trackDataExport(dataType: string) {
+    this.trackEvent('data_export', {
+      event_category: 'data',
+      event_label: dataType,
+    });
+  }
+
+  trackDataImport(dataType: string) {
+    this.trackEvent('data_import', {
+      event_category: 'data',
+      event_label: dataType,
+    });
+  }
+
+  trackScoutingComplete(matchType: string) {
+    this.trackEvent('scouting_complete', {
+      event_category: 'scouting',
+      event_label: matchType,
     });
   }
 
@@ -161,18 +181,33 @@ class OfflineGA4 {
     if (process.env.NODE_ENV === 'development') {
       console.log('=== Analytics Debug Info ===');
       console.log('Measurement ID:', this.measurementId);
-      console.log('Client ID:', this.clientId);
-      console.log('Session ID:', this.sessionId);
+      console.log('Initialized:', this.initialized);
       console.log('Online:', navigator.onLine);
       console.log('gtag available:', !!window.gtag);
-      console.log('dataLayer:', window.dataLayer?.length || 0, 'items');
-      console.log('Queued events:', this.getQueue().length);
-      console.log('Queue contents:', this.getQueue());
+      console.log('dataLayer length:', window.dataLayer?.length || 0);
+      console.log('Ready to track:', this.isReady());
+      console.log('Current URL:', window.location.href);
     }
+  }
+
+  // Test function for manual verification
+  testTracking() {
+    console.log('🧪 Testing analytics tracking...');
+    this.debug();
+    
+    // Test events
+    this.trackEvent('test_event', {
+      test_parameter: 'test_value',
+      timestamp: new Date().toISOString(),
+    });
+    
+    this.trackPageView('/test-page', 'Test Page');
+    
+    console.log('✅ Test events sent');
   }
 }
 
-export const analytics = new OfflineGA4();
+export const analytics = new SimpleGA4();
 
 // Type declarations for gtag
 declare global {

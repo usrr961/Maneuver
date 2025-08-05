@@ -10,6 +10,7 @@ import type { TeamStats as TeamStatsType } from "../lib/teamStatsTypes";
 import { TeamStatsHeader } from "../components/TeamStatsComponents/TeamStatsHeader";
 import { StatCard } from "../components/TeamStatsComponents/StatCard";
 import { ProgressCard } from "../components/TeamStatsComponents/ProgressCard";
+import { analytics } from '@/lib/analytics';
 import LogoNotFound from "../assets/Logo Not Found.png";
 
 const TeamStatsPage = () => {
@@ -34,6 +35,9 @@ const TeamStatsPage = () => {
         const events = [...new Set(data.map((entry: Record<string, unknown>) => entry.eventName?.toString()).filter(Boolean))];
         events.sort();
         setAvailableEvents(events as string[]);
+        
+        // Track team stats page usage
+        analytics.trackPageNavigation('team_stats');
       } catch (error) {
         console.error("Error loading scouting data:", error);
       }

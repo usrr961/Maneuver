@@ -61,23 +61,33 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    console.log('App loaded, analytics:', analytics); // Add this debug line
+    console.log('🚀 App loaded, initializing analytics...');
     
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js");
     }
 
-    // Track initial page view
-    analytics.trackPageView();
-
     // Track PWA install prompt
     window.addEventListener('beforeinstallprompt', () => {
+      console.log('💾 PWA install prompt shown');
       analytics.trackEvent('pwa_install_prompt_shown');
     });
 
     // Track if app was launched as PWA
     if (window.matchMedia('(display-mode: standalone)').matches) {
-      analytics.trackEvent('pwa_launched');
+      console.log('📱 App launched as PWA');
+      analytics.trackPWALaunched();
+    }
+
+    // Debug analytics in development
+    if (process.env.NODE_ENV === 'development') {
+      setTimeout(() => {
+        analytics.debug();
+        // Make analytics available globally for testing
+        (window as typeof window & { analytics: typeof analytics }).analytics = analytics;
+        console.log('💡 Analytics available globally as window.analytics');
+        console.log('💡 Try: window.analytics.testTracking()');
+      }, 2000);
     }
 
   }, []);

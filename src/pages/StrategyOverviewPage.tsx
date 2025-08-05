@@ -3,6 +3,7 @@ import { loadScoutingData } from "@/lib/scoutingDataUtils";
 import type { ScoutingDataWithId } from "@/lib/scoutingDataUtils";
 import { StrategyHeader, StrategyChart, TeamStatsTableEnhanced } from "@/components/StrategyComponents";
 import { useTeamStatistics, useChartData } from "@/hooks";
+import { analytics } from '@/lib/analytics';
 
 type AggregationType = "average" | "median" | "max" | "75th";
 type FilterOperator = ">" | ">=" | "<" | "<=" | "=" | "!=";
@@ -100,6 +101,9 @@ const StrategyOverviewPage = () => {
         setLoading(true);
         const data = await loadScoutingData();
         setScoutingData(data.entries);
+        
+        // Track strategy page usage
+        analytics.trackPageNavigation('strategy_overview');
       } catch (error) {
         console.error("Error loading scouting data:", error);
       } finally {
