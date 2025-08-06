@@ -56,10 +56,10 @@ const JSONDataTransferPage = () => {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col items-start px-4 pt-6 pb-6">
-      <h1 className="text-2xl font-bold pb-4">JSON Data Transfer</h1>
-      <div className="flex flex-col items-center gap-4 max-w-md w-full">
-        <p className="text-center text-muted-foreground">
+    <div className="h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
+      <div className="flex flex-col items-start gap-4 max-w-md w-full">
+        <h1 className="text-2xl font-bold">JSON Data Transfer</h1>
+        <p className="text-muted-foreground">
           Export your scouting data as CSV for analysis, or upload JSON files to overwrite your local data storage.
         </p>
 
@@ -131,7 +131,7 @@ const JSONDataTransferPage = () => {
           </Button>
         </div>
 
-        <div className="text-xs text-muted-foreground text-center space-y-1">
+        <div className="text-xs text-muted-foreground text-start space-y-1">
           <p>• CSV: Export scouting data for spreadsheet analysis</p>
           <p>• Upload: Import data from other devices</p>
           <p>• Supports both scouting and match schedule data</p>

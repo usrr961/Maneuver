@@ -4,6 +4,7 @@ import { toast } from "sonner"
 import Button from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { Eye, EyeOff } from "lucide-react";
 
 const MatchDataPage = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const MatchDataPage = () => {
   
   const [apiKey, setApiKey] = useState("");
   const [eventKey, setEventKey] = useState("");
+  const [showApiKey, setShowApiKey] = useState(false);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -116,9 +118,9 @@ const MatchDataPage = () => {
     }
   };
   return (
-    <main className="h-screen w-full flex flex-col items-start px-4 pt-6 pb-6">
-      <h1 className="text-2xl font-bold pb-4">Load Match Data</h1>
-      <div className="flex flex-col items-center gap-4 max-w-md w-full">
+    <main className="h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
+      <div className="flex flex-col items-start gap-4 max-w-md w-full">
+        <h1 className="text-2xl font-bold">Load Match Data</h1>
         <input
           type="file"
           id="selectFiles"
@@ -150,14 +152,27 @@ const MatchDataPage = () => {
             <label htmlFor="apiKey" className="text-sm font-medium">
               TBA API Key
             </label>
-            <Input
-              id="apiKey"
-              type="text"
-              placeholder="Enter your Blue Alliance API key"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              className="w-full"
-            />
+            <div className="relative">
+              <Input
+                id="apiKey"
+                type={showApiKey ? "text" : "password"}
+                placeholder="Enter your Blue Alliance API key"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                className="w-full pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowApiKey(!showApiKey)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                {showApiKey ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
           <div className="space-y-1">
             <label htmlFor="eventKey" className="text-sm font-medium">

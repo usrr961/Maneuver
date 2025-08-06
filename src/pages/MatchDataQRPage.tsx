@@ -26,11 +26,10 @@ const MatchDataQRPage = () => {
   }
 
   return (
-    <div className="h-screen w-full flex flex-col items-start px-4 pt-6 pb-6">
-      <h1 className="text-2xl font-bold pb-4">Upload Match Data QR</h1>
-      <div className="flex flex-col items-center gap-4 max-w-md w-full">
-
-        <p className="text-center text-muted-foreground">
+    <div className="h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
+      <div className="flex flex-col items-start gap-4 max-w-md w-full">
+        <h1 className="text-2xl font-bold">Upload Match Data QR</h1>
+        <p className="text-muted-foreground">
           Generate or scan fountain code QR sequences for reliable match data transfer between devices.
         </p>
 
@@ -57,7 +56,7 @@ const MatchDataQRPage = () => {
           </Button>
         </div>
 
-        <div className="text-xs text-muted-foreground text-center space-y-1">
+        <div className="text-xs text-muted-foreground text-start space-y-1">
           <p>• Fountain codes break large data into multiple QR codes</p>
           <p>• Scan packets in any order until reconstruction completes</p>
           <p>• More reliable than single large QR codes</p>
