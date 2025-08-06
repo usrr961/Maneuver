@@ -4,6 +4,7 @@ import Button from "@/components/ui/button";
 import JSONUploader from "@/components/DataTransferComponents/JSONUploader";
 import { convertArrayOfArraysToCSV, SCOUTING_DATA_HEADER } from "@/lib/utils";
 import { loadScoutingData, extractLegacyData } from "@/lib/scoutingDataUtils";
+import { Separator } from "@/components/ui/separator";
 
 
 const JSONDataTransferPage = () => {
@@ -55,7 +56,8 @@ const JSONDataTransferPage = () => {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
+    <div className="h-screen w-full flex flex-col items-start px-4 pt-6 pb-6">
+      <h1 className="text-2xl font-bold pb-4">JSON Data Transfer</h1>
       <div className="flex flex-col items-center gap-4 max-w-md w-full">
         <p className="text-center text-muted-foreground">
           Export your scouting data as CSV for analysis, or upload JSON files to overwrite your local data storage.
@@ -99,6 +101,13 @@ const JSONDataTransferPage = () => {
           >
             Download Scouting Data as JSON
           </Button>
+
+          <div className="flex items-center gap-4">
+            <Separator className="flex-1" />
+            <span className="text-sm text-muted-foreground">OR</span>
+            <Separator className="flex-1" />
+          </div>
+
           <Button
             onClick={handleDownloadCSV}
             variant="secondary"
@@ -106,6 +115,13 @@ const JSONDataTransferPage = () => {
           >
             Download Scouting Data as CSV
           </Button>
+
+          <div className="flex items-center gap-4">
+            <Separator className="flex-1" />
+            <span className="text-sm text-muted-foreground">OR</span>
+            <Separator className="flex-1" />
+          </div>
+
           <Button
             onClick={() => setMode('upload')}
             variant="outline"

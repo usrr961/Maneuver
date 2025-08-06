@@ -90,8 +90,9 @@ const TeamStatsPage = () => {
   }, [compareTeam, scoutingData, calculateTeamStatsCallback]);
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center px-4 pt-4 pb-6">
-      <div className="flex flex-col items-center gap-6 max-w-7xl w-full">
+    <div className="min-h-screen w-full flex flex-col px-4 pt-4 pb-6">
+      <h1 className="text-2xl font-bold mb-4">Team Statistics</h1>
+      <div className="flex flex-col gap-6 max-w-7xl w-full">
         
         {/* Header */}
         <TeamStatsHeader

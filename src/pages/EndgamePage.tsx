@@ -98,7 +98,8 @@ const EndgamePage = () => {
   };
 
   return (
-    <div className="h-full w-full flex flex-col items-center px-4 pt-6 pb-6">
+    <div className="h-full w-full flex flex-col items-start px-4 pt-6 pb-6">
+      <h1 className="text-2xl font-bold pb-4">Endgame</h1>
       <div className="flex flex-col items-center gap-6 max-w-2xl w-full h-full min-h-0 pb-4">
         {/* Match Info */}
         {states?.inputs && (

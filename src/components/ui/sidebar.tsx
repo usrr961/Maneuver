@@ -10,13 +10,6 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
@@ -43,6 +36,145 @@ type SidebarContextProps = {
 }
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
+
+function SwipeToOpenDetector({ onOpen }: { onOpen: () => void }) {
+  const touchStartRef = React.useRef<{ x: number; y: number } | null>(null)
+  const [isDragging, setIsDragging] = React.useState(false)
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY }
+    setIsDragging(false)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return
+    
+    const touch = e.touches[0]
+    const deltaX = Math.abs(touch.clientX - touchStartRef.current.x)
+    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y)
+    
+    // If we've moved more than 10px, consider it a drag
+    if (deltaX > 10 || deltaY > 10) {
+      setIsDragging(true)
+      
+      // Prevent default only if this is a horizontal swipe from the edge
+      const isHorizontalSwipe = deltaX > deltaY
+      if (isHorizontalSwipe) {
+        e.preventDefault()
+      }
+    }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return
+    
+    const touch = e.changedTouches[0]
+    const deltaX = touch.clientX - touchStartRef.current.x
+    const deltaY = touch.clientY - touchStartRef.current.y
+    const minSwipeDistance = 80
+    
+    // If it's a swipe to the right (opening gesture)
+    if (isDragging && Math.abs(deltaX) > Math.abs(deltaY) && deltaX > minSwipeDistance) {
+      // Add haptic feedback on open
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate(50)
+      }
+      onOpen()
+    }
+    
+    touchStartRef.current = null
+    setIsDragging(false)
+  }
+
+  return (
+    <div
+      className="fixed left-0 top-0 bottom-0 w-8 z-30 2xl:hidden"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{ 
+        touchAction: 'pan-y', // Allow vertical scrolling
+        WebkitTouchCallout: 'none',
+        WebkitUserSelect: 'none',
+        userSelect: 'none'
+      }}
+    />
+  )
+}
+
+function MobileOverlay({ onClose }: { onClose: () => void }) {
+  const touchStartRef = React.useRef<{ x: number; y: number } | null>(null)
+  const [isDragging, setIsDragging] = React.useState(false)
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY }
+    setIsDragging(false)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return
+    
+    const touch = e.touches[0]
+    const deltaX = Math.abs(touch.clientX - touchStartRef.current.x)
+    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y)
+    
+    // If we've moved more than 10px, consider it a drag
+    if (deltaX > 10 || deltaY > 10) {
+      setIsDragging(true)
+    }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return
+    
+    const touch = e.changedTouches[0]
+    const deltaX = touch.clientX - touchStartRef.current.x
+    const deltaY = touch.clientY - touchStartRef.current.y
+    const minSwipeDistance = 60
+    
+    // If it's a swipe to the left (closing gesture) or a tap (not dragging)
+    if (!isDragging || (Math.abs(deltaX) > Math.abs(deltaY) && deltaX < -minSwipeDistance)) {
+      // Add haptic feedback on close
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate(50)
+      }
+      onClose()
+    }
+    
+    touchStartRef.current = null
+    setIsDragging(false)
+  }
+
+  const handleClick = () => {
+    // Only close on direct clicks, not when dragging
+    if (!isDragging) {
+      // Add haptic feedback on close
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate(50)
+      }
+      onClose()
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm 2xl:hidden transition-opacity duration-300"
+      onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      aria-hidden="true"
+      style={{ 
+        touchAction: 'none', // Prevent default touch behaviors
+        WebkitTouchCallout: 'none',
+        WebkitUserSelect: 'none',
+        userSelect: 'none'
+      }}
+    />
+  )
+}
 
 function useSidebar() {
   const context = React.useContext(SidebarContext)
@@ -87,6 +219,53 @@ function SidebarProvider({
     },
     [setOpenProp, open]
   )
+
+  // Prevent body scroll and touch behaviors when sidebar is open (below 2xl breakpoint)
+  React.useEffect(() => {
+    const checkAndApplyScrollLock = () => {
+      // Check if we're below 2xl breakpoint (1536px) - same as useIsMobile
+      const isBelow2xlBreakpoint = window.innerWidth < 1536
+      
+      if (isBelow2xlBreakpoint && openMobile) {
+        // Store original styles
+        const originalOverflow = document.body.style.overflow
+        const originalTouchAction = document.body.style.touchAction
+        const originalPosition = document.body.style.position
+        
+        // Apply lock styles
+        document.body.style.overflow = 'hidden'
+        document.body.style.touchAction = 'none'
+        document.body.style.position = 'fixed'
+        document.body.style.width = '100%'
+        
+        // Return cleanup function
+        return () => {
+          document.body.style.overflow = originalOverflow
+          document.body.style.touchAction = originalTouchAction
+          document.body.style.position = originalPosition
+          document.body.style.width = ''
+        }
+      }
+    }
+    
+    // Apply immediately
+    const cleanup = checkAndApplyScrollLock()
+    
+    // Listen for resize events to recheck breakpoint
+    const handleResize = () => {
+      // Clean up previous state
+      if (cleanup) cleanup()
+      // Reapply based on new window size
+      checkAndApplyScrollLock()
+    }
+    
+    window.addEventListener('resize', handleResize)
+    
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      if (cleanup) cleanup()
+    }
+  }, [openMobile])
 
   // Helper to toggle the sidebar.
   const toggleSidebar = React.useCallback(() => {
@@ -144,6 +323,14 @@ function SidebarProvider({
           )}
           {...props}
         >
+          {/* Swipe-to-open detector when sidebar is closed (below 2xl breakpoint) */}
+          {!openMobile && (
+            <SwipeToOpenDetector onOpen={() => setOpenMobile(true)} />
+          )}
+          {/* Mobile/Tablet/Desktop (below 2xl) backdrop/overlay with drag support */}
+          {openMobile && (
+            <MobileOverlay onClose={() => setOpenMobile(false)} />
+          )}
           {children}
         </div>
       </TooltipProvider>
@@ -163,7 +350,7 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offcanvas" | "icon" | "none"
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const { isMobile, state, openMobile } = useSidebar()
 
   if (collapsible === "none") {
     return (
@@ -182,32 +369,31 @@ function Sidebar({
 
   if (isMobile) {
     return (
-      <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
-        <SheetContent
-          data-sidebar="sidebar"
-          data-slot="sidebar"
-          data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
-          style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-            } as React.CSSProperties
-          }
-          side={side}
-        >
-          <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar</SheetTitle>
-            <SheetDescription>Displays the mobile sidebar.</SheetDescription>
-          </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
-        </SheetContent>
-      </Sheet>
+      <div
+        data-slot="sidebar"
+        className={cn(
+          "bg-sidebar text-sidebar-foreground fixed inset-y-0 z-50 flex h-full w-(--sidebar-width) flex-col transition-transform duration-300 ease-in-out",
+          side === "left" ? "left-0" : "right-0",
+          side === "left" 
+            ? (openMobile ? "translate-x-0" : "-translate-x-full")
+            : (openMobile ? "translate-x-0" : "translate-x-full"),
+          className
+        )}
+        style={
+          {
+            "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
+          } as React.CSSProperties
+        }
+        {...props}
+      >
+        {children}
+      </div>
     )
   }
 
   return (
     <div
-      className="group peer text-sidebar-foreground hidden md:block"
+      className="group peer text-sidebar-foreground hidden 2xl:block"
       data-state={state}
       data-collapsible={state === "collapsed" ? collapsible : ""}
       data-variant={variant}
@@ -229,7 +415,7 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
+          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear 2xl:flex",
           side === "left"
             ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
@@ -305,14 +491,38 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
 }
 
 function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
+  const { openMobile } = useSidebar()
+  
+  // Check if we're below 2xl breakpoint (same as useIsMobile hook)
+  const [isBelow2xlBreakpoint, setIsBelow2xlBreakpoint] = React.useState(false)
+  
+  React.useEffect(() => {
+    const checkBreakpoint = () => {
+      setIsBelow2xlBreakpoint(window.innerWidth < 1536)
+    }
+    
+    checkBreakpoint()
+    window.addEventListener('resize', checkBreakpoint)
+    return () => window.removeEventListener('resize', checkBreakpoint)
+  }, [])
+  
   return (
     <main
       data-slot="sidebar-inset"
       className={cn(
-        "bg-background relative flex w-full overflow-auto flex-col",
+        "bg-background relative flex w-full overflow-auto flex-col transition-transform duration-300 ease-in-out",
         "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
+        // Push behavior for all devices below 2xl - push content to the right when sidebar is open
+        isBelow2xlBreakpoint && openMobile && "translate-x-72",
+        // Prevent interaction with content when sidebar is open (below 2xl)
+        isBelow2xlBreakpoint && openMobile && "pointer-events-none",
         className
       )}
+      style={
+        {
+          "--sidebar-width-mobile": SIDEBAR_WIDTH_MOBILE,
+        } as React.CSSProperties
+      }
       {...props}
     />
   )

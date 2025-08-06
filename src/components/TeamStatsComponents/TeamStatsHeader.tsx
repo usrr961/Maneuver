@@ -27,8 +27,8 @@ export const TeamStatsHeader = ({
 
   return (
     <div className="w-full pt-4">
-      <div className="flex flex-col sm:flex-row items-center gap-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-start gap-4">
+        <div className="flex items-start gap-2">
           <label className="font-medium">Select Team:</label>
           <TeamSelector
             index={0}

@@ -22,7 +22,9 @@ export default function Dashboard() {
         <AppSidebar variant="inset" />
         <SidebarInset>
             <SiteHeader />
-            <Outlet />
+            <div className="pt-(--header-height)">
+                <Outlet />
+            </div>
         </SidebarInset>
         </SidebarProvider>
     )

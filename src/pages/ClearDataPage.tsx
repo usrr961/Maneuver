@@ -98,10 +98,11 @@ const ClearDataPage = () => {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
+    <div className="h-screen w-full flex flex-col items-start px-4 pt-6 pb-6">
+      <h1 className="text-2xl font-bold">Clear Data</h1>
       <div className="flex flex-col items-center gap-4 max-w-md w-full overflow-y-auto">
 
-        <p className="text-center text-muted-foreground">
+        <p className="text-muted-foreground">
           Permanently delete stored data from this device. This action cannot be undone.
         </p>
 

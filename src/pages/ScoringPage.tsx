@@ -172,7 +172,8 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
   const actionCount = scoringActions.length;
 
   return (
-    <div className="h-fit w-full flex flex-col items-center px-4 pt-6 pb-8 md:pb-6">
+    <div className="h-fit w-full flex flex-col items-start px-4 pt-6 pb-8 md:pb-6">
+      <h1 className="text-2xl font-bold pb-4">{phaseTitle}</h1>
       <div className="flex flex-col-reverse lg:flex-row items-start gap-0 lg:gap-6 max-w-7xl w-full h-full min-h-0">
         
         {/* Main Scoring Section */}
