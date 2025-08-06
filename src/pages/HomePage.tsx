@@ -86,10 +86,10 @@ const HomePage = () => {
   };
 
   return (
-    <main className="overflow-hidden h-screen w-full">
+    <main className="relative min-h-screen w-full">
       <div
         className={cn(
-          "flex flex-col h-full w-full justify-center items-center gap-6 pt-6",
+          "flex flex-col min-h-screen w-full justify-center items-center gap-6 pt-6",
           "[background-size:40px_40px]",
           "[background-image:linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)]",
           "dark:[background-image:linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)]"
@@ -160,7 +160,7 @@ const HomePage = () => {
           </CardContent>
         </Card>
       </div>
-      <div className="pointer-events-none absolute mt-7 top-10 left-0 right-0 bottom-0 flex items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_70%,black)] dark:bg-black"></div>
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_70%,black)] dark:bg-black"></div>
     </main>
   );
 };
