@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner"
 import Button from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Shield } from "lucide-react";
 
 const MatchDataPage = () => {
   const navigate = useNavigate();
@@ -13,6 +13,34 @@ const MatchDataPage = () => {
   const [apiKey, setApiKey] = useState("");
   const [eventKey, setEventKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
+  const [rememberForSession, setRememberForSession] = useState(false);
+
+  // Load API key from sessionStorage on component mount
+  useEffect(() => {
+    const sessionApiKey = sessionStorage.getItem("tbaApiKey");
+    if (sessionApiKey) {
+      setApiKey(sessionApiKey);
+      setRememberForSession(true);
+    }
+  }, []);
+
+  // Save/remove API key from sessionStorage when remember preference changes
+  useEffect(() => {
+    if (rememberForSession && apiKey) {
+      sessionStorage.setItem("tbaApiKey", apiKey);
+    } else {
+      sessionStorage.removeItem("tbaApiKey");
+    }
+  }, [rememberForSession, apiKey]);
+
+  // Cleanup: Clear API key from memory when component unmounts (unless user chose to remember)
+  useEffect(() => {
+    return () => {
+      if (!rememberForSession) {
+        setApiKey("");
+      }
+    };
+  }, [rememberForSession]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -99,6 +127,11 @@ const MatchDataPage = () => {
         }
       }
       toast.success(fetchedMsg);
+      
+      // Clear API key from memory and session storage after successful fetch
+      setApiKey("");
+      sessionStorage.removeItem("tbaApiKey");
+      
       navigate("/");
     } catch (err) {
       toast.error("Failed to fetch match data from TBA");
@@ -152,19 +185,22 @@ const MatchDataPage = () => {
             <label htmlFor="apiKey" className="text-sm font-medium">
               TBA API Key
             </label>
-            <div className="relative">
+            <div className="relative pb-1">
               <Input
                 id="apiKey"
+                name="tba-api-key"
                 type={showApiKey ? "text" : "password"}
                 placeholder="Enter your Blue Alliance API key"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 className="w-full pr-10"
+                autoComplete="current-password"
               />
               <button
                 type="button"
                 onClick={() => setShowApiKey(!showApiKey)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                aria-label={showApiKey ? "Hide API key" : "Show API key"}
               >
                 {showApiKey ? (
                   <EyeOff className="h-4 w-4" />
@@ -172,6 +208,28 @@ const MatchDataPage = () => {
                   <Eye className="h-4 w-4" />
                 )}
               </button>
+            </div>
+            
+            {/* Session storage option */}
+            <div className="flex items-center space-x-2 mt-2 pb-2 ml-1">
+              <input
+                id="rememberSession"
+                type="checkbox"
+                checked={rememberForSession}
+                onChange={(e) => setRememberForSession(e.target.checked)}
+                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+              />
+              <label htmlFor="rememberSession" className="text-xs text-muted-foreground">
+                Remember for this session only
+              </label>
+            </div>
+            
+            {/* Security notice */}
+            <div className="flex items-start space-x-2 mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
+              <Shield className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-amber-800">
+                API keys are never stored permanently for security. Use your browser's password manager for convenient access.
+              </p>
             </div>
           </div>
           <div className="space-y-1">
