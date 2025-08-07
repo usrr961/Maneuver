@@ -6,15 +6,18 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { loadScoutingData } from "@/lib/scoutingDataUtils";
 import { clearAllScoutingData } from "@/lib/dexieDB";
+import { clearAllPitScoutingData, getPitScoutingStats } from "@/lib/pitScoutingUtils";
 import { convertTeamRole } from "@/lib/utils";
 
 
 const ClearDataPage = () => {
   const [scoutingDataCount, setScoutingDataCount] = useState(0);
+  const [pitScoutingDataCount, setPitScoutingDataCount] = useState(0);
   const [matchDataCount, setMatchDataCount] = useState(0);
   const [playerStation, setPlayerStation] = useState("");
   const [scoutingDataSize, setScoutingDataSize] = useState("0 B");
   const [showScoutingConfirm, setShowScoutingConfirm] = useState(false);
+  const [showPitScoutingConfirm, setShowPitScoutingConfirm] = useState(false);
   const [showMatchConfirm, setShowMatchConfirm] = useState(false);
 
   const loadScoutingCount = useCallback(async () => {
@@ -35,9 +38,20 @@ const ClearDataPage = () => {
     }
   }, []);
 
+  const loadPitScoutingCount = useCallback(async () => {
+    try {
+      const pitStats = await getPitScoutingStats();
+      setPitScoutingDataCount(pitStats.totalEntries);
+    } catch (error) {
+      console.error("Error loading pit scouting data:", error);
+      setPitScoutingDataCount(0);
+    }
+  }, []);
+
   const refreshData = useCallback(async () => {
     await loadScoutingCount();
-  }, [loadScoutingCount]);
+    await loadPitScoutingCount();
+  }, [loadScoutingCount, loadPitScoutingCount]);
 
   useEffect(() => {
     const matchData = localStorage.getItem("matchData");
@@ -46,6 +60,7 @@ const ClearDataPage = () => {
     setPlayerStation(station);
     
     loadScoutingCount();
+    loadPitScoutingCount();
 
     if (matchData) {
       try {
@@ -55,7 +70,7 @@ const ClearDataPage = () => {
         setMatchDataCount(0);
       }
     }
-  }, [loadScoutingCount]);
+  }, [loadScoutingCount, loadPitScoutingCount]);
 
   const handleClearScoutingData = async () => {
     try {
@@ -74,6 +89,22 @@ const ClearDataPage = () => {
       await refreshData();
       setShowScoutingConfirm(false);
       toast.success("Cleared all scouting data");
+    }
+  };
+
+  const handleClearPitScoutingData = async () => {
+    try {
+      console.log("ClearDataPage - Starting pit scouting data clear...");
+      await clearAllPitScoutingData();
+      
+      await refreshData();
+      setShowPitScoutingConfirm(false);
+      toast.success("Cleared all pit scouting data");
+      console.log("ClearDataPage - Pit scouting data cleared successfully");
+    } catch (error) {
+      console.error("Error clearing pit scouting data:", error);
+      toast.error("Failed to clear pit scouting data");
+      setShowPitScoutingConfirm(false);
     }
   };
 
@@ -165,6 +196,60 @@ const ClearDataPage = () => {
                     size="sm"
                     className="flex-1"
                     onClick={() => setShowScoutingConfirm(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Pit Scouting Data Card */}
+        <Card className="w-full">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Pit Scouting Data</CardTitle>
+              <Badge variant={pitScoutingDataCount > 0 ? "default" : "secondary"}>
+                {pitScoutingDataCount} entries
+              </Badge>
+            </div>
+            <CardDescription>
+              Robot pit scouting data collected at events
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!showPitScoutingConfirm ? (
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={() => setShowPitScoutingConfirm(true)}
+                disabled={pitScoutingDataCount === 0}
+              >
+                {pitScoutingDataCount === 0 ? "No Pit Scouting Data" : "Clear Pit Scouting Data"}
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <Alert variant="destructive">
+                  <AlertTitle>⚠️ Confirm Deletion</AlertTitle>
+                  <AlertDescription>
+                    This will permanently delete {pitScoutingDataCount} pit scouting entries.
+                  </AlertDescription>
+                </Alert>
+                <div className="flex gap-2">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="flex-1"
+                    onClick={handleClearPitScoutingData}
+                  >
+                    Yes, Delete All
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setShowPitScoutingConfirm(false)}
                   >
                     Cancel
                   </Button>

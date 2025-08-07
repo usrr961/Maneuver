@@ -10,6 +10,7 @@ import type { TeamStats as TeamStatsType } from "../lib/teamStatsTypes";
 import { TeamStatsHeader } from "../components/TeamStatsComponents/TeamStatsHeader";
 import { StatCard } from "../components/TeamStatsComponents/StatCard";
 import { ProgressCard } from "../components/TeamStatsComponents/ProgressCard";
+import { PitScoutingData } from "../components/TeamStatsComponents/PitScoutingData";
 import { analytics } from '@/lib/analytics';
 import LogoNotFound from "../assets/Logo Not Found.png";
 
@@ -90,9 +91,10 @@ const TeamStatsPage = () => {
   }, [compareTeam, scoutingData, calculateTeamStatsCallback]);
 
   return (
-    <div className="min-h-screen w-full flex flex-col px-4 pt-4 pb-6">
-      <h1 className="text-2xl font-bold mb-4">Team Statistics</h1>
-      <div className="flex flex-col gap-6 max-w-7xl w-full">
+    <div className="min-h-screen w-full flex flex-col items-center px-4 pt-4 pb-6">
+      <div className="w-full max-w-7xl">
+        <h1 className="text-2xl font-bold mb-4">Team Statistics</h1>
+        <div className="flex flex-col gap-6 w-full">
         
         {/* Header */}
         <TeamStatsHeader
@@ -145,11 +147,27 @@ const TeamStatsPage = () => {
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" enableSwipe={true}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="scoring">Scoring</TabsTrigger>
-                <TabsTrigger value="auto">Auto Start</TabsTrigger>
-                <TabsTrigger value="performance">Performance</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-5 h-auto">
+                <TabsTrigger value="overview" className="text-xs sm:text-sm px-1 sm:px-3">
+                  <span className="hidden sm:inline">Overview</span>
+                  <span className="sm:hidden">Over.</span>
+                </TabsTrigger>
+                <TabsTrigger value="scoring" className="text-xs sm:text-sm px-1 sm:px-3">
+                  <span className="hidden sm:inline">Scoring</span>
+                  <span className="sm:hidden">Score</span>
+                </TabsTrigger>
+                <TabsTrigger value="auto" className="text-xs sm:text-sm px-1 sm:px-3">
+                  <span className="hidden sm:inline">Auto Start</span>
+                  <span className="sm:hidden">Auto</span>
+                </TabsTrigger>
+                <TabsTrigger value="performance" className="text-xs sm:text-sm px-1 sm:px-3">
+                  <span className="hidden sm:inline">Performance</span>
+                  <span className="sm:hidden">Perf.</span>
+                </TabsTrigger>
+                <TabsTrigger value="pit" className="text-xs sm:text-sm px-1 sm:px-3">
+                  <span className="hidden sm:inline">Pit Data</span>
+                  <span className="sm:hidden">Pit</span>
+                </TabsTrigger>
               </TabsList>
 
               {/* Overview Tab */}
@@ -634,6 +652,14 @@ const TeamStatsPage = () => {
                   </Card>
                 </div>
               </TabsContent>
+
+              {/* Pit Scouting Tab */}
+              <TabsContent value="pit" className="space-y-6 pb-6">
+                <PitScoutingData 
+                  teamNumber={selectedTeam} 
+                  selectedEvent={selectedEvent}
+                />
+              </TabsContent>
             </Tabs>
           </div>
         ) : (
@@ -652,6 +678,7 @@ const TeamStatsPage = () => {
             </CardContent>
           </Card>
         )}
+        </div>
       </div>
     </div>
   );

@@ -1,8 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { ChevronDown } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { GenericSelector } from "@/components/ui/generic-selector";
 import type { SortOption } from "@/lib/pickListTypes";
 
 interface SortSelectorProps {
@@ -25,52 +21,25 @@ const sortOptions = [
 ];
 
 export const SortSelector = ({ sortBy, onSortChange }: SortSelectorProps) => {
-  const isMobile = useIsMobile();
-  const currentOption = sortOptions.find(option => option.value === sortBy);
+  const sortValues = sortOptions.map(option => option.value);
   
-  if (isMobile) {
-    return (
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="outline" className="w-full justify-between">
-            {currentOption?.label || "Sort by..."}
-            <ChevronDown className="h-4 w-4 opacity-50" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="bottom" className="h-[60vh]">
-          <SheetHeader>
-            <SheetTitle>Sort Teams By</SheetTitle>
-          </SheetHeader>
-          <div className="grid gap-2 py-4 px-4 overflow-y-scroll">
-            {sortOptions.map((option) => (
-              <SheetClose key={option.value} asChild>
-                <Button
-                  variant={sortBy === option.value ? "default" : "ghost"}
-                  className="w-full justify-start h-12 px-4"
-                  onClick={() => onSortChange(option.value)}
-                >
-                  {option.label}
-                </Button>
-              </SheetClose>
-            ))}
-          </div>
-        </SheetContent>
-      </Sheet>
-    );
-  }
+  const displayFormat = (value: string) => {
+    const option = sortOptions.find(opt => opt.value === value);
+    return option?.label || value;
+  };
+  
+  const handleValueChange = (value: string) => {
+    onSortChange(value as SortOption);
+  };
 
   return (
-    <Select value={sortBy} onValueChange={onSortChange} aria-label="Sort by">
-      <SelectTrigger>
-        <SelectValue placeholder="Sort by..." />
-      </SelectTrigger>
-      <SelectContent>
-        {sortOptions.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <GenericSelector
+      label="Sort Teams By"
+      value={sortBy}
+      availableOptions={sortValues}
+      onValueChange={handleValueChange}
+      placeholder="Sort by..."
+      displayFormat={displayFormat}
+    />
   );
 };

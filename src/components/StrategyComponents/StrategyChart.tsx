@@ -116,15 +116,17 @@ export const StrategyChart = ({
               /* Bar Chart Metric */
               <div className="flex gap-2 md:flex-none items-center">
                 <p className="whitespace-nowrap">Metric:</p>
-                <GenericSelector
-                  label="Select Metric"
-                  value={chartMetric}
-                  availableOptions={columnConfig.filter(col => col.numeric || col.key === 'teamNumber').map(col => col.key)}
-                  onValueChange={onChartMetricChange}
+                <div className="w-full">
+                  <GenericSelector
+                    label="Select Metric"
+                    value={chartMetric}
+                    availableOptions={columnConfig.filter(col => col.numeric || col.key === 'teamNumber').map(col => col.key)}
+                    onValueChange={onChartMetricChange}
                   placeholder="Select metric"
                   displayFormat={(key) => columnConfig.find(col => col.key === key)?.label || key}
                   className="w-full md:w-48"
                 />
+                </div>
               </div>
             )}
           </div>

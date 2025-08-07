@@ -38,7 +38,7 @@ export const GenericSelector = ({
         <SheetTrigger asChild>
           <Button 
             variant="outline" 
-            className="flex-1 justify-between h-10 min-w-[120px]"
+            className={`w-full justify-between h-10 ${className}`}
           >
             <span className="truncate">
               {getDisplayText(value)}
@@ -98,7 +98,7 @@ export const GenericSelector = ({
       value={value || "none"} 
       onValueChange={onValueChange}
     >
-      <SelectTrigger className={`min-w-[120px] ${className}`}>
+      <SelectTrigger className={`h-10 w-full ${className}`}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

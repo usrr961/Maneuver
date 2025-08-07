@@ -28,30 +28,34 @@ export const TeamStatsHeader = ({
   return (
     <div className="w-full pt-4">
       <div className="flex flex-col sm:flex-row items-start gap-4">
-        <div className="flex items-start gap-2">
-          <label className="font-medium">Select Team:</label>
-          <TeamSelector
-            index={0}
-            label="Select Team"
-            labelColor=""
-            value={selectedTeam}
-            availableTeams={availableTeams}
-            onValueChange={onSelectedTeamChange}
-          />
+        <div className="flex items-center gap-2">
+          <label className="font-medium shrink-0">Select Team:</label>
+          <div className="min-w-[120px] max-w-[200px]">
+            <TeamSelector
+              index={0}
+              label="Select Team"
+              labelColor=""
+              value={selectedTeam}
+              availableTeams={availableTeams}
+              onValueChange={onSelectedTeamChange}
+            />
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <label className="font-medium">Compare to:</label>
-          <TeamSelector
-            index={1}
-            label="Compare Team"
-            labelColor=""
-            value={compareTeam}
-            availableTeams={compareTeamOptions}
-            onValueChange={onCompareTeamChange}
-          />
+          <label className="font-medium shrink-0">Compare to:</label>
+          <div className="min-w-[120px] max-w-[200px]">
+            <TeamSelector
+              index={1}
+              label="Compare Team"
+              labelColor=""
+              value={compareTeam}
+              availableTeams={compareTeamOptions}
+              onValueChange={onCompareTeamChange}
+            />
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <label className="font-medium">Event:</label>
+          <label className="font-medium shrink-0">Event:</label>
           <GenericSelector
             label="Select Event"
             value={selectedEvent}
@@ -59,6 +63,7 @@ export const TeamStatsHeader = ({
             onValueChange={onSelectedEventChange}
             placeholder="All events"
             displayFormat={(val) => val}
+            className="min-w-[120px] max-w-[200px]"
           />
         </div>
       </div>

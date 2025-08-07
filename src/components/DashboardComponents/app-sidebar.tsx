@@ -77,6 +77,10 @@ const data = {
           url: "/team-stats",
         },
         {
+          title: "Pit Scouting",
+          url: "/pit-scouting",
+        },
+        {
           title: "Pick Lists",
           url: "/pick-list",
         }

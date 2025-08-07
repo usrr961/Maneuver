@@ -85,17 +85,19 @@ export const AllianceCard = ({
                 <div className="space-y-3">
                   {/* Team Selector */}
                   <div className="flex items-center gap-3">
-                    <label className={`text-sm font-medium ${textColor} min-w-0`}>
+                    <label className={`text-sm font-medium ${textColor} min-w-0 shrink-0`}>
                       {alliance === 'blue' ? 'Blue' : 'Red'} Team {index + 1}:
                     </label>
-                    <TeamSelector
-                      index={teamIndex}
-                      label={`${alliance === 'blue' ? 'Blue' : 'Red'} Team ${index + 1}`}
-                      labelColor={textColor}
-                      value={selectedTeams[teamIndex]}
-                      availableTeams={availableTeams}
-                      onValueChange={(value) => onTeamChange(teamIndex, value)}
-                    />
+                    <div className="w-full flex-1">
+                      <TeamSelector
+                        index={teamIndex}
+                        label={`${alliance === 'blue' ? 'Blue' : 'Red'} Team ${index + 1}`}
+                        labelColor={textColor}
+                        value={selectedTeams[teamIndex]}
+                        availableTeams={availableTeams}
+                        onValueChange={(value) => onTeamChange(teamIndex, value)}
+                      />
+                    </div>
                   </div>
 
                   {/* Team Stats */}
