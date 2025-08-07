@@ -1,7 +1,6 @@
 import { Binoculars, ChevronRight, Home, type LucideIcon } from "lucide-react"
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Collapsible,
   CollapsibleContent,
@@ -27,6 +26,8 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { convertTeamRole } from "@/lib/utils";
+import { useNavigationConfirm } from "@/hooks/useNavigationConfirm";
+import { NavigationConfirmDialog } from "@/components/NavigationConfirmDialog";
 
 
 export function NavMain({
@@ -51,32 +52,48 @@ export function NavMain({
       localStorage.setItem("playerStation", value);
     };
 
-    const navigate = useNavigate();
     const { isMobile, setOpenMobile } = useSidebar();
+    const { 
+      confirmNavigation, 
+      handleConfirm, 
+      handleCancel, 
+      isConfirmDialogOpen, 
+      pendingDestinationLabel 
+    } = useNavigationConfirm();
 
     // navigate to the destination page
     const proceedClick = (url?: string) => {
-        // Close sidebar on mobile after navigation
-        if (isMobile) {
-            setOpenMobile(false);
-        }
+        const destination = url || "/";
+        const label = url === "/" ? "Home" : "this page";
         
-        if (url) {
-        // If a destination is provided, navigate to that page
-        navigate(url);
-        } else {
-        // If no destination is provided, navigate to the root page
-        navigate("/");
+        if (confirmNavigation(destination, label)) {
+          // Navigation was allowed immediately
+          if (isMobile) {
+            setOpenMobile(false);
+          }
         }
+        // If navigation was blocked, confirmNavigation will show the dialog
     };
 
     // Handler for sub-menu clicks
     const handleSubItemClick = (url: string) => {
-        // Close sidebar on mobile after navigation
-        if (isMobile) {
+        const label = url.split('/').pop() || "this page";
+        
+        if (confirmNavigation(url, label)) {
+          // Navigation was allowed immediately
+          if (isMobile) {
             setOpenMobile(false);
+          }
         }
-        navigate(url);
+        // If navigation was blocked, confirmNavigation will show the dialog
+    };
+
+    // Close sidebar when navigation is confirmed
+    const handleConfirmNavigation = () => {
+      if (isMobile) {
+        setOpenMobile(false);
+      }
+      handleConfirm();
     };
 
     useEffect(() => {
@@ -89,75 +106,84 @@ export function NavMain({
     }, [selected]);
 
   return (
-    <SidebarGroup>
-      <SidebarMenuItem className="flex items-center pb-4">
-            <div className="flex w-full gap-2">
-                <Select
-                    onValueChange={handlePlayerStationChange}
-                >
-                    <SelectTrigger className="w-full text-lg font-bold" id="scoutRole" aria-label="Scout Role">
-                        <SelectValue placeholder={convertTeamRole(selected) || "Role"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem className="text-lg" value="lead">Lead</SelectItem>
-                      <SelectItem className="text-lg" value="red-1">Red 1</SelectItem>
-                      <SelectItem className="text-lg" value="red-2">Red 2</SelectItem>
-                      <SelectItem className="text-lg" value="red-3">Red 3</SelectItem>
-                      <SelectItem className="text-lg" value="blue-1">Blue 1</SelectItem>
-                      <SelectItem className="text-lg" value="blue-2">Blue 2</SelectItem>
-                      <SelectItem className="text-lg" value="blue-3">Blue 3</SelectItem>
-                    </SelectContent>
-                </Select>
-                <ModeToggle/>
-            </div>
-      </SidebarMenuItem>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
-      <SidebarMenu>
-        <SidebarMenuItem className="flex items-center gap-2">
-          <SidebarMenuButton tooltip={"Home"} onClick={() => proceedClick("/")}>
-            <Home />
-            <span>Home</span>
-          </SidebarMenuButton>
+    <>
+      <SidebarGroup>
+        <SidebarMenuItem className="flex items-center pb-4">
+              <div className="flex w-full gap-2">
+                  <Select
+                      onValueChange={handlePlayerStationChange}
+                  >
+                      <SelectTrigger className="w-full text-lg font-bold" id="scoutRole" aria-label="Scout Role">
+                          <SelectValue placeholder={convertTeamRole(selected) || "Role"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem className="text-lg" value="lead">Lead</SelectItem>
+                        <SelectItem className="text-lg" value="red-1">Red 1</SelectItem>
+                        <SelectItem className="text-lg" value="red-2">Red 2</SelectItem>
+                        <SelectItem className="text-lg" value="red-3">Red 3</SelectItem>
+                        <SelectItem className="text-lg" value="blue-1">Blue 1</SelectItem>
+                        <SelectItem className="text-lg" value="blue-2">Blue 2</SelectItem>
+                        <SelectItem className="text-lg" value="blue-3">Blue 3</SelectItem>
+                      </SelectContent>
+                  </Select>
+                  <ModeToggle/>
+              </div>
         </SidebarMenuItem>
-        <SidebarMenuItem className="flex items-center gap-2">
-          <SidebarMenuButton tooltip={"Scout"} onClick={() => proceedClick("/game-start")}>
-            <Binoculars />
-            <span>Scout</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        {items.map((item) => (
-          <Collapsible
-            key={item.title}
-            asChild
-            defaultOpen={item.isActive}
-            className="group/collapsible"
-          >
-            
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {item.items?.map((subItem) => (
-                    <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton asChild>
-                        <button onClick={() => handleSubItemClick(subItem.url)}>
-                          <span>{subItem.title}</span>
-                        </button>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          </Collapsible>
-        ))}
-      </SidebarMenu>
-    </SidebarGroup>
+        <SidebarGroupLabel>Platform</SidebarGroupLabel>
+        <SidebarMenu>
+          <SidebarMenuItem className="flex items-center gap-2">
+            <SidebarMenuButton tooltip={"Home"} onClick={() => proceedClick("/")}>
+              <Home />
+              <span>Home</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem className="flex items-center gap-2">
+            <SidebarMenuButton tooltip={"Scout"} onClick={() => proceedClick("/game-start")}>
+              <Binoculars />
+              <span>Scout</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          {items.map((item) => (
+            <Collapsible
+              key={item.title}
+              asChild
+              defaultOpen={item.isActive}
+              className="group/collapsible"
+            >
+              
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton tooltip={item.title}>
+                    {item.icon && <item.icon />}
+                    <span>{item.title}</span>
+                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {item.items?.map((subItem) => (
+                      <SidebarMenuSubItem key={subItem.title}>
+                        <SidebarMenuSubButton asChild>
+                          <button onClick={() => handleSubItemClick(subItem.url)}>
+                            <span>{subItem.title}</span>
+                          </button>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
+          ))}
+        </SidebarMenu>
+      </SidebarGroup>
+      
+      <NavigationConfirmDialog
+        open={isConfirmDialogOpen}
+        onConfirm={handleConfirmNavigation}
+        onCancel={handleCancel}
+        destinationLabel={pendingDestinationLabel}
+      />
+    </>
   )
 }

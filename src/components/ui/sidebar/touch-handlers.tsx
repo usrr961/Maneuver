@@ -19,17 +19,17 @@ export function SwipeToOpenDetector({ onOpen }: { onOpen: () => void }) {
       if (!touchStartRef.current) return
       
       const touch = e.touches[0]
-      const deltaX = Math.abs(touch.clientX - touchStartRef.current.x)
-      const deltaY = Math.abs(touch.clientY - touchStartRef.current.y)
+      const deltaX = touch.clientX - touchStartRef.current.x
       
-      // If we've moved more than 10px, consider it a drag
-      if (deltaX > 10 || deltaY > 10) {
+      // If we've moved more than 10px horizontally, consider it a potential sidebar gesture
+      if (Math.abs(deltaX) > 10) {
         setIsDragging(true)
         
-        // Prevent default only if this is a horizontal swipe from the edge
-        const isHorizontalSwipe = deltaX > deltaY
-        if (isHorizontalSwipe) {
+        // Only handle right swipes (opening sidebar) from the left edge
+        if (deltaX > 0 && touchStartRef.current.x < 48) {
+          // Prevent browser back navigation for right swipes from edge
           e.preventDefault()
+          e.stopPropagation()
         }
       }
     }
@@ -42,8 +42,20 @@ export function SwipeToOpenDetector({ onOpen }: { onOpen: () => void }) {
       const deltaY = touch.clientY - touchStartRef.current.y
       const minSwipeDistance = 80
       
-      // If it's a swipe to the right (opening gesture)
-      if (isDragging && Math.abs(deltaX) > Math.abs(deltaY) && deltaX > minSwipeDistance) {
+      // Only open sidebar if:
+      // 1. It's a horizontal swipe (deltaX > deltaY)
+      // 2. It's a right swipe (deltaX > 0)
+      // 3. It started from the left edge (x < 48px)
+      // 4. The swipe distance is sufficient
+      if (isDragging && 
+          Math.abs(deltaX) > Math.abs(deltaY) && 
+          deltaX > minSwipeDistance && 
+          touchStartRef.current.x < 48) {
+        
+        // Prevent any browser default behavior
+        e.preventDefault()
+        e.stopPropagation()
+        
         // Add haptic feedback on open
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
           navigator.vibrate(50)
@@ -70,7 +82,7 @@ export function SwipeToOpenDetector({ onOpen }: { onOpen: () => void }) {
   return (
     <div
       ref={elementRef}
-      className="fixed left-0 top-0 bottom-0 w-8 z-30 2xl:hidden"
+      className="fixed left-0 top-0 bottom-0 w-12 z-30 2xl:hidden"
       style={{ 
         touchAction: 'pan-y', // Allow vertical scrolling
         WebkitTouchCallout: 'none',

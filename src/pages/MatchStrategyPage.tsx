@@ -90,8 +90,10 @@ const MatchStrategyPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-start px-4 pt-6 pb-6">
-      <h1 className="text-2xl font-bold">Match Strategy</h1>
+    <div className="min-h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
+      <div className="w-full max-w-7xl">
+        <h1 className="text-2xl font-bold">Match Strategy</h1>
+      </div>
       <div className="flex flex-col items-center gap-4 max-w-7xl w-full">
         {/* Header section - should scroll naturally */}
         <div className="flex md:justify-between w-full flex-wrap md:flex-nowrap gap-2 pt-4">

@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/DashboardComponents/app-sidebar"
 import { SiteHeader } from "@/components/DashboardComponents/site-header"
+import { BottomNavigation } from "@/components/BottomNavigation"
 import {
   SidebarInset,
   SidebarProvider,
@@ -22,9 +23,13 @@ export default function Dashboard() {
         <AppSidebar variant="inset" />
         <SidebarInset>
             <SiteHeader />
-            <div className="pt-(--header-height)">
+            <div 
+                className="pb-20 2xl:pb-0"
+                style={{ paddingTop: 'var(--header-height)' }}
+            >
                 <Outlet />
             </div>
+            <BottomNavigation />
         </SidebarInset>
         </SidebarProvider>
     )

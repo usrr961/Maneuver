@@ -9,13 +9,21 @@ export function SiteHeader() {
   const location = useLocation();
   
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Only enable on mobile/tablet (below 2xl breakpoint)
-    if (window.innerWidth >= 1536) {
-      setIsHeaderVisible(true);
-      return;
-    }
+    const checkIsMobile = () => {
+      const mobile = window.innerWidth < 1536;
+      setIsMobile(mobile);
+      
+      if (!mobile) {
+        setIsHeaderVisible(true);
+        return;
+      }
+    };
+
+    // Initial check
+    checkIsMobile();
 
     let lastScrollY = 0;
     let ticking = false;
@@ -63,13 +71,17 @@ export function SiteHeader() {
       }
     };
 
-    // Add listeners
-    addScrollListener();
+    // Add listeners only on mobile
+    if (isMobile) {
+      addScrollListener();
+    }
 
     // Handle resize
     const handleResize = () => {
       removeScrollListener();
-      if (window.innerWidth < 1536) {
+      checkIsMobile();
+      const mobile = window.innerWidth < 1536;
+      if (mobile) {
         addScrollListener();
         setIsHeaderVisible(true);
       } else {
@@ -83,11 +95,15 @@ export function SiteHeader() {
       removeScrollListener();
       window.removeEventListener('resize', handleResize);
     };
-  }, [location.pathname]); // Re-run when route changes
+  }, [location.pathname, isMobile]); // Re-run when route changes or mobile state changes
 
   return (
     <header 
-      className={`flex h-(--header-height) items-center bg-popover/95 backdrop-blur-sm gap-2 border-b transition-all duration-300 ease-out group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) py-2 fixed top-0 left-0 right-0 z-30 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}
+      className={`flex h-(--header-height) items-center bg-popover/95 backdrop-blur-sm gap-2 border-b transition-all duration-300 ease-out group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) py-2 z-30 ${
+        isMobile 
+          ? `fixed top-0 left-0 right-0 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}` 
+          : 'sticky top-0'
+      }`}
     >
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ml-1" size={"lg"} />
