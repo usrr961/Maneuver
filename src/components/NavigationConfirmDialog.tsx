@@ -47,8 +47,9 @@ export function NavigationConfirmDialog({
             Continue Scouting
           </Button>
           <Button 
+            variant="destructive"
             onClick={onConfirm}
-            className="bg-red-600 hover:bg-red-700 focus:ring-red-600 p-2"
+            className="p-2 text-white"
           >
             Leave and Lose Data
           </Button>

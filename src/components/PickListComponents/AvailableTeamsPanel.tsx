@@ -26,7 +26,7 @@ export const AvailableTeamsPanel = ({
   onAddTeamToList
 }: AvailableTeamsPanelProps) => {
   return (
-    <Card className="lg:col-span-1">
+    <Card className="lg:col-span-1 max-h-screen">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Available Teams

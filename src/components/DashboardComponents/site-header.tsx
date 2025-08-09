@@ -113,7 +113,6 @@ export function SiteHeader() {
         />
         <div className="ml-auto flex items-center gap-2">
           <div className="flex items-center justify-center">
-            <span className="flex items-center justify-center">Help</span>
             <PageHelpTooltip />
           </div>
           <Button variant="ghost" className="hidden sm:flex w-auto h-auto px-6">

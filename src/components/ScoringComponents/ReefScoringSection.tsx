@@ -14,7 +14,6 @@ const ReefScoringSection = ({
   onScoringAction, 
   currentCoral, 
   phase,
-  showFlashing 
 }: ReefScoringSectionProps) => {
 
   const handleReefScore = (level: string) => {
@@ -117,10 +116,9 @@ const ReefScoringSection = ({
                 className={`
                   flex-1 font-bold text-lg shadow-lg rounded-md
                   ${index < reefLevels.length - 1 ? 'mb-1' : ''}
-                  ${currentCoral <= 0 ? 'cursor-not-allowed opacity-40' : 'opacity-95 hover:opacity-100'}
-                  ${phase === "auto" && showFlashing && reef.level !== "miss" ? 'animate-pulse' : ''}
+                  ${currentCoral <= 0 ? 'cursor-not-allowed opacity-100' : 'opacity-95 hover:opacity-100'}
                   ${reef.level === "miss" 
-                    ? 'bg-red-600 hover:bg-red-700 text-white border-2 border-red-800' 
+                    ? 'bg-red-600 hover:bg-red-700 text-white border-2 border-red-800 opacity-100' 
                     : 'bg-white hover:bg-gray-100 text-black border-3 border-gray-800'
                   }
                 `}

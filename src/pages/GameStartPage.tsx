@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import GameStartSelectTeam from "@/components/GameStartComponents/GameStartSelectTeam";
 import { EventNameSelector } from "@/components/GameStartComponents/EventNameSelector";
+import { AlertTriangle } from "lucide-react";
 
 const GameStartPage = () => {
   const location = useLocation();
@@ -160,8 +161,8 @@ const GameStartPage = () => {
           <Card className="w-full border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20">
             <CardContent>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary">⚠️</Badge>
-                <span className="text-sm text-amber-700 dark:text-amber-300">
+                <AlertTriangle className="h-5 w-5 text-orange-500" />
+                <span className="text-sm text-amber-700">
                   Please select a scouter from the sidebar before starting
                 </span>
               </div>
@@ -220,13 +221,13 @@ const GameStartPage = () => {
                   onClick={() => setAlliance("red")}
                   className={`h-12 text-lg font-semibold ${
                     alliance === "red" 
-                      ? "bg-red-600 hover:bg-red-700 text-white" 
-                      : "hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                      ? "bg-red-500 hover:bg-red-600 text-white" 
+                      : "hover:bg-red-50 hover:text-red-600 hover:border-red-300"
                   }`}
                 >
                   <Badge 
                     variant={alliance === "red" ? "secondary" : "destructive"} 
-                    className="w-3 h-3 p-0 mr-2"
+                    className={`w-3 h-3 p-0 mr-2 ${alliance === "red" ? "bg-white" : "bg-red-500"}`}
                   />
                   Red Alliance
                 </Button>
@@ -235,13 +236,13 @@ const GameStartPage = () => {
                   onClick={() => setAlliance("blue")}
                   className={`h-12 text-lg font-semibold ${
                     alliance === "blue" 
-                      ? "bg-blue-600 hover:bg-blue-700 text-white" 
-                      : "hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+                      ? "bg-blue-500 hover:bg-blue-600 text-white" 
+                      : "hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
                   }`}
                 >
                   <Badge 
                     variant={alliance === "blue" ? "secondary" : "default"} 
-                    className={`w-3 h-3 p-0 mr-2 ${alliance === "blue" ? "bg-white" : "bg-blue-600"}`}
+                    className={`w-3 h-3 p-0 mr-2 ${alliance === "blue" ? "bg-white" : "bg-blue-500"}`}
                   />
                   Blue Alliance
                 </Button>

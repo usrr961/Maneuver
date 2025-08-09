@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import AutoStartMap from "@/components/AutoComponents/AutoStartMap";
+import { AlertTriangle } from "lucide-react";
 
 const AutoStartPage = () => {
   const location = useLocation();
@@ -138,7 +139,7 @@ const AutoStartPage = () => {
                   <span className="text-muted-foreground">Alliance:</span>
                   <Badge 
                     variant={states.inputs.alliance === "red" ? "destructive" : "default"}
-                    className={states.inputs.alliance === "blue" ? "bg-blue-600" : ""}
+                    className={states.inputs.alliance === "blue" ? "bg-blue-500 text-white" : "bg-red-500 text-white"}
                   >
                     {states.inputs.alliance?.charAt(0).toUpperCase() + states.inputs.alliance?.slice(1)}
                   </Badge>
@@ -186,7 +187,7 @@ const AutoStartPage = () => {
             <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20">
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="flex justify-center items-center">⚠️</Badge>
+                  <AlertTriangle className="h-5 w-5 text-orange-500 dark:text-amber-300" />
                   <span className="text-sm text-amber-700 dark:text-amber-300">
                     Please select a starting position
                   </span>

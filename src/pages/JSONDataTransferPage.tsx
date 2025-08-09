@@ -14,7 +14,6 @@ const JSONDataTransferPage = () => {
     return (
       <JSONUploader 
         onBack={() => setMode('select')} 
-        onSwitchToDownload={() => setMode('select')} 
       />
     );
   }

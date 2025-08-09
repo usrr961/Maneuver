@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import ReefScoringSection from "@/components/ScoringComponents/ReefScoringSection";
 import AlgaeSection from "@/components/ScoringComponents/AlgaeSection";
+import { ArrowRight } from "lucide-react";
 
 interface ScoringPageProps {
   phase: "auto" | "teleop";
@@ -303,7 +304,7 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
                   <Button
                     variant={playedDefense ? "default" : "outline"}
                     onClick={() => handleToggleAction("defense")}
-                    className={`w-full h-10 ${playedDefense ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''}`}
+                    className={`w-full h-10 ${playedDefense ? 'bg-blue-500 hover:bg-blue-600 text-white' : ''}`}
                   >
                     {playedDefense ? "✓ Played Defense" : "Played Defense"}
                   </Button>
@@ -334,10 +335,11 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
             <Button
               onClick={handleProceed}
               className={`flex-2 h-12 text-lg font-semibold ${
-                phase === "auto" && showFlashing ? "animate-pulse bg-green-600 hover:bg-green-700" : ""
+                phase === "auto" && showFlashing ? "animate-pulse bg-green-600 hover:bg-green-700 text-white" : ""
               }`}
             >
               {phase === "auto" ? "Continue to Teleop" : "Continue to Endgame"}
+              <ArrowRight className="ml-0.5" />
             </Button>
           </div>
         </div>

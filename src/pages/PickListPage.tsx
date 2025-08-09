@@ -205,9 +205,9 @@ const PickListPage = () => {
   );
 
   return (
-    <div className="h-screen w-full flex flex-col px-4 pt-4 overflow-hidden">
-      <h1 className="text-2xl font-bold">Pick Lists</h1>
-      <div className="flex flex-col gap-6 max-w-7xl w-full mx-auto flex-1 overflow-y-auto pb-6">
+    <div className="min-h-screen w-full flex flex-col px-4 pt-4">
+      <h1 className="text-2xl font-bold px-4">Pick Lists</h1>
+      <div className="flex flex-col gap-6 max-w-7xl w-full mx-auto flex-1 pb-6">
         
         {/* Header */}
         <PickListHeader onExport={exportPickLists} onImport={importPickLists} />

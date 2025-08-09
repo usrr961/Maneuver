@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { 
   loadScoutingData, 
@@ -14,10 +12,9 @@ import {
 
 type JSONUploaderProps = {
   onBack: () => void;
-  onSwitchToDownload: () => void;
 };
 
-const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack, onSwitchToDownload }) => {
+const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   type FileSelectEvent = React.ChangeEvent<HTMLInputElement>
@@ -140,13 +137,6 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack, onSwitchToDownload 
           >
             ← Back
           </Button>
-          <Button 
-            onClick={onSwitchToDownload} 
-            variant="outline" 
-            size="sm"
-          >
-            Switch to Download
-          </Button>
         </div>
 
         <Card className="w-full">
@@ -184,11 +174,11 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack, onSwitchToDownload 
                 <div className="space-y-3">
                   <Button
                     onClick={() => handleUpload("smart-merge")}
-                    className="w-full h-16 text-xl bg-green-600 hover:bg-green-700"
+                    className="w-full h-16 text-xl bg-green-500 hover:bg-green-600 text-white"
                   >
                     🧠 Smart Merge (Recommended)
                   </Button>
-                  
+                   <p><strong>Smart Merge</strong>: Skip duplicates, add only new entries</p>
                   <div className="flex items-center gap-4">
                     <Separator className="flex-1" />
                     <span className="text-sm text-muted-foreground">OR</span>
@@ -197,39 +187,24 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack, onSwitchToDownload 
                   
                   <Button
                     onClick={() => handleUpload("append")}
-                    className="w-full h-16 text-xl bg-blue-600 hover:bg-blue-700"
+                    className="w-full h-16 text-xl bg-blue-500 hover:bg-blue-600 text-white"
                   >
                     📤 Force Append
                   </Button>
-                  
+                   <p className="pb-4"><strong>Force Append</strong>: Add all data (may create duplicates)</p>
                   <Button
                     onClick={() => handleUpload("overwrite")}
                     variant="destructive"
-                    className="w-full h-16 text-xl"
+                    className="w-full h-16 text-xl text-white"
                   >
                     🔄 Replace All Data
                   </Button>
+                  <p><strong>Replace All</strong>: Completely overwrite existing data</p>
                 </div>
               </>
             )}
           </CardContent>
         </Card>
-
-        <Alert>
-          <AlertDescription>
-            <div className="space-y-1">
-              <p>• <strong>Smart Merge</strong>: Skip duplicates, add only new entries (recommended)</p>
-              <p>• <strong>Force Append</strong>: Add all data (may create duplicates)</p>
-              <p>• <strong>Replace All</strong>: Completely overwrite existing data</p>
-              <p>• Supports both raw and processed JSON formats</p>
-              {selectedFile && (
-                <div className="mt-2">
-                  <Badge variant="outline">Ready: {selectedFile.name}</Badge>
-                </div>
-              )}
-            </div>
-          </AlertDescription>
-        </Alert>
       </div>
     </div>
   );

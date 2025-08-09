@@ -321,7 +321,7 @@ const UniversalFountainScanner = ({
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
                     style={{ width: `${Math.min(progress.percentage, 100)}%` }}
                   ></div>
                 </div>
@@ -338,15 +338,16 @@ const UniversalFountainScanner = ({
                   Reset Scanner
                 </Button>
               )}
-              
-              <Button
-                onClick={() => setAllowDuplicates(!allowDuplicates)}
-                variant={allowDuplicates ? "default" : "outline"}
-                className="flex-1"
-                size="sm"
-              >
-                {allowDuplicates ? "Allow Dupes ✓" : "Skip Dupes"}
-              </Button>
+              {process.env.NODE_ENV === 'development' && (
+                <Button
+                  onClick={() => setAllowDuplicates(!allowDuplicates)}
+                  variant={allowDuplicates ? "default" : "outline"}
+                  className="flex-1"
+                  size="sm"
+                >
+                  {allowDuplicates ? "Allow Dupes ✓" : "Skip Dupes"}
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

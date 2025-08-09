@@ -156,7 +156,7 @@ function SortableListItem({
                           item.checked ? "text-red-400" : "text-white/70"
                         )}
                       >
-                        {item.checked ? "Delete" : ` ${item.text}`}
+                        {item.text}
                       </h4>
                     </motion.div>
                   </motion.div>

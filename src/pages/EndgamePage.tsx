@@ -10,6 +10,7 @@ import { transformToObjectFormat } from "@/lib/dataTransformation";
 import { generateEntryId } from "@/lib/scoutingDataUtils";
 import { saveScoutingEntry } from "@/lib/dexieDB";
 import type { ScoutingDataWithId } from "@/lib/scoutingDataUtils";
+import { ArrowRight } from "lucide-react";
 
 const EndgamePage = () => {
   const location = useLocation();
@@ -124,7 +125,7 @@ const EndgamePage = () => {
                 <span className="text-muted-foreground">Alliance:</span>
                 <Badge 
                   variant={states.inputs.alliance === "red" ? "destructive" : "default"}
-                  className={states.inputs.alliance === "blue" ? "bg-blue-600" : ""}
+                  className={states.inputs.alliance === "blue" ? "bg-blue-500 text-white" : "bg-red-500 text-white"}
                 >
                   {states.inputs.alliance?.charAt(0).toUpperCase() + states.inputs.alliance?.slice(1)}
                 </Badge>
@@ -153,7 +154,7 @@ const EndgamePage = () => {
                     setParkAttempted(false);
                   }
                 }}
-                className={`h-12 ${shallowClimbAttempted ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''}`}
+                className={`h-12 ${shallowClimbAttempted ? 'bg-blue-500 hover:bg-blue-600 text-white' : ''}`}
               >
                 {shallowClimbAttempted ? "✓ " : ""}Shallow Climb Attempted
               </Button>
@@ -245,9 +246,10 @@ const EndgamePage = () => {
           </Button>
           <Button
             onClick={handleSubmit}
-            className="flex-2 h-12 text-lg font-semibold bg-green-600 hover:bg-green-700"
+            className="flex-2 h-12 text-lg font-semibold bg-green-600 hover:bg-green-700 text-white"
           >
             Submit Match Data
+            <ArrowRight className="ml-0.5" />
           </Button>
         </div>
       </div>

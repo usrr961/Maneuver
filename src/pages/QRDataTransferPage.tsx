@@ -56,7 +56,7 @@ const QRDataTransferPage = () => {
           </Button>
         </div>
 
-        <div className="text-xs text-muted-foreground text-center space-y-1">
+        <div className="text-xs text-muted-foreground text-start space-y-1">
           <p>• Codes can be scanned in any order</p>
           <p>• No need to receive all codes</p>
           <p>• Automatic reconstruction when enough data is received</p>

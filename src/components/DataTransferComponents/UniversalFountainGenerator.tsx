@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { createEncoder, blockToBinary } from "luby-transform";
 import { fromUint8Array } from "js-base64";
+import { Info } from "lucide-react";
 
 interface FountainPacket {
   type: string;
@@ -41,7 +42,7 @@ const UniversalFountainGenerator = ({
   const [packets, setPackets] = useState<FountainPacket[]>([]);
   const [currentPacketIndex, setCurrentPacketIndex] = useState(0);
   const [data, setData] = useState<unknown>(null);
-  const [cycleSpeed, setCycleSpeed] = useState(200);
+  const [cycleSpeed, setCycleSpeed] = useState(500);
 
   // Speed presets
   const speedPresets = [
@@ -165,10 +166,10 @@ const UniversalFountainGenerator = ({
   }, [packets.length, cycleSpeed]);
 
   const currentPacket = packets[currentPacketIndex];
-  const currentSpeedLabel = speedPresets.find(s => s.value === cycleSpeed)?.label || "Custom";
+  const currentSpeedLabel = speedPresets.find(s => s.value === cycleSpeed)?.label;
 
   return (
-    <div className="h-screen w-full flex flex-col items-center gap-6 px-4 pt-[var(--header-height)]">
+    <div className="min-h-screen w-full flex flex-col items-center gap-6 px-4 pt-[var(--header-height)] pb-6">
       <div className="flex flex-col items-center gap-4 max-w-md w-full pb-4">
         {/* Navigation Header */}
         <div className="flex items-center justify-between w-full">
@@ -253,6 +254,42 @@ const UniversalFountainGenerator = ({
               </CardContent>
             </Card>
 
+             {/* Instructions */}
+            <Alert>
+              <AlertTitle>📱 Scanning Instructions</AlertTitle>
+              <AlertDescription>
+                Point your scanner at the QR code. Estimated time per cycle: {Math.round((packets.length * cycleSpeed) / 1000)}s
+              </AlertDescription>
+            </Alert>
+
+            {/* Speed Control */}
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle className="text-sm">Adjust Speed</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-2">
+                  {speedPresets.map((preset) => (
+                    <Button
+                      key={preset.value}
+                      variant={cycleSpeed === preset.value ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCycleSpeed(preset.value)}
+                      className="text-xs"
+                    >
+                      {preset.label}
+                    </Button>
+                  ))}
+                  <div className="col-span-2 flex items-start">
+                    <Info className="inline mr-2 mt-1.5 text-muted-foreground" size={16}/>
+                    <p className="text-sm text-muted-foreground col-span-2 pt-1">
+                      If unable to get final packets, try slowing down the cycle speed.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Packet Info */}
             <Card className="w-full">
               <CardHeader>
@@ -293,36 +330,6 @@ const UniversalFountainGenerator = ({
                 </div>
               </CardContent>
             </Card>
-
-            {/* Speed Control */}
-            <Card className="w-full">
-              <CardHeader>
-                <CardTitle className="text-sm">Adjust Speed</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  {speedPresets.map((preset) => (
-                    <Button
-                      key={preset.value}
-                      variant={cycleSpeed === preset.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCycleSpeed(preset.value)}
-                      className="text-xs"
-                    >
-                      {preset.label}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Instructions */}
-            <Alert>
-              <AlertTitle>📱 Scanning Instructions</AlertTitle>
-              <AlertDescription>
-                Point your scanner at the QR code. Estimated time per cycle: {Math.round((packets.length * cycleSpeed) / 1000)}s
-              </AlertDescription>
-            </Alert>
 
             {/* Reset Button */}
             <Button

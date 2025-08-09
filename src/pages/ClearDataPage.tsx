@@ -8,6 +8,7 @@ import { loadScoutingData } from "@/lib/scoutingDataUtils";
 import { clearAllScoutingData } from "@/lib/dexieDB";
 import { clearAllPitScoutingData, getPitScoutingStats } from "@/lib/pitScoutingUtils";
 import { convertTeamRole } from "@/lib/utils";
+import { AlertTriangle } from "lucide-react";
 
 
 const ClearDataPage = () => {
@@ -129,8 +130,8 @@ const ClearDataPage = () => {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
-      <div className="flex flex-col items-start gap-4 max-w-md w-full overflow-y-auto">
+    <div className="min-h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
+      <div className="flex flex-col items-start gap-4 max-w-md w-full">
         <h1 className="text-2xl font-bold">Clear Data</h1>
         <p className="text-muted-foreground">
           Permanently delete stored data from this device. This action cannot be undone.
@@ -146,6 +147,13 @@ const ClearDataPage = () => {
             <p className="text-sm"><span className="font-medium">Last Updated:</span> {new Date().toLocaleDateString()}</p>
           </CardContent>
         </Card>
+
+        <Alert>
+          <AlertTitle>💡 Backup Recommendation</AlertTitle>
+          <AlertDescription>
+            Consider downloading your data before clearing it. Use the JSON Transfer page to export your data.
+          </AlertDescription>
+        </Alert>
 
         {/* Scouting Data Card */}
         <Card className="w-full">
@@ -176,9 +184,9 @@ const ClearDataPage = () => {
               </Button>
             ) : (
               <div className="space-y-3">
-                <Alert variant="destructive">
-                  <AlertTitle>⚠️ Confirm Deletion</AlertTitle>
-                  <AlertDescription>
+                <Alert>
+                  <AlertTriangle className="h-5 w-5" color="red"/>
+                  <AlertDescription className="text-white">
                     This will permanently delete {scoutingDataCount} scouting entries.
                   </AlertDescription>
                 </Alert>
@@ -230,9 +238,9 @@ const ClearDataPage = () => {
               </Button>
             ) : (
               <div className="space-y-3">
-                <Alert variant="destructive">
-                  <AlertTitle>⚠️ Confirm Deletion</AlertTitle>
-                  <AlertDescription>
+                <Alert>
+                  <AlertTriangle className="h-5 w-5" color="red"/>
+                  <AlertDescription className="text-white">
                     This will permanently delete {pitScoutingDataCount} pit scouting entries.
                   </AlertDescription>
                 </Alert>
@@ -288,9 +296,9 @@ const ClearDataPage = () => {
               </Button>
             ) : (
               <div className="space-y-3">
-                <Alert variant="destructive">
-                  <AlertTitle>⚠️ Confirm Deletion</AlertTitle>
-                  <AlertDescription>
+                <Alert>
+                  <AlertTriangle className="h-5 w-5" color="red"/>
+                  <AlertDescription className="text-white">
                     This will delete the match schedule for {matchDataCount} matches.
                   </AlertDescription>
                 </Alert>
@@ -316,14 +324,6 @@ const ClearDataPage = () => {
             )}
           </CardContent>
         </Card>
-
-        {/* Warning Footer */}
-        <Alert>
-          <AlertTitle>💡 Backup Recommendation</AlertTitle>
-          <AlertDescription>
-            Consider downloading your data before clearing it. Use the JSON Transfer page to export your data.
-          </AlertDescription>
-        </Alert>
       </div>
     </div>
   );

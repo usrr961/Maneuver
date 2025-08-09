@@ -55,8 +55,9 @@ export const PageHelpTooltip = ({ title, content, useDialog = false }: PageHelpT
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 mr-4"
           >
+            <span className="flex items-center justify-center">Page Help</span>
             <HelpCircle className="h-4 w-4" />
           </Button>
         </DialogTrigger>
