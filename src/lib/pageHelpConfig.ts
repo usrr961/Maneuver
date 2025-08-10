@@ -74,6 +74,7 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
       "4. Toggle 'Played Defense' when the robot actively defends against opponents",
       "5. Monitor the 'Recent Actions' sidebar to verify your entries",
       "6. Use 'Undo Last Action' to correct any recording errors",
+      "7. Click 'Continue to Endgame' when your robot heads to perform endgame actions",
       "Pro tip: The current coral/algae counts show what the robot is currently holding."
     ]
   },
@@ -95,8 +96,10 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
     title: "Team Statistics",
     content: [
       "Analyze team performance across all scouted matches.",
-      "View averages, trends, and consistency metrics for each team.",
-      "Use filters to focus on specific teams or match types.",
+      "1. Select a team from the dropdown to view its stats.",
+      "2. View key metrics average total points, scoring by location, auto positions, pit scouting data, and comments",
+      "3. Use the Compare to feature to analyze performance against other teams.",
+      "4. Use the event filter to narrow down stats by specific events.",
       "This data helps with alliance selection and match strategy planning."
     ]
   },
@@ -104,9 +107,11 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
     title: "Match Strategy",
     content: [
       "Plan strategy for upcoming matches using scouted data.",
-      "Analyze opponent strengths and weaknesses to develop counter-strategies.",
-      "Coordinate with alliance partners based on complementary capabilities.",
-      "Use this data to make informed decisions during competition."
+      "1. Draw on the field to visualize robot paths and scoring zones.",
+      "2. Switch tabs to strategize scoring and paths for different phases of the game",
+      "3. Enter the teams on each alliance or enter a match number to auto-fill the data.",
+      "4. Compare alliance abilities in each phase of the game.",
+      "Pro tip: Using the save all button will create an image with all drawings from each phase, team numbers, and match number"
     ]
   },
   "/pick-list": {
@@ -133,7 +138,7 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
     ]
   },
   "/parse-data": {
-    title: "Data Compilation",
+    title: "JSON to CSV Compilation Tool",
     content: [
       "Compile and export all JSON scouting data for analysis.",
       "Generate CSV files for sharing with other scouting systems.",
@@ -147,13 +152,11 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
     content: [
       "![Match Data Demo](./assets/tutorials/match-data-demo.gif)",
       "Import match schedules and team lists for competitions.",
-      "1. 'Upload Match Data JSON' - Load match schedules from a JSON file",
-      "2. OR use The Blue Alliance API for live data:",
-      "3. Get your TBA API key from thebluealliance.com/account",
-      "4. Enter the event key (e.g., '2024chcmp' for 2024 Championship)",
-      "5. Click 'Submit' to load qualification matches automatically",
-      "6. Match data populates team dropdowns and validates match numbers",
-      "Pro tip: TBA integration keeps your match schedule current and accurate."
+      "1. OR use The Blue Alliance API for live data:",
+      "2. Get your TBA API key from thebluealliance.com/account",
+      "3. Enter the event key (e.g., '2024chcmp' for 2024 Championship)",
+      "4. Click 'Submit' to load qualification matches automatically",
+      "5. Match data populates team dropdowns and validates match numbers",
     ]
   },
   "/scout-data-qr": {
@@ -162,12 +165,16 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
     content: [
       "![QR Scouting Demo](./assets/tutorials/qr-scouting-demo.gif)",
       "Transfer scouting data between devices using QR fountain codes.",
-      "1. 'Generate Fountain Codes' - Convert your scouting data into multiple QR codes",
-      "2. 'Scan Fountain Codes' - Capture QR codes from another device to import data",
-      "3. Fountain codes break large data into smaller, manageable QR segments",
-      "4. Scan packets in any order - you don't need to get every single one",
-      "5. Progress bar shows reconstruction status as you scan",
-      "6. More reliable than single large QR codes for big datasets",
+      "'Generate Fountain Codes' - Convert your scouting data into multiple QR codes for others to scan",
+      "1. Keep the default speed or select the slower speed and click 'Generate & Start Auto-Cycling'",
+      "2. If the QR codes are not scanning properly, try adjusting the speed or lighting conditions.",
+      "'Scan Fountain Codes' - Capture QR codes from another device to import data",
+      "1. Scan a QR code and the progress bar shows reconstruction status as you scan.",
+      "2. Resetting the scanner will clear the current progress and allow you to start over.",
+      "3. Choose to Continue to App if done collecting data or Scan More Data",
+      "Fountain codes break large data into smaller, manageable QR segments",
+      "Scouting Leads should scan QR codes from scouts when needed to aggregate data.",
+      "Data can then be passed back to scouter devices, to drive team in the pit, or to other teams using Maneuver.",
       "Perfect for transferring data when WiFi/internet isn't available."
     ]
   },
@@ -177,12 +184,14 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
     content: [
       "![QR Match Data Demo](./assets/tutorials/qr-match-data-demo.gif)",
       "Share match schedules between devices using QR fountain codes.",
-      "1. 'Generate Match Data Fountain Codes' - Create QR codes from your match schedule",
-      "2. 'Scan Match Data Fountain Codes' - Import match schedules from another device",
-      "3. Fountain codes automatically handle large match data files",
-      "4. Reconstruction happens automatically as you scan enough packets",
-      "5. No need to scan all QR codes - algorithm fills in missing pieces",
-      "6. Great for sharing event schedules across your scouting team",
+      "'Generate Fountain Codes' - Convert your match data into multiple QR codes for others to scan",
+      "1. Keep the default speed or select the slower speed and click 'Generate & Start Auto-Cycling'",
+      "2. If the QR codes are not scanning properly, try adjusting the speed or lighting conditions.",
+      "'Scan Fountain Codes' - Capture QR codes from another device to import data",
+      "1. Scan a QR code and the progress bar shows reconstruction status as you scan.",
+      "2. Resetting the scanner will clear the current progress and allow you to start over.",
+      "3. Choose to Continue to App if done collecting data or Scan More Data",
+      "Great for sharing event schedules across your scouting team",
       "Use this when you need to distribute match data without internet access."
     ]
   },

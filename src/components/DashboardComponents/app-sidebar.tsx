@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Settings, SquarePen, Download } from "lucide-react"
+import { Settings, SquarePen } from "lucide-react"
 
 // import { NavDocuments } from "@/components/DashboardComponents/nav-documents"
 import { NavMain } from "@/components/DashboardComponents/nav-main"
@@ -21,26 +21,30 @@ import { haptics } from "@/lib/haptics"
 
 const data = {
   navMain: [
+    // {
+    //   title: "Data Actions",
+    //   url: "/settings",
+    //   icon: Settings,
+    //   items: [
+    //     {
+    //       title: "Clear Data",
+    //       url: "/clear-data",
+    //     },
+    //     {
+    //       title: "Convert Scouting JSON Data",
+    //       url: "/parse-data",
+    //     }
+    //   ]
+    // },
     {
       title: "Data Actions",
-      url: "/settings",
+      url: "#",
       icon: Settings,
       items: [
         {
           title: "Clear Data",
           url: "/clear-data",
         },
-        {
-          title: "Convert Scouting JSON Data",
-          url: "/parse-data",
-        }
-      ]
-    },
-    {
-      title: "Data Transfer",
-      url: "#",
-      icon: Download,
-      items: [
         {
           title: "Scouting Data JSON Transfer",
           url: "/json-transfer",
@@ -50,7 +54,7 @@ const data = {
           url: "/scout-data-qr",
         },
         {
-          title: "Match Data API/JSON Load",
+          title: "Match Data Load",
           url: "/match-data",
         },
         {

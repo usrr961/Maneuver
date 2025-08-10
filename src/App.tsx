@@ -14,7 +14,7 @@ import NotFoundPage from "@/pages/NotFoundPage";
 import HomePage from "@/pages/HomePage";
 import GameStartPage from "@/pages/GameStartPage";
 import AutoStartPage from "@/pages/AutoStartPage";
-import ParseDataPage from "@/pages/ParseDataPage";
+// import ParseDataPage from "@/pages/ParseDataPage";
 import MatchDataPage from "@/pages/MatchDataPage";
 import ClearDataPage from "@/pages/ClearDataPage";
 import QRDataTransferPage from "@/pages/QRDataTransferPage";
@@ -40,7 +40,7 @@ function App() {
         <Route index element={<HomePage />} />
         <Route path="/match-data" element={<MatchDataPage />} />
         <Route path="/clear-data" element={<ClearDataPage />} /> 
-        <Route path="/parse-data" element={<ParseDataPage />} />
+        {/* <Route path="/parse-data" element={<ParseDataPage />} /> */}
         <Route path="/game-start" element={<GameStartPage />} />
         <Route path="/auto-start" element={<AutoStartPage />} />
         <Route path="/scout-data-qr" element={<QRDataTransferPage />} />

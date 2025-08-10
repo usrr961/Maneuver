@@ -1,19 +1,15 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner"
 import Button from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Shield } from "lucide-react";
 
 const MatchDataPage = () => {
-  const navigate = useNavigate();
-  const [selectedData, setSelectedData] = useState("");
-  
   const [apiKey, setApiKey] = useState("");
   const [eventKey, setEventKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [rememberForSession, setRememberForSession] = useState(false);
+  const apiInputRef = useRef<HTMLInputElement | null>(null);
 
   // Load API key from sessionStorage on component mount
   useEffect(() => {
@@ -28,40 +24,27 @@ const MatchDataPage = () => {
   useEffect(() => {
     if (rememberForSession && apiKey) {
       sessionStorage.setItem("tbaApiKey", apiKey);
+    } else if (rememberForSession && !apiKey) {
+      toast.error("API key cannot be empty if you want to remember it for this session.");
     } else {
       sessionStorage.removeItem("tbaApiKey");
     }
   }, [rememberForSession, apiKey]);
 
-  // Cleanup: Clear API key from memory when component unmounts (unless user chose to remember)
-  useEffect(() => {
-    return () => {
-      if (!rememberForSession) {
-        setApiKey("");
-      }
-    };
-  }, [rememberForSession]);
+    useEffect(() => {
+      // Check for autofilled value after a short delay
+      const timeout = setTimeout(() => {
+        if (apiInputRef.current) {
+          const val = apiInputRef.current.value;
+          if (val && val !== apiKey) {
+            setApiKey(val);
+          }
+        }
+      }, 300);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) {
-      toast.error("No file selected");
-      return;
-    }
-    const file = files.item(0);
-  
-    const getText = async () => {
-      try {
-        const text = await file!.text();
-        
-        setSelectedData(JSON.stringify(JSON.parse(text).matches));
-        toast.success("Data Loaded");
-      } catch {
-        toast.error("Error In Loading");
-      }
-    };
-    getText();
-  };
+      return () => clearTimeout(timeout);
+    }, [apiKey]);
+    
 
   const fetchMatchDataFromTBA = async (tbaApiKey: string, tbaEventKey: string) => {
     try {
@@ -129,10 +112,10 @@ const MatchDataPage = () => {
       toast.success(fetchedMsg);
       
       // Clear API key from memory and session storage after successful fetch
-      setApiKey("");
-      sessionStorage.removeItem("tbaApiKey");
-      
-      navigate("/");
+      if (!rememberForSession) {
+        setApiKey("");
+        sessionStorage.removeItem("tbaApiKey");
+      }
     } catch (err) {
       toast.error("Failed to fetch match data from TBA");
       console.error(err);
@@ -140,46 +123,17 @@ const MatchDataPage = () => {
   };
 
   const doneClick = async () => {
-    if (selectedData) {
-      localStorage.setItem("matchData", selectedData);
-      toast.success("Match data loaded from file");
-      navigate("/");
-    } else if (apiKey && eventKey) {
+    if (apiKey && eventKey) {
       await fetchMatchDataFromTBA(apiKey, eventKey);
     } else {
-      toast.error("Please provide match data via file upload or direct API input");
+      toast.error("Please provide match data via API input");
     }
   };
+  
   return (
     <main className="h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
       <div className="flex flex-col items-start gap-4 max-w-md w-full">
         <h1 className="text-2xl font-bold">Load Match Data</h1>
-        <input
-          type="file"
-          id="selectFiles"
-          accept=".json"
-          style={{ display: "none" }}
-          onChange={handleFileSelect}
-        />
-
-        <Button
-          type="button"
-          variant={"secondary"}
-          className="flex w-full max-w-md h-16 items-center justify-center text-xl text-center"
-          onClick={() => {
-            const input = document.getElementById("selectFiles");
-            if (input) input.click();
-          }}
-        >
-          Upload Match Data JSON
-        </Button>
-
-        <div className="flex items-center justify-center gap-4 w-full max-w-md">
-          <Separator className="flex-1" />
-          <p className="text-center text-xl font-bold">OR</p>
-          <Separator className="flex-1" />
-        </div>
-
         <div className="w-full max-w-md space-y-3">
           <div className="space-y-1">
             <label htmlFor="apiKey" className="text-sm font-medium">
@@ -187,6 +141,7 @@ const MatchDataPage = () => {
             </label>
             <div className="relative pb-1">
               <Input
+                ref={apiInputRef}
                 id="apiKey"
                 name="tba-api-key"
                 type={showApiKey ? "text" : "password"}
@@ -251,7 +206,7 @@ const MatchDataPage = () => {
         </div>
         
         <Button
-          className="flex w-full max-w-md h-16 items-center justify-center text-xl text-center mt-8"
+          className="flex w-full max-w-md h-16 items-center justify-center text-xl text-center"
           onClick={() => doneClick()}
         >
           Submit
