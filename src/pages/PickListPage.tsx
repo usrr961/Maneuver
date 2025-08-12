@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/animate-ui/radix/tabs";
 import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
 import { 
   sortTeams, 
@@ -23,6 +24,7 @@ const PickListPage = () => {
   const [newListDescription, setNewListDescription] = useState("");
   const [searchFilter, setSearchFilter] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("number");
+  const [activeTab, setActiveTab] = useState("teams");
 
   useEffect(() => {
     const savedLists = localStorage.getItem("pickLists");
@@ -212,42 +214,90 @@ const PickListPage = () => {
         {/* Header */}
         <PickListHeader onExport={exportPickLists} onImport={importPickLists} />
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-y-6 xl:gap-6">
-          
-          {/* Available Teams Panel */}
-          <AvailableTeamsPanel
-            teams={filteredAndSortedTeams}
-            pickLists={pickLists}
-            searchFilter={searchFilter}
-            sortBy={sortBy}
-            onSearchChange={setSearchFilter}
-            onSortChange={setSortBy}
-            onAddTeamToList={addTeamToList}
-          />
-
-          {/* Pick Lists Panel */}
-          <div className="lg:col-span-2 space-y-6">
+        {/* Mobile Layout (below xl) - Tabs */}
+        <div className="xl:hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" enableSwipe={true}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="teams">Available Teams</TabsTrigger>
+              <TabsTrigger value="lists">Pick Lists</TabsTrigger>
+            </TabsList>
             
-            {/* Create New List */}
-            <CreatePickList
-              newListName={newListName}
-              newListDescription={newListDescription}
-              onNameChange={setNewListName}
-              onDescriptionChange={setNewListDescription}
-              onCreateList={createNewList}
+            <TabsContent value="teams" className="mt-6">
+              <AvailableTeamsPanel
+                teams={filteredAndSortedTeams}
+                pickLists={pickLists}
+                searchFilter={searchFilter}
+                sortBy={sortBy}
+                onSearchChange={setSearchFilter}
+                onSortChange={setSortBy}
+                onAddTeamToList={addTeamToList}
+              />
+            </TabsContent>
+            
+            <TabsContent value="lists" className="mt-6 space-y-6">
+              {/* Create New List */}
+              <CreatePickList
+                newListName={newListName}
+                newListDescription={newListDescription}
+                onNameChange={setNewListName}
+                onDescriptionChange={setNewListDescription}
+                onCreateList={createNewList}
+              />
+
+              {/* Pick Lists */}
+              {pickLists.map(list => (
+                <PickListCard
+                  key={list.id}
+                  pickList={list}
+                  availableTeams={availableTeams}
+                  canDelete={pickLists.length > 1}
+                  onDeleteList={deleteList}
+                  onUpdateTeams={updateListTeams}
+                />
+              ))}
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Desktop Layout (xl and above) - Side by Side */}
+        <div className="hidden xl:block">
+          <div className="grid grid-cols-3 gap-6">
+            
+            {/* Available Teams Panel */}
+            <AvailableTeamsPanel
+              teams={filteredAndSortedTeams}
+              pickLists={pickLists}
+              searchFilter={searchFilter}
+              sortBy={sortBy}
+              onSearchChange={setSearchFilter}
+              onSortChange={setSortBy}
+              onAddTeamToList={addTeamToList}
             />
 
-            {/* Pick Lists */}
-            {pickLists.map(list => (
-              <PickListCard
-                key={list.id}
-                pickList={list}
-                availableTeams={availableTeams}
-                canDelete={pickLists.length > 1}
-                onDeleteList={deleteList}
-                onUpdateTeams={updateListTeams}
+            {/* Pick Lists Panel */}
+            <div className="col-span-2 space-y-6">
+              
+              {/* Create New List */}
+              <CreatePickList
+                newListName={newListName}
+                newListDescription={newListDescription}
+                onNameChange={setNewListName}
+                onDescriptionChange={setNewListDescription}
+                onCreateList={createNewList}
               />
-            ))}
+
+              {/* Pick Lists */}
+              {pickLists.map(list => (
+                <PickListCard
+                  key={list.id}
+                  pickList={list}
+                  availableTeams={availableTeams}
+                  canDelete={pickLists.length > 1}
+                  onDeleteList={deleteList}
+                  onUpdateTeams={updateListTeams}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>

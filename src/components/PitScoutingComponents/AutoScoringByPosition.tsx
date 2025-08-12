@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/animate-ui/radix/tabs";
 import { type AutoPositionScoring } from "@/lib/pitScoutingTypes";
@@ -22,22 +23,34 @@ interface AutoScoringByPositionProps {
 }
 
 export const AutoScoringByPosition = ({ autoScoring, setAutoScoring }: AutoScoringByPositionProps) => {
+  const [activeTab, setActiveTab] = useState("0");
+  
+  const handleTabChange = (value: string) => {
+    console.log("Tab changed to:", value);
+    setActiveTab(value);
+  };
+  
   return (
     <Card>
       <CardHeader>
         <CardTitle>Reported Auto Scoring by Position</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="position0" enableSwipe={true}>
+        <Tabs 
+          value={activeTab} 
+          onValueChange={handleTabChange} 
+          enableSwipe={true}
+          className="touch-pan-y"
+        >
           <TabsList className="grid w-full grid-cols-5">
             {[0, 1, 2, 3, 4].map((position) => (
-              <TabsTrigger key={position} value={`position${position}`}>
+              <TabsTrigger key={position} value={position.toString()}>
                 Pos {position}
               </TabsTrigger>
             ))}
           </TabsList>
           {[0, 1, 2, 3, 4].map((position) => (
-            <TabsContent key={position} value={`position${position}`} className="space-y-4">
+            <TabsContent key={position} value={position.toString()} className="space-y-4 min-h-[400px] w-full">
               <FieldPositionVisual selectedPosition={position} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-3">
