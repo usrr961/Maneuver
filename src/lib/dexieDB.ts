@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import type { ScoutingDataWithId } from './scoutingDataUtils';
+import type { PitScoutingEntry } from './pitScoutingTypes';
 
 export interface ScoutingEntryDB {
   id: string;
@@ -16,7 +17,7 @@ export class SimpleScoutingAppDB extends Dexie {
   scoutingData!: Table<ScoutingEntryDB>;
 
   constructor() {
-    super('SimpleScoutingDB_v2');
+    super('SimpleScoutingDB');
     
     this.version(1).stores({
       scoutingData: 'id, teamNumber, matchNumber, alliance, scouterInitials, eventName, timestamp'
@@ -24,7 +25,20 @@ export class SimpleScoutingAppDB extends Dexie {
   }
 }
 
+export class PitScoutingDB extends Dexie {
+  pitScoutingData!: Table<PitScoutingEntry>;
+
+  constructor() {
+    super('PitScoutingDB');
+    
+    this.version(1).stores({
+      pitScoutingData: 'id, teamNumber, eventName, scouterInitials, timestamp, [teamNumber+eventName]'
+    });
+  }
+}
+
 export const db = new SimpleScoutingAppDB();
+export const pitDB = new PitScoutingDB();
 
 const safeStringify = (value: unknown): string | undefined => {
   if (value === null || value === undefined || value === '') {
@@ -360,3 +374,100 @@ export const getFilterOptions = async (): Promise<{
 db.open().catch(error => {
   console.error('Failed to open Dexie database:', error);
 });
+
+pitDB.open().catch(error => {
+  console.error('Failed to open Pit Scouting database:', error);
+});
+
+// Pit Scouting Database Functions
+export const savePitScoutingEntry = async (entry: PitScoutingEntry): Promise<void> => {
+  try {
+    await pitDB.pitScoutingData.put(entry);
+  } catch (error) {
+    console.error('Error saving pit scouting entry to database:', error);
+    throw error;
+  }
+};
+
+export const loadAllPitScoutingEntries = async (): Promise<PitScoutingEntry[]> => {
+  try {
+    return await pitDB.pitScoutingData.toArray();
+  } catch (error) {
+    console.error('Error loading all pit scouting entries:', error);
+    return [];
+  }
+};
+
+export const loadPitScoutingByTeam = async (teamNumber: string): Promise<PitScoutingEntry[]> => {
+  try {
+    return await pitDB.pitScoutingData.where('teamNumber').equals(teamNumber).toArray();
+  } catch (error) {
+    console.error('Error loading pit scouting entries by team:', error);
+    return [];
+  }
+};
+
+export const loadPitScoutingByEvent = async (eventName: string): Promise<PitScoutingEntry[]> => {
+  try {
+    return await pitDB.pitScoutingData.where('eventName').equals(eventName).toArray();
+  } catch (error) {
+    console.error('Error loading pit scouting entries by event:', error);
+    return [];
+  }
+};
+
+export const loadPitScoutingByTeamAndEvent = async (
+  teamNumber: string, 
+  eventName: string
+): Promise<PitScoutingEntry | undefined> => {
+  try {
+    const results = await pitDB.pitScoutingData
+      .where('[teamNumber+eventName]')
+      .equals([teamNumber, eventName])
+      .toArray();
+    
+    // Return the most recent entry if multiple exist
+    return results.sort((a, b) => b.timestamp - a.timestamp)[0];
+  } catch (error) {
+    console.error('Error loading pit scouting entry by team and event:', error);
+    // Fallback to manual filtering if compound index fails
+    try {
+      const allEntries = await pitDB.pitScoutingData.toArray();
+      const filtered = allEntries.filter(entry => 
+        entry.teamNumber === teamNumber && entry.eventName === eventName
+      );
+      return filtered.sort((a, b) => b.timestamp - a.timestamp)[0];
+    } catch (fallbackError) {
+      console.error('Fallback query also failed:', fallbackError);
+      return undefined;
+    }
+  }
+};
+
+export const deletePitScoutingEntry = async (id: string): Promise<void> => {
+  await pitDB.pitScoutingData.delete(id);
+};
+
+export const clearAllPitScoutingData = async (): Promise<void> => {
+  await pitDB.pitScoutingData.clear();
+};
+
+export const getPitScoutingStats = async (): Promise<{
+  totalEntries: number;
+  teams: string[];
+  events: string[];
+  scouters: string[];
+}> => {
+  const entries = await pitDB.pitScoutingData.toArray();
+  
+  const teams = [...new Set(entries.map(e => e.teamNumber))].sort((a, b) => Number(a) - Number(b));
+  const events = [...new Set(entries.map(e => e.eventName))].sort();
+  const scouters = [...new Set(entries.map(e => e.scouterInitials))].sort();
+  
+  return {
+    totalEntries: entries.length,
+    teams,
+    events,
+    scouters
+  };
+};

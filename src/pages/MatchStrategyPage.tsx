@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/animate-ui/radix/tabs";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import FieldCanvas from "@/components/MatchStrategyComponents/FieldCanvas";
 import { AllianceCard } from "@/components/MatchStrategyComponents/AllianceCard";
 import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
+import { loadScoutingEntriesByMatch } from "@/lib/dexieDB";
 import { createTeamStatsCalculator } from "@/lib/matchStrategyUtils";
 import { clearAllStrategies, saveAllStrategyCanvases } from "@/lib/strategyCanvasUtils";
 
@@ -17,9 +18,148 @@ const MatchStrategyPage = () => {
   const [activeTab, setActiveTab] = useState("autonomous");
   const [matchNumber, setMatchNumber] = useState<string>("");
   const [activeStatsTab, setActiveStatsTab] = useState("overall");
+  const [isLookingUpMatch, setIsLookingUpMatch] = useState(false);
   
   // Create the team stats calculator function
   const getTeamStats = createTeamStatsCalculator(scoutingData);
+
+  // Debounced match number lookup
+  const lookupMatchTeams = useCallback(async (matchNum: string) => {
+    if (!matchNum.trim()) return;
+    
+    setIsLookingUpMatch(true);
+    try {
+      const matchNumber = parseInt(matchNum.trim());
+      
+      // First check localStorage match data (from TBA API)
+      const matchDataStr = localStorage.getItem("matchData");
+      if (matchDataStr) {
+        try {
+          const matchData = JSON.parse(matchDataStr);
+          const match = matchData.find((m: any) => m.matchNum === matchNumber);
+          
+          if (match && match.redAlliance && match.blueAlliance) {
+            console.log("Found match in localStorage:", match);
+            
+            const redTeams = match.redAlliance.slice(0, 3); // Up to 3 teams
+            const blueTeams = match.blueAlliance.slice(0, 3); // Up to 3 teams
+            
+            // Update selectedTeams array
+            // Red alliance: indices 0, 1, 2
+            // Blue alliance: indices 3, 4, 5
+            const newSelectedTeams = Array(6).fill("");
+            
+            // Fill red teams
+            for (let i = 0; i < redTeams.length && i < 3; i++) {
+              newSelectedTeams[i] = redTeams[i];
+            }
+            
+            // Fill blue teams
+            for (let i = 0; i < blueTeams.length && i < 3; i++) {
+              newSelectedTeams[i + 3] = blueTeams[i];
+            }
+            
+            console.log("Setting teams from match data:", { redTeams, blueTeams, newSelectedTeams });
+            setSelectedTeams(newSelectedTeams);
+            setIsLookingUpMatch(false);
+            return;
+          }
+        } catch (error) {
+          console.error("Error parsing match data:", error);
+        }
+      }
+      
+      // Fallback: Try scouting database and legacy data (existing logic)
+      const matchEntries = await loadScoutingEntriesByMatch(matchNum.trim());
+      console.log("Database match entries found:", matchEntries);
+      
+      // Also check legacy data
+      const legacyMatches = scoutingData.filter((entry: any) => 
+        entry.matchNumber?.toString() === matchNum.trim()
+      );
+      console.log("Legacy match entries found:", legacyMatches);
+      
+      // Initialize team arrays
+      const redTeams: string[] = [];
+      const blueTeams: string[] = [];
+      
+      // Process database entries
+      matchEntries.forEach(entry => {
+        console.log("Processing DB entry:", { teamNumber: entry.teamNumber, alliance: entry.alliance });
+        if (entry.teamNumber) {
+          if (entry.alliance === "red" || entry.alliance === "redAlliance") {
+            if (!redTeams.includes(entry.teamNumber)) {
+              redTeams.push(entry.teamNumber);
+            }
+          } else if (entry.alliance === "blue" || entry.alliance === "blueAlliance") {
+            if (!blueTeams.includes(entry.teamNumber)) {
+              blueTeams.push(entry.teamNumber);
+            }
+          }
+        }
+      });
+      
+      // Process legacy entries if no database entries found
+      if (matchEntries.length === 0 && legacyMatches.length > 0) {
+        legacyMatches.forEach((entry: any) => {
+          console.log("Processing legacy entry:", { teamNumber: entry.selectTeam, alliance: entry.alliance });
+          const teamNumber = entry.selectTeam?.toString();
+          if (teamNumber) {
+            if (entry.alliance === "red" || entry.alliance === "redAlliance") {
+              if (!redTeams.includes(teamNumber)) {
+                redTeams.push(teamNumber);
+              }
+            } else if (entry.alliance === "blue" || entry.alliance === "blueAlliance") {
+              if (!blueTeams.includes(teamNumber)) {
+                blueTeams.push(teamNumber);
+              }
+            }
+          }
+        });
+      }
+      
+      if (redTeams.length > 0 || blueTeams.length > 0) {
+        // Sort teams numerically
+        redTeams.sort((a, b) => Number(a) - Number(b));
+        blueTeams.sort((a, b) => Number(a) - Number(b));
+        
+        console.log("Grouped teams from scouting data:", { redTeams, blueTeams });
+        
+        // Update selectedTeams array
+        const newSelectedTeams = Array(6).fill("");
+        
+        // Fill red teams (up to 3)
+        for (let i = 0; i < 3; i++) {
+          newSelectedTeams[i] = redTeams[i] || "";
+        }
+        
+        // Fill blue teams (up to 3)
+        for (let i = 0; i < 3; i++) {
+          newSelectedTeams[i + 3] = blueTeams[i] || "";
+        }
+        
+        console.log("Setting teams from scouting data:", { redTeams, blueTeams, newSelectedTeams });
+        setSelectedTeams(newSelectedTeams);
+      } else {
+        console.log("No match entries found for match number:", matchNum);
+      }
+    } catch (error) {
+      console.error("Error looking up match teams:", error);
+    } finally {
+      setIsLookingUpMatch(false);
+    }
+  }, [scoutingData]); // Add scoutingData dependency
+
+  // Debounce match number input
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (matchNumber.trim()) {
+        lookupMatchTeams(matchNumber);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [matchNumber, lookupMatchTeams]);
 
   useEffect(() => {
     // Load scouting data using the new deduplication utilities
@@ -27,6 +167,10 @@ const MatchStrategyPage = () => {
       try {
         const data = await loadLegacyScoutingData();
         setScoutingData(data);
+        
+        // Debug: Log all match numbers in the data
+        const matchNumbers = [...new Set(data.map((entry: Record<string, unknown>) => entry.matchNumber?.toString()).filter(Boolean))];
+        console.log("Available match numbers:", matchNumbers.sort((a, b) => Number(a) - Number(b)));
         
         // Get unique team numbers from selectTeam field
         const teams = [...new Set(data.map((entry: Record<string, unknown>) => entry.selectTeam?.toString()).filter(Boolean))];
@@ -101,14 +245,37 @@ const MatchStrategyPage = () => {
             <label htmlFor="match-number" className="font-semibold whitespace-nowrap">
               Match #:
             </label>
-            <Input
-              id="match-number"
-              type="text"
-              placeholder="Optional"
-              value={matchNumber}
-              onChange={(e) => setMatchNumber(e.target.value)}
-              className="w-24"
-            />
+            <div className="relative">
+              <Input
+                id="match-number"
+                type="text"
+                placeholder="Optional"
+                value={matchNumber}
+                onChange={(e) => setMatchNumber(e.target.value)}
+                className="w-24"
+              />
+              {isLookingUpMatch && (
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>
+                </div>
+              )}
+            </div>
+            {matchNumber && !isLookingUpMatch && (
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                Auto-fills from match data
+              </span>
+            )}
+            {(() => {
+              const hasMatchData = localStorage.getItem("matchData");
+              if (!hasMatchData) {
+                return (
+                  <span className="text-xs text-orange-500 whitespace-nowrap">
+                    Load match data first
+                  </span>
+                );
+              }
+              return null;
+            })()}
           </div>
           <div className="flex items-center md:justify-end w-full md:w-auto gap-2">
             <Button 

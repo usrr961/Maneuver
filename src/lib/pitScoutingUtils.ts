@@ -1,6 +1,14 @@
 import type { PitScoutingEntry, PitScoutingData } from './pitScoutingTypes';
-
-const PIT_SCOUTING_STORAGE_KEY = 'pitScoutingData';
+import { 
+  savePitScoutingEntry as dbSavePitScoutingEntry, 
+  loadPitScoutingByTeamAndEvent, 
+  loadAllPitScoutingEntries, 
+  loadPitScoutingByTeam,
+  loadPitScoutingByEvent,
+  deletePitScoutingEntry as dbDeletePitScoutingEntry, 
+  clearAllPitScoutingData as dbClearAllPitScoutingData,
+  getPitScoutingStats as dbGetPitScoutingStats 
+} from './dexieDB';
 
 // Generate unique ID for pit scouting entries
 export const generatePitScoutingId = (entry: Omit<PitScoutingEntry, 'id' | 'timestamp'>): string => {
@@ -12,38 +20,17 @@ export const generatePitScoutingId = (entry: Omit<PitScoutingEntry, 'id' | 'time
 
 // Save pit scouting entry
 export const savePitScoutingEntry = async (entry: Omit<PitScoutingEntry, 'id' | 'timestamp'>): Promise<PitScoutingEntry> => {
-  const completeEntry: PitScoutingEntry = {
-    ...entry,
-    id: generatePitScoutingId(entry),
-    timestamp: Date.now()
-  };
-
   try {
-    const existingDataStr = localStorage.getItem(PIT_SCOUTING_STORAGE_KEY);
-    let existingData: PitScoutingData;
-    
-    if (existingDataStr) {
-      existingData = JSON.parse(existingDataStr);
-    } else {
-      existingData = { entries: [], lastUpdated: 0 };
-    }
-
     // Check if an entry for this team and event already exists
-    const existingIndex = existingData.entries.findIndex(
-      e => e.teamNumber === entry.teamNumber && e.eventName === entry.eventName
-    );
-
-    if (existingIndex >= 0) {
-      // Update existing entry
-      existingData.entries[existingIndex] = completeEntry;
-    } else {
-      // Add new entry
-      existingData.entries.push(completeEntry);
-    }
-
-    existingData.lastUpdated = Date.now();
-    localStorage.setItem(PIT_SCOUTING_STORAGE_KEY, JSON.stringify(existingData));
+    const existing = await loadPitScoutingByTeamAndEvent(entry.teamNumber, entry.eventName);
     
+    const completeEntry: PitScoutingEntry = {
+      ...entry,
+      id: existing?.id || generatePitScoutingId(entry),
+      timestamp: Date.now()
+    };
+
+    await dbSavePitScoutingEntry(completeEntry);
     return completeEntry;
   } catch (error) {
     console.error('Error saving pit scouting entry:', error);
@@ -54,12 +41,11 @@ export const savePitScoutingEntry = async (entry: Omit<PitScoutingEntry, 'id' | 
 // Load all pit scouting data
 export const loadPitScoutingData = async (): Promise<PitScoutingData> => {
   try {
-    const dataStr = localStorage.getItem(PIT_SCOUTING_STORAGE_KEY);
-    if (!dataStr) {
-      return { entries: [], lastUpdated: 0 };
-    }
-    
-    return JSON.parse(dataStr);
+    const entries = await loadAllPitScoutingEntries();
+    return { 
+      entries, 
+      lastUpdated: entries.length > 0 ? Math.max(...entries.map(e => e.timestamp)) : 0
+    };
   } catch (error) {
     console.error('Error loading pit scouting data:', error);
     return { entries: [], lastUpdated: 0 };
@@ -69,10 +55,8 @@ export const loadPitScoutingData = async (): Promise<PitScoutingData> => {
 // Load pit scouting entry by team and event
 export const loadPitScoutingEntry = async (teamNumber: string, eventName: string): Promise<PitScoutingEntry | null> => {
   try {
-    const data = await loadPitScoutingData();
-    return data.entries.find(entry => 
-      entry.teamNumber === teamNumber && entry.eventName === eventName
-    ) || null;
+    const result = await loadPitScoutingByTeamAndEvent(teamNumber, eventName);
+    return result || null;
   } catch (error) {
     console.error('Error loading pit scouting entry:', error);
     return null;
@@ -82,8 +66,7 @@ export const loadPitScoutingEntry = async (teamNumber: string, eventName: string
 // Load pit scouting entries by team
 export const loadPitScoutingEntriesByTeam = async (teamNumber: string): Promise<PitScoutingEntry[]> => {
   try {
-    const data = await loadPitScoutingData();
-    return data.entries.filter(entry => entry.teamNumber === teamNumber);
+    return await loadPitScoutingByTeam(teamNumber);
   } catch (error) {
     console.error('Error loading pit scouting entries by team:', error);
     return [];
@@ -93,8 +76,7 @@ export const loadPitScoutingEntriesByTeam = async (teamNumber: string): Promise<
 // Load pit scouting entries by event
 export const loadPitScoutingEntriesByEvent = async (eventName: string): Promise<PitScoutingEntry[]> => {
   try {
-    const data = await loadPitScoutingData();
-    return data.entries.filter(entry => entry.eventName === eventName);
+    return await loadPitScoutingByEvent(eventName);
   } catch (error) {
     console.error('Error loading pit scouting entries by event:', error);
     return [];
@@ -104,10 +86,7 @@ export const loadPitScoutingEntriesByEvent = async (eventName: string): Promise<
 // Delete pit scouting entry
 export const deletePitScoutingEntry = async (id: string): Promise<void> => {
   try {
-    const data = await loadPitScoutingData();
-    data.entries = data.entries.filter(entry => entry.id !== id);
-    data.lastUpdated = Date.now();
-    localStorage.setItem(PIT_SCOUTING_STORAGE_KEY, JSON.stringify(data));
+    await dbDeletePitScoutingEntry(id);
   } catch (error) {
     console.error('Error deleting pit scouting entry:', error);
     throw error;
@@ -117,7 +96,7 @@ export const deletePitScoutingEntry = async (id: string): Promise<void> => {
 // Clear all pit scouting data
 export const clearAllPitScoutingData = async (): Promise<void> => {
   try {
-    localStorage.removeItem(PIT_SCOUTING_STORAGE_KEY);
+    await dbClearAllPitScoutingData();
   } catch (error) {
     console.error('Error clearing pit scouting data:', error);
     throw error;
@@ -132,17 +111,7 @@ export const getPitScoutingStats = async (): Promise<{
   scouters: string[];
 }> => {
   try {
-    const data = await loadPitScoutingData();
-    const teams = [...new Set(data.entries.map(e => e.teamNumber))].sort((a, b) => Number(a) - Number(b));
-    const events = [...new Set(data.entries.map(e => e.eventName))].sort();
-    const scouters = [...new Set(data.entries.map(e => e.scouterInitials))].sort();
-
-    return {
-      totalEntries: data.entries.length,
-      teams,
-      events,
-      scouters
-    };
+    return await dbGetPitScoutingStats();
   } catch (error) {
     console.error('Error getting pit scouting stats:', error);
     return {
@@ -167,16 +136,16 @@ export const importPitScoutingData = async (
   try {
     if (mode === 'overwrite') {
       await clearAllPitScoutingData();
-      localStorage.setItem(PIT_SCOUTING_STORAGE_KEY, JSON.stringify(importData));
+      // Save all imported entries
+      await Promise.all(importData.entries.map(entry => dbSavePitScoutingEntry(entry)));
       return { imported: importData.entries.length, duplicatesSkipped: 0 };
     } else {
-      const existingData = await loadPitScoutingData();
-      const existingIds = new Set(existingData.entries.map(e => e.id));
+      const existingEntries = await loadAllPitScoutingEntries();
+      const existingIds = new Set(existingEntries.map(e => e.id));
       const newEntries = importData.entries.filter(entry => !existingIds.has(entry.id));
       
-      existingData.entries.push(...newEntries);
-      existingData.lastUpdated = Date.now();
-      localStorage.setItem(PIT_SCOUTING_STORAGE_KEY, JSON.stringify(existingData));
+      // Save only new entries
+      await Promise.all(newEntries.map(entry => dbSavePitScoutingEntry(entry)));
       
       return { 
         imported: newEntries.length, 
