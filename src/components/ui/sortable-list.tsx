@@ -63,7 +63,7 @@ function SortableListItem({
           value={item}
           className={cn(
             "relative z-auto grow",
-            "h-full rounded-xl bg-[#161716]/80",
+            "h-full rounded-xl bg-background",
             "shadow-[0px_1px_0px_0px_hsla(0,0%,100%,.03)_inset,0px_0px_0px_1px_hsla(0,0%,100%,.03)_inset,0px_0px_0px_1px_rgba(0,0,0,.1),0px_2px_2px_0px_rgba(0,0,0,.1),0px_4px_4px_0px_rgba(0,0,0,.1),0px_8px_8px_0px_rgba(0,0,0,.1)]",
             item.checked ? "cursor-not-allowed" : "cursor-grab",
             item.checked && !isDragging ? "w-7/10" : "w-full"
@@ -153,7 +153,7 @@ function SortableListItem({
                       <h4
                         className={cn(
                           "tracking-tighter text-base md:text-lg ",
-                          item.checked ? "text-red-400" : "text-white/70"
+                          item.checked ? "text-red-400" : ""
                         )}
                       >
                         {item.text}
@@ -199,7 +199,7 @@ function SortableListItem({
                   bounce: 0,
                 },
               }}
-              className="-ml-[1px] h-[1.5rem] w-3 rounded-l-none  rounded-r-none border-y  border-y-white/5 border-r-white/10 bg-[#161716] "
+              className="-ml-[1px] h-[1.5rem] w-3 rounded-l-none  rounded-r-none border-y border-r border-border/20 dark:border-background/5 dark:border-r-background/10 bg-background"
             />
           ) : null}
         </AnimatePresence>
@@ -225,10 +225,10 @@ function SortableListItem({
                 x: -10,
                 transition: { delay: 0, duration: 0.12 },
               }}
-              className="inset-0 z-0 border-spacing-1  rounded-r-xl rounded-l-sm border-r-2   border-r-red-300/60 bg-[#161716]/80 shadow-[0_1px_0_0_rgba(255,255,255,0.03)_inset,0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_1px_rgba(0,0,0,0.1),0_2px_2px_0_rgba(0,0,0,0.1),0_4px_4px_0_rgba(0,0,0,0.1),0_8px_8px_0_rgba(0,0,0,0.1)] dark:bg-[#161716]/50"
+              className="inset-0 z-0 border-spacing-1  rounded-r-xl rounded-l-sm border-r-2   border-r-red-300/60 bg-background shadow-[0_1px_0_0_rgba(255,255,255,0.03)_inset,0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_1px_rgba(0,0,0,0.1),0_2px_2px_0_rgba(0,0,0,0.1),0_4px_4px_0_rgba(0,0,0,0.1),0_8px_8px_0_rgba(0,0,0,0.1)] dark:bg-[#161716]/50"
             >
               <button
-                className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-md px-3 text-sm font-medium  transition-colors duration-150   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                className="inline-flex bg-background h-10 items-center justify-center whitespace-nowrap rounded-md px-3 text-sm font-medium  transition-colors duration-150   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
                 onClick={() => onRemoveItem(item.id)}
               >
                 <Trash className="h-4 w-4 text-red-400 transition-colors duration-150 fill-red-400/60 " />

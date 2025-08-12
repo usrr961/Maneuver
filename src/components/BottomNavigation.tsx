@@ -6,6 +6,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigationConfirm } from '@/hooks/useNavigationConfirm';
 import { NavigationConfirmDialog } from '@/components/NavigationConfirmDialog';
 import { haptics } from '@/lib/haptics';
+import Button from '@/components/ui/button';
 
 /**
  * Bottom Navigation Component
@@ -89,12 +90,13 @@ export function BottomNavigation() {
             const isActive = location.pathname === item.href;
             
             return (
-              <button
+              <Button
                 key={item.href}
+                variant="ghost"
                 onClick={() => handleNavigation(item.href, item.label)}
                 className={cn(
                   "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors",
-                  "min-w-0 flex-1 max-w-16",
+                  "min-w-0 flex-1 max-w-16 h-auto",
                   isActive 
                     ? "text-primary bg-primary/10" 
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -102,7 +104,7 @@ export function BottomNavigation() {
               >
                 <Icon className="h-5 w-5 flex-shrink-0" />
                 <span className="text-xs font-medium truncate">{item.label}</span>
-              </button>
+              </Button>
             );
           })}
         </nav>

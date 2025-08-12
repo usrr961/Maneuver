@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import Button from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "../components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -154,7 +154,11 @@ const EndgamePage = () => {
                     setParkAttempted(false);
                   }
                 }}
-                className={`h-12 ${shallowClimbAttempted ? 'bg-blue-500 hover:bg-blue-600 text-white' : ''}`}
+                className="h-12"
+                style={shallowClimbAttempted ? {
+                  backgroundColor: '#3b82f6',
+                  color: 'white'
+                } : undefined}
               >
                 {shallowClimbAttempted ? "✓ " : ""}Shallow Climb Attempted
               </Button>
@@ -168,7 +172,11 @@ const EndgamePage = () => {
                     setParkAttempted(false);
                   }
                 }}
-                className={`h-12 ${deepClimbAttempted ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
+                className="h-12"
+                style={deepClimbAttempted ? {
+                  backgroundColor: '#16a34a',
+                  color: 'white'
+                } : undefined}
               >
                 {deepClimbAttempted ? "✓ " : ""}Deep Climb Attempted
               </Button>
@@ -182,7 +190,11 @@ const EndgamePage = () => {
                     setDeepClimbAttempted(false);
                   }
                 }}
-                className={`h-12 ${parkAttempted ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : ''}`}
+                className="h-12"
+                style={parkAttempted ? {
+                  backgroundColor: '#ca8a04',
+                  color: 'white'
+                } : undefined}
               >
                 {parkAttempted ? "✓ " : ""}Park Attempted
               </Button>
@@ -246,7 +258,11 @@ const EndgamePage = () => {
           </Button>
           <Button
             onClick={handleSubmit}
-            className="flex-2 h-12 text-lg font-semibold bg-green-600 hover:bg-green-700 text-white"
+            className="flex-2 h-12 text-lg font-semibold"
+            style={{
+              backgroundColor: '#16a34a',
+              color: 'white'
+            }}
           >
             Submit Match Data
             <ArrowRight className="ml-0.5" />

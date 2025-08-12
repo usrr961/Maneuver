@@ -15,6 +15,7 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
       "Use the sidebar menu to access scouting forms, data management, and strategy tools.",
       "Each page has detailed help available via tooltips or dialogs.",
       "Click the ❓ icon on each page for quick tips or in-depth tutorials.",
+      "Install the Maneuver app on your device for the best experience. On Android, go to the browser settings, enable 'Add to Home Screen', and follow the prompts. On Safari in iOS, use the share button and select 'Add to Home Screen'.",
       "For more information, visit our GitHub repository."
     ]
   },

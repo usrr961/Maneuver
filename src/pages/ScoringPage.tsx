@@ -2,7 +2,7 @@
 import { useState, useEffect, type Key } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import Button from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import ReefScoringSection from "@/components/ScoringComponents/ReefScoringSection";
@@ -210,8 +210,12 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
             <Button
               onClick={handleProceed}
               className={`flex-2 h-12 text-lg font-semibold ${
-                phase === "auto" && showFlashing ? "animate-pulse bg-green-600 hover:bg-green-700" : ""
+                phase === "auto" && showFlashing ? "animate-pulse" : ""
               }`}
+              style={phase === "auto" && showFlashing ? {
+                backgroundColor: '#16a34a',
+                color: 'white'
+              } : undefined}
             >
               {phase === "auto" ? "Continue to Teleop" : "Continue to Endgame"}
             </Button>
@@ -295,7 +299,11 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
                   <Button
                     variant={passedStartLine ? "default" : "outline"}
                     onClick={() => handleToggleAction("passed_start_line")}
-                    className={`w-full h-10 ${passedStartLine ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
+                    className="w-full h-10"
+                    style={passedStartLine ? {
+                      backgroundColor: '#16a34a',
+                      color: 'white'
+                    } : undefined}
                   >
                     {passedStartLine ? "✓ Passed Starting Line" : "Passed Starting Line"}
                   </Button>
@@ -304,7 +312,11 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
                   <Button
                     variant={playedDefense ? "default" : "outline"}
                     onClick={() => handleToggleAction("defense")}
-                    className={`w-full h-10 ${playedDefense ? 'bg-blue-500 hover:bg-blue-600 text-white' : ''}`}
+                    className="w-full h-10"
+                    style={playedDefense ? {
+                      backgroundColor: '#3b82f6',
+                      color: 'white'
+                    } : undefined}
                   >
                     {playedDefense ? "✓ Played Defense" : "Played Defense"}
                   </Button>
@@ -335,8 +347,12 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
             <Button
               onClick={handleProceed}
               className={`flex-2 h-12 text-lg font-semibold ${
-                phase === "auto" && showFlashing ? "animate-pulse bg-green-600 hover:bg-green-700 text-white" : ""
+                phase === "auto" && showFlashing ? "animate-pulse" : ""
               }`}
+              style={phase === "auto" && showFlashing ? {
+                backgroundColor: '#16a34a',
+                color: 'white'
+              } : undefined}
             >
               {phase === "auto" ? "Continue to Teleop" : "Continue to Endgame"}
               <ArrowRight className="ml-0.5" />

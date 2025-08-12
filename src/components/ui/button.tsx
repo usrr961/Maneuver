@@ -56,7 +56,7 @@ export default function Button(
   return (
     <motion.button
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, size }), className)}
       whileHover={supportsHover ? { scale: 1.02 } : undefined}
       whileTap={{ scale: 0.95 }}
       {...props}
