@@ -47,7 +47,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Checkbox } from "@/components/animate-ui/radix/checkbox"
 import {
   Drawer,
   DrawerClose,

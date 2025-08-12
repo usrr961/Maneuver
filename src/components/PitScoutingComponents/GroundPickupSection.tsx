@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "@/components/animate-ui/radix/checkbox";
 import { Label } from "@/components/ui/label";
 import { type GroundPickupCapabilities } from "@/lib/pitScoutingTypes";
 

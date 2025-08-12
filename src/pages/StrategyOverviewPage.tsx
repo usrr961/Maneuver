@@ -325,7 +325,7 @@ const StrategyOverviewPage = () => {
 
   if (loading) {
     return (
-      <div className="h-full w-full flex items-center justify-center">
+      <div className="h-screen w-full flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="text-muted-foreground">Loading strategy data...</p>
@@ -335,7 +335,7 @@ const StrategyOverviewPage = () => {
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col p-4 md:p-4 space-y-4 md:space-y-8 pb-4 md:pb-8">
+    <div className="min-h-screen w-full flex flex-col p-4 md:p-4 space-y-4 md:space-y-8 pb-6">
       {/* Header */}
       <StrategyHeader
         filteredTeamCount={filteredTeamStats.length}
@@ -369,19 +369,21 @@ const StrategyOverviewPage = () => {
       />
 
       {/* Data Table */}
-      <TeamStatsTableEnhanced
-        teamStats={teamStats}
-        filteredTeamStats={filteredTeamStats}
-        columnConfig={columnConfig}
-        columnFilters={columnFilters}
-        onToggleColumn={toggleColumn}
-        onApplyPreset={applyColumnPreset}
-        onSetColumnFilter={setColumnFilter}
-        onRemoveColumnFilter={removeColumnFilter}
-        onClearAllFilters={clearAllFilters}
-        isColumnSettingsOpen={isColumnSettingsOpen}
-        onColumnSettingsOpenChange={setIsColumnSettingsOpen}
-      />
+      <div className="flex-1 flex flex-col min-h-0">
+        <TeamStatsTableEnhanced
+          teamStats={teamStats}
+          filteredTeamStats={filteredTeamStats}
+          columnConfig={columnConfig}
+          columnFilters={columnFilters}
+          onToggleColumn={toggleColumn}
+          onApplyPreset={applyColumnPreset}
+          onSetColumnFilter={setColumnFilter}
+          onRemoveColumnFilter={removeColumnFilter}
+          onClearAllFilters={clearAllFilters}
+          isColumnSettingsOpen={isColumnSettingsOpen}
+          onColumnSettingsOpenChange={setIsColumnSettingsOpen}
+        />
+      </div>
     </div>
   );
 };

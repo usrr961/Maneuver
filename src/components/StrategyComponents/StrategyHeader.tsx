@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+// import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { GenericSelector } from "@/components/ui/generic-selector";
-import { Settings, X } from "lucide-react";
+import { X } from "lucide-react";
 
 type AggregationType = "average" | "median" | "max" | "75th";
 
@@ -31,18 +31,18 @@ export const StrategyHeader = ({
   aggregationType,
   onAggregationTypeChange,
   onClearAllFilters,
-  isSettingsOpen,
-  onSettingsOpenChange,
-  chartType,
-  onChartTypeChange,
+  // isSettingsOpen,
+  // onSettingsOpenChange,
+  // chartType,
+  // onChartTypeChange,
 }: StrategyHeaderProps) => {
   const handleAggregationTypeChange = (value: string) => {
     onAggregationTypeChange(value as AggregationType);
   };
 
-  const handleChartTypeChange = (value: string) => {
-    onChartTypeChange(value as "bar" | "scatter");
-  };
+  // const handleChartTypeChange = (value: string) => {
+  //   onChartTypeChange(value as "bar" | "scatter");
+  // };
 
   return (
     <div className="flex flex-col md:flex-row justify-between">
@@ -99,7 +99,7 @@ export const StrategyHeader = ({
         />
 
         {/* Settings */}
-        <Sheet open={isSettingsOpen} onOpenChange={onSettingsOpenChange}>
+        {/* <Sheet open={isSettingsOpen} onOpenChange={onSettingsOpenChange}>
           <SheetTrigger asChild>
             <Button variant="outline" className="flex h-10 w-10 items-center justify-center">
               <Settings className="h-4 w-4" />
@@ -135,7 +135,7 @@ export const StrategyHeader = ({
               </div>
             </div>
           </SheetContent>
-        </Sheet>
+        </Sheet> */}
       </div>
     </div>
   );

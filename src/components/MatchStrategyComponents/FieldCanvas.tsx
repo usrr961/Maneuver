@@ -1,6 +1,8 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Maximize2, Minimize2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Maximize2, Minimize2, ChevronLeft, ChevronRight, EyeOff, Eye } from "lucide-react";
+import { useFullscreen } from "@/hooks/useFullscreen";
+import { useIsMobile } from "@/hooks/use-mobile";
 import fieldImage from "@/assets/field.png";
 
 interface Point {
@@ -22,8 +24,10 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
   const [brushSize, setBrushSize] = useState(3);
   const [brushColor, setBrushColor] = useState('#ff0000');
   const [lastPoint, setLastPoint] = useState<Point | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const { isFullscreen, setIsFullscreen } = useFullscreen();
   const [currentStageId, setCurrentStageId] = useState(stageId); // Internal stage tracking
+  const [hideControls, setHideControls] = useState(false); // State to hide controls on smaller screens
+  const isMobile = useIsMobile();
   const backgroundImageRef = useRef<HTMLImageElement | null>(null); // Store background image reference
 
   // Available stages for switching - memoized to prevent recreating on every render
@@ -61,8 +65,14 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
         const viewportHeight = window.innerHeight;
         const viewportWidth = window.innerWidth;
         
-        // Account for header (estimate 120px) + controls (estimate 100px) + footer (estimate 60px) + padding
-        const reservedHeight = 280; // Increased for stage switcher
+        // Account for header (estimate 120px) + footer (estimate 60px) + padding
+        let reservedHeight = 180; // Base: header + footer + padding
+        
+        // Add space for stage switcher and controls if they're visible
+        if (!hideControls || !isMobile) {
+          reservedHeight += 100; // Stage switcher (~50px) + drawing controls (~50px)
+        }
+        
         const reservedWidth = 32; // 16px padding on each side
         
         containerWidth = viewportWidth - reservedWidth;
@@ -117,7 +127,7 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
       }
     };
     img.src = fieldImage;
-  }, [currentStageId, isFullscreen]);
+  }, [currentStageId, isFullscreen, hideControls, isMobile]);
 
   useEffect(() => {
     setupCanvas();
@@ -131,7 +141,7 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [currentStageId, isFullscreen, setupCanvas]); // Use currentStageId instead of stageId
+  }, [currentStageId, isFullscreen, hideControls, setupCanvas]); // Add hideControls to dependencies
 
   // Handle fullscreen toggle
   const toggleFullscreen = useCallback(() => {
@@ -146,7 +156,7 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
         onStageChange(currentStageId);
       }
     }
-  }, [isFullscreen, onStageChange, currentStageId, stageId]);
+  }, [isFullscreen, setIsFullscreen, onStageChange, currentStageId, stageId]);
 
   // Save canvas function - defined here so switchStage can use it
   const saveCanvas = useCallback((showAlert = true) => {
@@ -420,103 +430,236 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
       >
         {/* Fullscreen Header - Fixed height */}
         <div className="flex-shrink-0 p-3 md:p-4 border-b bg-background">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg md:text-xl font-bold truncate">
-              Field Strategy
-            </h2>
-            <Button onClick={toggleFullscreen} variant="outline" size="sm">
-              <Minimize2 className="h-4 w-4 mr-1 md:mr-2" />
-              <span className="hidden sm:inline">Exit Fullscreen</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Stage Switcher */}
-        <div className="flex-shrink-0 p-2 md:p-3 border-b bg-background">
-          <div className="flex items-center justify-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => switchStage('prev')}
-              className="flex items-center gap-1"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Previous</span>
-            </Button>
-            
-            <div className="flex items-center gap-2">
-              <div className="text-sm font-medium bg-primary/10 px-3 py-1 rounded-full">
-                {currentStage?.label || currentStageId}
-              </div>
-              <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
-                {currentStageIndex + 1} / {stages.length}
-              </div>
+          <div className="grid grid-cols-3 items-center">
+            {/* Left side - Title */}
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg md:text-xl font-bold truncate">
+                Field Strategy
+              </h2>
+              
+              {/* Phase name when controls are hidden on any screen size */}
+              {hideControls && (
+                <div className="text-sm font-medium bg-primary/10 px-3 py-1 rounded-full">
+                  {currentStage?.label || currentStageId}
+                </div>
+              )}
             </div>
             
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => switchStage('next')}
-              className="flex items-center gap-1"
-            >
-              <span className="hidden sm:inline">Next</span>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            {/* Center - Phase controls on medium+ screens when controls are visible */}
+            <div className="hidden md:flex items-center justify-center gap-2">
+              {!hideControls && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => switchStage('prev')}
+                    className="flex items-center gap-1"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="hidden lg:inline">Previous</span>
+                  </Button>
+                  
+                  <div className="text-sm font-medium bg-primary/10 px-3 py-1 rounded-full">
+                    {currentStage?.label || currentStageId}
+                  </div>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => switchStage('next')}
+                    className="flex items-center gap-1"
+                  >
+                    <span className="hidden lg:inline">Next</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+            </div>
+            
+            {/* Right side - Exit button */}
+            <div className="flex items-center justify-end">
+              <Button onClick={toggleFullscreen} variant="outline" size="sm">
+                <Minimize2 className="h-4 w-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">Exit Fullscreen</span>
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Fullscreen Controls - Fixed height */}
-        <div className="flex-shrink-0 p-2 md:p-4 border-b bg-background">
-          <div className="flex flex-wrap justify-center items-center gap-2">
-            <Button
-              variant={!isErasing ? "default" : "outline"}
-              size="sm"
-              onClick={() => setIsErasing(false)}
-            >
-              Draw
-            </Button>
-            <Button
-              variant={isErasing ? "default" : "outline"}
-              size="sm"
-              onClick={() => setIsErasing(true)}
-            >
-              Erase
-            </Button>
-            
-            {/* Size selector */}
-            <select 
-              value={brushSize} 
-              onChange={(e) => setBrushSize(Number(e.target.value))}
-              className="px-2 py-1 border rounded text-sm"
-            >
-              <option value={2}>Small</option>
-              <option value={5}>Medium</option>
-              <option value={10}>Large</option>
-              <option value={20}>X-Large</option>
-            </select>
-            
-            {/* Color selector */}
-            <input
-              type="color"
-              value={brushColor}
-              onChange={(e) => setBrushColor(e.target.value)}
-              className="w-8 h-8 border rounded cursor-pointer"
-            />
-            
-            <Button onClick={clearCanvas} variant="outline" size="sm">
-              Clear
-            </Button>
-            <Button onClick={() => saveCanvas(true)} variant="outline" size="sm">
-              Save
-            </Button>
+        {/* Stage Switcher - Only on mobile screens when controls are visible */}
+        {isMobile && !hideControls && (
+          <div className="flex-shrink-0 p-2 md:p-3 border-b bg-background md:hidden">
+            <div className="flex items-center justify-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => switchStage('prev')}
+                className="flex items-center gap-1"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Previous</span>
+              </Button>
+              
+              <div className="flex items-center gap-2">
+                <div className="text-sm font-medium bg-primary/10 px-3 py-1 rounded-full">
+                  {currentStage?.label || currentStageId}
+                </div>
+                <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
+                  {currentStageIndex + 1} / {stages.length}
+                </div>
+              </div>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => switchStage('next')}
+                className="flex items-center gap-1"
+              >
+                <span className="hidden sm:inline">Next</span>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Fullscreen Controls - Fixed height, conditionally hidden on small screens */}
+        {(!hideControls || !isMobile) && (
+          <div className="flex-shrink-0 p-2 md:p-4 border-b bg-background">
+            <div className="flex flex-wrap justify-center items-center gap-2">
+              <Button
+                variant={!isErasing ? "default" : "outline"}
+                size="sm"
+                onClick={() => setIsErasing(false)}
+              >
+                Draw
+              </Button>
+              <Button
+                variant={isErasing ? "default" : "outline"}
+                size="sm"
+                onClick={() => setIsErasing(true)}
+              >
+                Erase
+              </Button>
+              
+              {/* Size selector */}
+              <select 
+                value={brushSize} 
+                onChange={(e) => setBrushSize(Number(e.target.value))}
+                className="px-2 py-1 border rounded text-sm"
+              >
+                <option value={2}>Small</option>
+                <option value={5}>Medium</option>
+                <option value={10}>Large</option>
+                <option value={20}>X-Large</option>
+              </select>
+              
+              {/* Color selector */}
+              <input
+                type="color"
+                value={brushColor}
+                onChange={(e) => setBrushColor(e.target.value)}
+                className="w-8 h-8 border rounded cursor-pointer"
+              />
+              
+              <Button onClick={clearCanvas} variant="outline" size="sm">
+                Clear
+              </Button>
+              <Button onClick={() => saveCanvas(true)} variant="outline" size="sm">
+                Save
+              </Button>
+              
+              {/* Hide Controls Button - Only on mobile screens */}
+              {isMobile && (
+                <Button
+                  onClick={() => setHideControls(!hideControls)}
+                  variant="outline"
+                  size="sm"
+                  title="Hide controls for more drawing space"
+                >
+                  <EyeOff className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Fullscreen Canvas - Flexible height */}
         <div 
-          className="flex-1 flex items-center justify-center p-2 md:p-4 bg-green-50 dark:bg-green-950/20 overflow-hidden"
+          className="flex-1 flex items-center justify-center p-2 md:p-4 bg-green-50 dark:bg-green-950/20 overflow-hidden relative"
           style={{ touchAction: 'none' }}
         >
+        {/* Floating Controls - Only visible when controls are hidden on mobile */}
+        {hideControls && isMobile && (
+          <div className="absolute top-2 right-2 z-10">
+            {/* Vertical layout on smaller screens, horizontal on lg+ */}
+            <div className="flex flex-col lg:flex-row gap-2 lg:gap-4">
+              {/* Show Controls Button */}
+              <Button
+                onClick={() => setHideControls(false)}
+                variant="secondary"
+                size="sm"
+                className="shadow-lg"
+                title="Show all controls"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              
+              {/* Phase Controls */}
+              <div className="flex flex-col lg:flex-row gap-1 lg:gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => switchStage('prev')}
+                  className="shadow-lg bg-background/90 hover:bg-background"
+                  title="Previous phase"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => switchStage('next')}
+                  className="shadow-lg bg-background/90 hover:bg-background"
+                  title="Next phase"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Drawing Controls */}
+              <div className="flex flex-col lg:flex-row gap-2 lg:gap-2">
+                <Button
+                  variant={!isErasing ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setIsErasing(false)}
+                  className="shadow-lg"
+                  title="Draw mode"
+                >
+                  Draw
+                </Button>
+                <Button
+                  variant={isErasing ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setIsErasing(true)}
+                  className="shadow-lg"
+                  title="Erase mode"
+                >
+                  Erase
+                </Button>
+                <Button 
+                  onClick={clearCanvas} 
+                  variant="destructive" 
+                  size="sm"
+                  className="shadow-lg"
+                  title="Clear canvas"
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div 
           className="w-full h-full flex items-center justify-center"
           onTouchStart={(e) => e.stopPropagation()}
@@ -546,8 +689,15 @@ const FieldCanvas = ({ stageId = "default", onStageChange }: FieldCanvasProps) =
         {/* Fullscreen Footer - Fixed height */}
         <div className="flex-shrink-0 p-2 md:p-4 border-t bg-background text-center text-xs md:text-sm text-muted-foreground">
           <div className="flex flex-wrap justify-center gap-4">
-            <span>Press ESC to exit fullscreen</span>
-            <span>Use ← → arrows to switch stages</span>
+            {!isMobile && (
+              <>
+                <span>Press ESC to exit fullscreen</span>
+                <span>Use ← → arrows to switch stages</span>
+              </>
+            )}
+            {isMobile && (
+              <span>Tap Exit Fullscreen to return • Use Previous/Next or &lt; / &gt; to switch stages</span>
+            )}
           </div>
         </div>
       </div>

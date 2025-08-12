@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner"
 import Button from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/animate-ui/radix/checkbox";
 import { Eye, EyeOff, Shield } from "lucide-react";
 
 const MatchDataPage = () => {
@@ -166,15 +167,14 @@ const MatchDataPage = () => {
             </div>
             
             {/* Session storage option */}
-            <div className="flex items-center space-x-2 mt-2 pb-2 ml-1">
-              <input
+            <div className="flex items-center space-x-3 mt-2 pb-2 p-3 -ml-1 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              <Checkbox
                 id="rememberSession"
-                type="checkbox"
                 checked={rememberForSession}
-                onChange={(e) => setRememberForSession(e.target.checked)}
-                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                onCheckedChange={(checked) => setRememberForSession(checked === true)}
+                className="shrink-0"
               />
-              <label htmlFor="rememberSession" className="text-xs text-muted-foreground">
+              <label htmlFor="rememberSession" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
                 Remember for this session only
               </label>
             </div>

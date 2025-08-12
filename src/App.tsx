@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ThemeProvider } from "@/components/theme-provider"
+import { FullscreenProvider } from "@/contexts/FullscreenContext";
 import { analytics } from '@/lib/analytics';
 
 import MainLayout from "@/layouts/MainLayout";
@@ -100,11 +101,13 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-      <div className="min-h-screen bg-background">
-        <RouterProvider router={router} />
-        <InstallPrompt />
-        <StatusBarSpacer />
-      </div>
+      <FullscreenProvider>
+        <div className="min-h-screen bg-background">
+          <RouterProvider router={router} />
+          <InstallPrompt />
+          <StatusBarSpacer />
+        </div>
+      </FullscreenProvider>
     </ThemeProvider>
   );
 }
