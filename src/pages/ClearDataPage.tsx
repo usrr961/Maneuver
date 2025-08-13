@@ -149,7 +149,7 @@ const ClearDataPage = () => {
 
   const handleClearScouterGameData = async () => {
     try {
-      console.log("ClearDataPage - Starting scouter game data clear...");
+      console.log("ClearDataPage - Starting scouter profile data clear...");
       await clearGameData();
       
       // Clear all scouter-related localStorage data
@@ -162,11 +162,11 @@ const ClearDataPage = () => {
       window.dispatchEvent(new CustomEvent('scouterDataCleared'));
       
       await refreshData();
-      toast.success("Cleared all scouter game data");
-      console.log("ClearDataPage - Scouter game data cleared successfully");
+      toast.success("Cleared all scouter profile data");
+      console.log("ClearDataPage - Scouter profile data cleared successfully");
     } catch (error) {
-      console.error("Error clearing scouter game data:", error);
-      toast.error("Failed to clear scouter game data");
+      console.error("Error clearing scouter profile data:", error);
+      toast.error("Failed to clear scouter profile data");
     }
   };
 
