@@ -158,14 +158,12 @@ const ClearDataPage = () => {
       localStorage.removeItem("scouterInitials");
       console.log("ClearDataPage - Cleared all scouter data from localStorage");
       
+      // Dispatch custom event to notify nav-user component to reload
+      window.dispatchEvent(new CustomEvent('scouterDataCleared'));
+      
       await refreshData();
       toast.success("Cleared all scouter game data");
       console.log("ClearDataPage - Scouter game data cleared successfully");
-      
-      // Force page refresh to ensure nav-user component reloads
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000); // Give toast time to show
     } catch (error) {
       console.error("Error clearing scouter game data:", error);
       toast.error("Failed to clear scouter game data");

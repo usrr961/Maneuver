@@ -96,7 +96,24 @@ export function NavUser() {
       }
     }
     
+    // Listen for scouter data cleared event
+    const handleScouterDataCleared = () => {
+      console.log("NavUser - Received scouterDataCleared event, clearing state...")
+      setCurrentScouter("")
+      setCurrentScouterStakes(0)
+      setScoutersList([])
+      // Don't reload data since it was just cleared - the component will remain in cleared state
+    }
+    
     loadScouters()
+    
+    // Add event listener for scouter data clearing
+    window.addEventListener('scouterDataCleared', handleScouterDataCleared)
+    
+    // Cleanup event listener
+    return () => {
+      window.removeEventListener('scouterDataCleared', handleScouterDataCleared)
+    }
   }, [])
 
   // Refresh current scouter stakes periodically

@@ -80,6 +80,9 @@ export function PWAUpdatePrompt() {
           <p className="text-xs text-muted-foreground">
             Update now to get the latest features and improvements.
           </p>
+          <p className="text-xs text-red-400">
+            WARNING: This will refresh the app and apply the update.
+          </p>
           <div className="flex gap-2">
             <Button size="sm" onClick={handleUpdate}>
               Update Now
