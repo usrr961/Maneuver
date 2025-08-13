@@ -23,7 +23,7 @@ interface FountainPacket {
 interface UniversalFountainGeneratorProps {
   onBack: () => void;
   onSwitchToScanner?: () => void;
-  dataType: 'scouting' | 'match';
+  dataType: 'scouting' | 'match' | 'scouter' | 'combined';
   loadData: () => Promise<unknown> | unknown;
   title: string;
   description: string;
@@ -80,6 +80,14 @@ const UniversalFountainGenerator = ({
     const jsonString = JSON.stringify(data);
     const encodedData = new TextEncoder().encode(jsonString);
     
+    // Validate data size - need sufficient data for meaningful fountain codes
+    const minDataSize = 100; // Minimum 100 bytes for meaningful fountain codes
+    if (encodedData.length < minDataSize) {
+      toast.error(`${dataType} data is too small (${encodedData.length} bytes). Need at least ${minDataSize} bytes for fountain code generation.`);
+      console.warn(`Data too small for fountain codes: ${encodedData.length} bytes (min: ${minDataSize})`);
+      return;
+    }
+    
     console.log(`🔧 GENERATING ${dataType.toUpperCase()} FOUNTAIN CODES:`);
     console.log(`- Original data size: ${encodedData.length} bytes`);
     console.log(`- JSON preview: ${jsonString.substring(0, 100)}...`);
@@ -92,11 +100,21 @@ const UniversalFountainGenerator = ({
     let packetId = 0;
     const maxPackets = 30;
     const seenIndicesCombinations = new Set();
+    let iterationCount = 0;
+    const maxIterations = maxPackets * 10; // Safety limit to prevent infinite loops
 
     console.log(`- Block size: ${blockSize}`);
     console.log(`- Session ID: ${newSessionId}`);
 
     for (const block of ltEncoder.fountain()) {
+      iterationCount++;
+      
+      // Safety check to prevent infinite loops
+      if (iterationCount > maxIterations) {
+        console.warn(`Reached maximum iterations (${maxIterations}), stopping generation`);
+        break;
+      }
+      
       if (packetId >= maxPackets) break;
       
       try {
@@ -143,6 +161,7 @@ const UniversalFountainGenerator = ({
 
     console.log(`✅ GENERATION COMPLETE:`);
     console.log(`- Generated ${generatedPackets.length} packets total`);
+    console.log(`- Total iterations: ${iterationCount}`);
     console.log(`- K value: ${generatedPackets[0]?.k}`);
     console.log(`- Unique index combinations: ${seenIndicesCombinations.size}`);
     
@@ -165,8 +184,27 @@ const UniversalFountainGenerator = ({
     }
   }, [packets.length, cycleSpeed]);
 
+  // Helper function to check if data is sufficient for fountain code generation
+  const isDataSufficient = () => {
+    if (!data) return false;
+    const jsonString = JSON.stringify(data);
+    const encodedData = new TextEncoder().encode(jsonString);
+    return encodedData.length >= 100; // Minimum 100 bytes
+  };
+
+  const getDataSizeInfo = () => {
+    if (!data) return null;
+    const jsonString = JSON.stringify(data);
+    const encodedData = new TextEncoder().encode(jsonString);
+    return {
+      size: encodedData.length,
+      sufficient: encodedData.length >= 100
+    };
+  };
+
   const currentPacket = packets[currentPacketIndex];
   const currentSpeedLabel = speedPresets.find(s => s.value === cycleSpeed)?.label;
+  const dataSizeInfo = getDataSizeInfo();
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center gap-6 px-4 pt-[var(--header-height)] pb-6">
@@ -222,18 +260,25 @@ const UniversalFountainGenerator = ({
               <Button
                 onClick={generateFountainPackets}
                 className="w-full h-12"
-                disabled={!data}
+                disabled={!isDataSufficient()}
               >
                 Generate & Start Auto-Cycling
               </Button>
               
-              {!data && (
+              {!data ? (
                 <Alert variant="destructive">
                   <AlertDescription>
                     {noDataMessage}
                   </AlertDescription>
                 </Alert>
-              )}
+              ) : data && !isDataSufficient() ? (
+                <Alert variant="destructive">
+                  <AlertDescription>
+                    {dataType} data is too small ({dataSizeInfo?.size || 0} bytes). 
+                    Need at least 100 bytes for fountain code generation.
+                  </AlertDescription>
+                </Alert>
+              ) : null}
             </CardContent>
           </Card>
         ) : (

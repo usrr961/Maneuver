@@ -24,7 +24,7 @@ interface FountainPacket {
 interface UniversalFountainScannerProps {
   onBack: () => void;
   onSwitchToGenerator?: () => void;
-  dataType: 'scouting' | 'match';
+  dataType: 'scouting' | 'match' | 'scouter' | 'combined';
   expectedPacketType: string;
   saveData: (data: unknown) => void;
   validateData: (data: unknown) => boolean;

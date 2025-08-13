@@ -50,16 +50,12 @@ const data = {
           url: "/json-transfer",
         },
         {
-          title: "Scouting Data QR Transfer",
-          url: "/scout-data-qr",
+          title: "QR Data Transfer",
+          url: "/qr-data-transfer",
         },
         {
           title: "Match Data Load",
           url: "/match-data",
-        },
-        {
-          title: "Match Data QR Transfer",
-          url: "/match-data-qr",
         },
         {
           title: "Match Results (TBA)",

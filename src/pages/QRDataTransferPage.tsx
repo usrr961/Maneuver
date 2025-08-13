@@ -1,28 +1,85 @@
 import { useState } from "react";
-import Button from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import FountainCodeGenerator from "@/components/DataTransferComponents/FountainCodeGenerator";
 import FountainCodeScanner from "@/components/DataTransferComponents/FountainCodeScanner";
+import MatchDataFountainGenerator from "@/components/DataTransferComponents/MatchDataFountainGenerator";
+import MatchDataFountainScanner from "@/components/DataTransferComponents/MatchDataFountainScanner";
+import ScouterProfilesFountainGenerator from "@/components/DataTransferComponents/ScouterProfilesFountainGenerator";
+import ScouterProfilesFountainScanner from "@/components/DataTransferComponents/ScouterProfilesFountainScanner";
+import CombinedDataFountainGenerator from "@/components/DataTransferComponents/CombinedDataFountainGenerator";
+import CombinedDataFountainScanner from "@/components/DataTransferComponents/CombinedDataFountainScanner";
+
+type DataType = 'scouting' | 'match' | 'scouter' | 'combined';
 
 const QRDataTransferPage = () => {
   const [mode, setMode] = useState<'select' | 'generate' | 'scan'>('select');
+  const [dataType, setDataType] = useState<DataType>('scouting');
 
   if (mode === 'generate') {
-    return (
-      <FountainCodeGenerator 
-        onBack={() => setMode('select')} 
-        onSwitchToScanner={() => setMode('scan')} 
-      />
-    );
+    if (dataType === 'scouting') {
+      return (
+        <FountainCodeGenerator 
+          onBack={() => setMode('select')} 
+          onSwitchToScanner={() => setMode('scan')} 
+        />
+      );
+    } else if (dataType === 'match') {
+      return (
+        <MatchDataFountainGenerator 
+          onBack={() => setMode('select')} 
+          onSwitchToScanner={() => setMode('scan')} 
+        />
+      );
+    } else if (dataType === 'scouter') {
+      return (
+        <ScouterProfilesFountainGenerator 
+          onBack={() => setMode('select')} 
+          onSwitchToScanner={() => setMode('scan')} 
+        />
+      );
+    } else {
+      return (
+        <CombinedDataFountainGenerator 
+          onBack={() => setMode('select')} 
+          onSwitchToScanner={() => setMode('scan')} 
+        />
+      );
+    }
   }
 
   if (mode === 'scan') {
-    return (
-      <FountainCodeScanner 
-        onBack={() => setMode('select')} 
-        onSwitchToGenerator={() => setMode('generate')} 
-      />
-    );
+    if (dataType === 'scouting') {
+      return (
+        <FountainCodeScanner 
+          onBack={() => setMode('select')} 
+          onSwitchToGenerator={() => setMode('generate')} 
+        />
+      );
+    } else if (dataType === 'match') {
+      return (
+        <MatchDataFountainScanner 
+          onBack={() => setMode('select')} 
+          onSwitchToGenerator={() => setMode('generate')} 
+        />
+      );
+    } else if (dataType === 'scouter') {
+      return (
+        <ScouterProfilesFountainScanner 
+          onBack={() => setMode('select')} 
+          onSwitchToGenerator={() => setMode('generate')} 
+        />
+      );
+    } else {
+      return (
+        <CombinedDataFountainScanner 
+          onBack={() => setMode('select')} 
+          onSwitchToGenerator={() => setMode('generate')} 
+        />
+      );
+    }
   }
 
   return (
@@ -30,8 +87,31 @@ const QRDataTransferPage = () => {
       <div className="flex flex-col items-start gap-4 max-w-md w-full">
         <h1 className="text-2xl font-bold">QR Data Transfer</h1>
         <p className="text-muted-foreground">
-          Transfer large scouting data files using fountain codes. Scan packets in any order until reconstruction is complete.
+          Transfer large data files using fountain codes. Scan packets in any order until reconstruction is complete.
         </p>
+
+        {/* Data Type Selection */}
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="text-lg">Select Data Type</CardTitle>
+            <CardDescription>
+              Choose what type of data you want to transfer
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select value={dataType} onValueChange={(value: DataType) => setDataType(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select data type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="combined">Combined (Scouting + Profiles)</SelectItem>
+                <SelectItem value="scouting">Scouting Data</SelectItem>
+                <SelectItem value="match">Match Schedule Data</SelectItem>
+                <SelectItem value="scouter">Scouter Profiles</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
 
         <div className="flex flex-col gap-4 w-full">
           <Button
