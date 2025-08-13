@@ -160,38 +160,40 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
       "5. Match data populates team dropdowns and validates match numbers",
     ]
   },
-  "/qr-data-transfer": {
-    title: "QR Data Transfer",
+  "/scout-data-qr": {
+    title: "QR Scouting Data Transfer",
     useDialog: true,
     content: [
-      "![QR Data Transfer Demo](./assets/tutorials/qr-data-transfer-demo.gif)",
-      "Transfer various types of data between devices using QR fountain codes.",
-      "**Data Type Selection:**",
-      "1. 'Combined (Scouting + Profiles)' - Transfer both scouting data and scouter profiles in one operation",
-      "2. 'Scouting Data' - Transfer match scouting data only",
-      "3. 'Match Schedule Data' - Transfer event schedules and team lists",
-      "4. 'Scouter Profiles' - Transfer scouter names and their accumulated stakes/points",
-      "**Generate Fountain Codes:**",
-      "1. Select your data type from the dropdown",
-      "2. Click 'Generate Fountain Codes' to convert your data into multiple QR codes",
-      "3. Keep the default speed or select slower speed and click 'Generate & Start Auto-Cycling'",
-      "4. If QR codes aren't scanning properly, try adjusting speed or lighting conditions",
-      "**Scan Fountain Codes:**",
-      "1. Select the same data type you're expecting to receive",
-      "2. Click 'Scan Fountain Codes' to start capturing QR codes from another device",
-      "3. Scan QR codes - progress bar shows reconstruction status as you scan",
-      "4. Resetting the scanner clears current progress and allows you to start over",
-      "5. Choose 'Continue to App' when done or 'Scan More Data' to continue collecting",
-      "**Key Features:**",
-      "• Fountain codes break large data into smaller, manageable QR segments",
-      "• Codes can be scanned in any order - no need to receive all codes",
-      "• Automatic reconstruction when enough data is received",
-      "• Perfect for transferring data when WiFi/internet isn't available",
-      "• Combined transfer option allows complete data migration in one operation",
-      "**Recommended Usage:**",
-      "• Scouting Leads: Use 'Combined' or 'Scouting Data' to collect from scouts",
-      "• Use 'Match Schedule Data' to distribute event information to each scout for easy pre-match preparation",
-      "• Scouting Alliances: Use 'Scouting Data' to share data with partners without sharing your scouts information"
+      "![QR Scouting Demo](./assets/tutorials/qr-scouting-demo.gif)",
+      "Transfer scouting data between devices using QR fountain codes.",
+      "'Generate Fountain Codes' - Convert your scouting data into multiple QR codes for others to scan",
+      "1. Keep the default speed or select the slower speed and click 'Generate & Start Auto-Cycling'",
+      "2. If the QR codes are not scanning properly, try adjusting the speed or lighting conditions.",
+      "'Scan Fountain Codes' - Capture QR codes from another device to import data",
+      "1. Scan a QR code and the progress bar shows reconstruction status as you scan.",
+      "2. Resetting the scanner will clear the current progress and allow you to start over.",
+      "3. Choose to Continue to App if done collecting data or Scan More Data",
+      "Fountain codes break large data into smaller, manageable QR segments",
+      "Scouting Leads should scan QR codes from scouts when needed to aggregate data.",
+      "Data can then be passed back to scouter devices, to drive team in the pit, or to other teams using Maneuver.",
+      "Perfect for transferring data when WiFi/internet isn't available."
+    ]
+  },
+  "/match-data-qr": {
+    title: "QR Match Data Transfer",
+    useDialog: true,
+    content: [
+      "![QR Match Data Demo](./assets/tutorials/qr-match-data-demo.gif)",
+      "Share match schedules between devices using QR fountain codes.",
+      "'Generate Fountain Codes' - Convert your match data into multiple QR codes for others to scan",
+      "1. Keep the default speed or select the slower speed and click 'Generate & Start Auto-Cycling'",
+      "2. If the QR codes are not scanning properly, try adjusting the speed or lighting conditions.",
+      "'Scan Fountain Codes' - Capture QR codes from another device to import data",
+      "1. Scan a QR code and the progress bar shows reconstruction status as you scan.",
+      "2. Resetting the scanner will clear the current progress and allow you to start over.",
+      "3. Choose to Continue to App if done collecting data or Scan More Data",
+      "Great for sharing event schedules across your scouting team",
+      "Use this when you need to distribute match data without internet access."
     ]
   },
   "/strategy-overview": {
@@ -219,27 +221,27 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
       "Useful for starting fresh at new competitions or clearing test data."
     ]
   },
-  "/match-results": {
-    title: "Match Results (TBA)",
+  "/scout-management": {
+    title: "Scout Management Dashboard",
     useDialog: true,
     content: [
-      "Verify scouter predictions against official match results from The Blue Alliance API.",
-      "**Setup Required:**",
-      "1. Get an API key from [thebluealliance.com/account](https://www.thebluealliance.com/account)",
-      "**Usage:**",
-      "1. Enter your TBA API key",
-      "2. Enter an event key (e.g., '2025mrcmp' for 2025 FMA Championship)",
-      "3. Click 'Load Matches' to fetch qualification match results",
-      "4. Select the matches you want to process or all matches for prediction verification",
-      "5. Click 'Process Selected' to verify predictions and award points",
-      "**Stakes System:**",
-      "• 10 stakes for each correct prediction",
-      "• Streak bonuses: 2 extra stakes for 2 in a row, 4 for 3 in a row, 6 for 4 in a row, etc.",
-      "• Streaks reset when a prediction is incorrect or when there's a gap in sequential matches",
-      "• Sequential matches: Must be within 3 matches of the previous prediction to maintain streak",
-      "This feature automatically checks stored predictions against official results and awards stakes for correct predictions with exciting streak bonuses!",
-      "This feature is meant to increase scout engagement and accuracy in match scouting.",
-      "• Recommended flow: If internet connection is available, lead can use the TBA API to fetch real-time match data and update predictions accordingly. Else, lead can get results at the end of the day after data collection."
+      "Comprehensive dashboard for monitoring scout performance and managing scout statistics.",
+      "1. **View Selector** - Toggle between three visualization modes:",
+      "   • Bar Chart - Visual ranking of scouts by selected metric",
+      "   • Line Chart - Track scout performance progression over time",
+      "   • Table - Detailed statistics with medal rankings for top 3 scouts",
+      "2. **Metric Selector** - Choose which performance metric to analyze:",
+      "   • Stakes - Total stakes earned by the scout",
+      "   • Total Predictions - Number of predictions made",
+      "   • Correct Predictions - Number of accurate predictions", 
+      "   • Accuracy % - Percentage of correct predictions",
+      "   • Current Streak - Active prediction streak",
+      "   • Best Streak - Longest streak achieved",
+      "3. **Individual Scout Profile** - Select any scout to view detailed statistics and performance badges",
+      "4. **Summary Statistics** - Overview cards showing total scouts, predictions, stakes, and average accuracy",
+      "5. **Medal System** - Table view shows gold 🥇, silver 🥈, and bronze 🥉 rankings for top performers",
+      "Perfect for tracking scout engagement, identifying top performers, and managing scout teams during competitions.",
+      "Pro tip: Have disengaged scouts? Stakes are a great way to gamify scouting and encourage participation and further analysis of your data."
     ]
   }
 };
