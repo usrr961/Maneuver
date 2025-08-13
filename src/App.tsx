@@ -28,6 +28,8 @@ import TeamStatsPage from "@/pages/TeamStatsPage";
 import PitScoutingPage from "@/pages/PitScoutingPage";
 import PickListPage from "./pages/PickListPage";
 import StrategyOverviewPage from "./pages/StrategyOverviewPage";
+import ScouterTestPage from "./pages/ScouterTestPage";
+import MatchResultsPage from "./pages/MatchResultsPage";
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { StatusBarSpacer } from '@/components/StatusBarSpacer';
 import { SplashScreen } from '@/components/SplashScreen';
@@ -55,6 +57,8 @@ function App() {
         <Route path="/pit-scouting" element={<PitScoutingPage />} />
         <Route path="/strategy-overview" element={<StrategyOverviewPage />} />
         <Route path="/pick-list" element={<PickListPage />} />
+        <Route path="/scouter-test" element={<ScouterTestPage />} />
+        <Route path="/match-results" element={<MatchResultsPage />} />
         {/* Add more routes as needed */}
         <Route path="*" element={<NotFoundPage />} />
       </Route>

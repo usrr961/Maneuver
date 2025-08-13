@@ -30,37 +30,109 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Check, ChevronsUpDown, Plus, Trash2, User } from "lucide-react"
+import { Check, ChevronsUpDown, Plus, Trash2, User, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { getOrCreateScouterByName, getAllScouters, deleteScouter, getScouter } from "@/lib/scouterGameUtils"
 
 export function NavUser() {
   const { isMobile } = useSidebar()
   const [open, setOpen] = useState(false)
   const [currentScouter, setCurrentScouter] = useState("")
+  const [currentScouterStakes, setCurrentScouterStakes] = useState(0)
   const [scoutersList, setScoutersList] = useState<string[]>([])
   const [newScouterName, setNewScouterName] = useState("")
   const [showAddForm, setShowAddForm] = useState(false)
 
   // Load saved scouters and current scouter on component mount
   useEffect(() => {
-    const savedScouters = localStorage.getItem("scoutersList")
-    const savedCurrentScouter = localStorage.getItem("scouterInitials") || localStorage.getItem("currentScouter")
-    
-    if (savedScouters) {
+    const loadScouters = async () => {
+      // Load from localStorage for backwards compatibility
+      const savedScouters = localStorage.getItem("scoutersList")
+      const savedCurrentScouter = localStorage.getItem("scouterInitials") || localStorage.getItem("currentScouter")
+      
+      let localStorageScouters: string[] = []
+      if (savedScouters) {
+        try {
+          localStorageScouters = JSON.parse(savedScouters)
+        } catch {
+          localStorageScouters = []
+        }
+      }
+      
+      // Load from ScouterGameDB
       try {
-        setScoutersList(JSON.parse(savedScouters))
-      } catch {
-        setScoutersList([])
+        const dbScouters = await getAllScouters()
+        const dbScouterNames = dbScouters.map(s => s.name)
+        
+        // Combine and deduplicate scouters from both sources
+        const allScouters = [...new Set([...localStorageScouters, ...dbScouterNames])].sort()
+        setScoutersList(allScouters)
+        
+        // Update localStorage to include any scouters that were only in DB
+        localStorage.setItem("scoutersList", JSON.stringify(allScouters))
+        
+        // Ensure any localStorage scouters exist in DB
+        for (const scouterName of localStorageScouters) {
+          if (!dbScouterNames.includes(scouterName)) {
+            await getOrCreateScouterByName(scouterName)
+          }
+        }
+      } catch (error) {
+        console.error("Error loading scouters from database:", error)
+        // Fallback to localStorage only
+        setScoutersList(localStorageScouters)
+      }
+      
+      if (savedCurrentScouter) {
+        setCurrentScouter(savedCurrentScouter)
+        // Ensure current scouter exists in DB and load their stakes
+        try {
+          const scouter = await getOrCreateScouterByName(savedCurrentScouter)
+          setCurrentScouterStakes(scouter.stakes)
+        } catch (error) {
+          console.error("Error creating current scouter in database:", error)
+        }
       }
     }
     
-    if (savedCurrentScouter) {
-      setCurrentScouter(savedCurrentScouter)
-    }
+    loadScouters()
   }, [])
 
-  const saveScouter = (name: string) => {
+  // Refresh current scouter stakes periodically
+  useEffect(() => {
+    if (!currentScouter) return
+
+    const refreshStakes = async () => {
+      await updateCurrentScouterStakes(currentScouter)
+    }
+
+    // Initial load
+    refreshStakes()
+
+    // Refresh every 30 seconds
+    const interval = setInterval(refreshStakes, 30000)
+
+    return () => clearInterval(interval)
+  }, [currentScouter])
+
+  // Function to update current scouter stakes
+  const updateCurrentScouterStakes = async (scouterName: string) => {
+    if (!scouterName) {
+      setCurrentScouterStakes(0)
+      return
+    }
+    
+    try {
+      const scouter = await getScouter(scouterName)
+      setCurrentScouterStakes(scouter?.stakes || 0)
+    } catch (error) {
+      console.error("Error fetching scouter stakes:", error)
+      setCurrentScouterStakes(0)
+    }
+  }
+
+  const saveScouter = async (name: string) => {
     if (!name.trim()) return
     
     const trimmedName = name.trim()
@@ -76,6 +148,16 @@ export function NavUser() {
     localStorage.setItem("currentScouter", trimmedName)
     localStorage.setItem("scouterInitials", trimmedName) // For backwards compatibility
     
+    // Create/update scouter in ScouterGameDB and get their stakes
+    try {
+      const scouter = await getOrCreateScouterByName(trimmedName)
+      setCurrentScouterStakes(scouter.stakes)
+      console.log(`Scouter "${trimmedName}" created/updated in ScouterGameDB`)
+    } catch (error) {
+      console.error("Error creating scouter in database:", error)
+      toast.error(`Failed to save scouter to database: ${error}`)
+    }
+    
     setOpen(false)
     setShowAddForm(false)
     setNewScouterName("")
@@ -83,13 +165,23 @@ export function NavUser() {
     toast.success(`Switched to scouter: ${trimmedName}`)
   }
 
-  const removeScouter = (name: string) => {
+  const removeScouter = async (name: string) => {
     const updatedList = scoutersList.filter(s => s !== name)
     setScoutersList(updatedList)
     localStorage.setItem("scoutersList", JSON.stringify(updatedList))
     
+    // Remove from database
+    try {
+      await deleteScouter(name)
+      console.log(`Scouter "${name}" removed from ScouterGameDB`)
+    } catch (error) {
+      console.error("Error removing scouter from database:", error)
+      // Don't show error toast as this is not critical
+    }
+    
     if (currentScouter === name) {
       setCurrentScouter("")
+      setCurrentScouterStakes(0)
       localStorage.removeItem("currentScouter")
       localStorage.removeItem("scouterInitials")
     }
@@ -97,9 +189,9 @@ export function NavUser() {
     toast.success(`Removed scouter: ${name}`)
   }
 
-  const handleAddNewScouter = () => {
+  const handleAddNewScouter = async () => {
     if (newScouterName.trim()) {
-      saveScouter(newScouterName)
+      await saveScouter(newScouterName)
     }
   }
 
@@ -135,7 +227,7 @@ export function NavUser() {
             <CommandItem
               key={scouter}
               value={scouter}
-              onSelect={() => saveScouter(scouter)}
+              onSelect={async () => await saveScouter(scouter)}
               className="flex items-center justify-between"
             >
               <div className="flex items-center">
@@ -157,9 +249,9 @@ export function NavUser() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.stopPropagation()
-                  removeScouter(scouter)
+                  await removeScouter(scouter)
                 }}
                 className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
               >
@@ -186,9 +278,9 @@ export function NavUser() {
                 value={newScouterName}
                 onChange={(e) => setNewScouterName(e.target.value)}
                 onInput={(e) => setNewScouterName((e.target as HTMLInputElement).value)}
-                onKeyDown={(e) => {
+                onKeyDown={async (e) => {
                   if (e.key === "Enter") {
-                    handleAddNewScouter()
+                    await handleAddNewScouter()
                   } else if (e.key === "Escape") {
                     setShowAddForm(false)
                     setNewScouterName("")
@@ -245,7 +337,18 @@ export function NavUser() {
                   {currentScouter || "Select Scouter"}
                 </span>
                 <span className="text-muted-foreground truncate text-xs">
-                  {currentScouter ? "Active Scouter" : "No scouter selected"}
+                  {currentScouter ? (
+                    <div className="flex items-center gap-1">
+                      <span>Active Scouter</span>
+                      <span className="text-xs">•</span>
+                      <div className="flex items-center gap-1">
+                        <Trophy className="h-3 w-3 text-yellow-500" />
+                        <span>{currentScouterStakes}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    "No scouter selected"
+                  )}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -279,7 +382,18 @@ export function NavUser() {
                     {currentScouter || "Select Scouter"}
                   </span>
                   <span className="text-muted-foreground truncate text-xs">
-                    {currentScouter ? "Active Scouter" : "No scouter selected"}
+                    {currentScouter ? (
+                      <div className="flex items-center gap-1">
+                        <span>Active Scouter</span>
+                        <span className="text-xs">•</span>
+                        <div className="flex items-center gap-1">
+                          <Trophy className="h-3 w-3 text-yellow-500" />
+                          <span>{currentScouterStakes}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      "No scouter selected"
+                    )}
                   </span>
                 </div>
                 <ChevronsUpDown className="ml-auto size-4" />

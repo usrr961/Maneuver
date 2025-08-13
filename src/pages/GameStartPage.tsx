@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import GameStartSelectTeam from "@/components/GameStartComponents/GameStartSelectTeam";
 import { EventNameSelector } from "@/components/GameStartComponents/EventNameSelector";
+import { createMatchPrediction, getPredictionForMatch } from "@/lib/scouterGameUtils";
 import { AlertTriangle } from "lucide-react";
 
 const GameStartPage = () => {
@@ -53,6 +54,7 @@ const GameStartPage = () => {
   const [eventName, setEventName] = useState(
     states?.inputs?.eventName || localStorage.getItem("eventName") || ""
   );
+  const [predictedWinner, setPredictedWinner] = useState<"red" | "blue" | "none">("none");
 
   // Debounce matchNumber for team selection
   useEffect(() => {
@@ -68,6 +70,44 @@ const GameStartPage = () => {
       localStorage.setItem("currentMatchNumber", matchNumber);
     }
   }, [matchNumber]);
+
+  // Effect to load existing prediction when match/event changes
+  useEffect(() => {
+    const loadExistingPrediction = async () => {
+      const currentScouter = getCurrentScouter();
+      if (currentScouter && eventName && matchNumber) {
+        try {
+          const existingPrediction = await getPredictionForMatch(currentScouter, eventName, matchNumber);
+          if (existingPrediction) {
+            setPredictedWinner(existingPrediction.predictedWinner);
+          } else {
+            setPredictedWinner("none");
+          }
+        } catch (error) {
+          console.error("Error loading existing prediction:", error);
+          setPredictedWinner("none");
+        }
+      }
+    };
+
+    loadExistingPrediction();
+  }, [matchNumber, eventName]);
+
+  // Function to handle prediction changes and save them immediately
+  const handlePredictionChange = async (newPrediction: "red" | "blue" | "none") => {
+    setPredictedWinner(newPrediction);
+    
+    const currentScouter = getCurrentScouter();
+    if (newPrediction !== "none" && currentScouter && eventName && matchNumber) {
+      try {
+        await createMatchPrediction(currentScouter, eventName, matchNumber, newPrediction);
+        toast.success(`Prediction updated: ${newPrediction} alliance to win`);
+      } catch (error) {
+        console.error("Error saving prediction:", error);
+        toast.error("Failed to save prediction");
+      }
+    }
+  };
 
   const getCurrentScouter = () => {
     return (
@@ -105,10 +145,21 @@ const GameStartPage = () => {
     return true;
   };
 
-  const handleStartScouting = () => {
+  const handleStartScouting = async () => {
     if (!validateInputs()) return;
 
     const currentScouter = getCurrentScouter();
+
+    // Save prediction if one was made
+    if (predictedWinner !== "none" && currentScouter && eventName && matchNumber) {
+      try {
+        await createMatchPrediction(currentScouter, eventName, matchNumber, predictedWinner);
+        toast.success(`Prediction saved: ${predictedWinner} alliance to win`);
+      } catch (error) {
+        console.error("Error saving prediction:", error);
+        toast.error("Failed to save prediction");
+      }
+    }
 
     // Save inputs to localStorage (similar to ProceedBackButton logic)
     localStorage.setItem("matchNumber", matchNumber);
@@ -247,6 +298,52 @@ const GameStartPage = () => {
                   Blue Alliance
                 </Button>
               </div>
+            </div>
+
+            {/* Alliance Prediction Selection */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Alliance Prediction (Optional)</Label>
+                <span className="text-xs text-muted-foreground">
+                  Earn points for correct predictions
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  variant={predictedWinner === "red" ? "default" : "outline"}
+                  onClick={() => handlePredictionChange("red")}
+                  className={`h-10 text-sm font-medium ${
+                    predictedWinner === "red" 
+                      ? "bg-red-500 hover:bg-red-600 text-white" 
+                      : "hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+                  }`}
+                >
+                  Red Wins
+                </Button>
+                <Button
+                  variant={predictedWinner === "blue" ? "default" : "outline"}
+                  onClick={() => handlePredictionChange("blue")}
+                  className={`h-10 text-sm font-medium ${
+                    predictedWinner === "blue" 
+                      ? "bg-blue-500 hover:bg-blue-600 text-white" 
+                      : "hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                  }`}
+                >
+                  Blue Wins
+                </Button>
+                <Button
+                  variant={predictedWinner === "none" ? "default" : "outline"}
+                  onClick={() => handlePredictionChange("none")}
+                  className="h-10 text-sm font-medium"
+                >
+                  No Prediction
+                </Button>
+              </div>
+              {predictedWinner !== "none" && (
+                <p className="text-xs text-muted-foreground">
+                  Predicting <span className="font-medium capitalize">{predictedWinner} Alliance</span> will win this match
+                </p>
+              )}
             </div>
 
             {/* Team Selection */}

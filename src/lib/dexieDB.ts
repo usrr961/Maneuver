@@ -2,6 +2,31 @@ import Dexie, { type Table } from 'dexie';
 import type { ScoutingDataWithId } from './scoutingDataUtils';
 import type { PitScoutingEntry } from './pitScoutingTypes';
 
+// Scouter gamification types
+export interface Scouter {
+  name: string; // Primary key - matches the name from nav-user sidebar
+  stakes: number;
+  totalPredictions: number;
+  correctPredictions: number;
+  currentStreak: number; // Current consecutive correct predictions
+  longestStreak: number; // Best streak ever achieved
+  createdAt: number;
+  lastUpdated: number;
+}
+
+export interface MatchPrediction {
+  id: string;
+  scouterName: string;
+  eventName: string;
+  matchNumber: string;
+  predictedWinner: 'red' | 'blue';
+  actualWinner?: 'red' | 'blue' | 'tie';
+  isCorrect?: boolean;
+  pointsAwarded?: number;
+  timestamp: number;
+  verified: boolean;
+}
+
 export interface ScoutingEntryDB {
   id: string;
   teamNumber?: string;
@@ -37,8 +62,53 @@ export class PitScoutingDB extends Dexie {
   }
 }
 
+// Scouter gamification database
+export class ScouterGameDB extends Dexie {
+  scouters!: Table<Scouter>;
+  predictions!: Table<MatchPrediction>;
+
+  constructor() {
+    super('ScouterGameDB');
+    
+    this.version(1).stores({
+      scouters: 'name, stakes, totalPredictions, correctPredictions, lastUpdated',
+      predictions: 'id, scouterName, eventName, matchNumber, predictedWinner, timestamp, verified, [scouterName+eventName+matchNumber]'
+    });
+
+    // Version 2: Add streak tracking
+    this.version(2).stores({
+      scouters: 'name, stakes, totalPredictions, correctPredictions, currentStreak, longestStreak, lastUpdated',
+      predictions: 'id, scouterName, eventName, matchNumber, predictedWinner, timestamp, verified, [scouterName+eventName+matchNumber]'
+    }).upgrade(tx => {
+      // Add default values for new streak fields
+      return tx.table('scouters').toCollection().modify(scouter => {
+        scouter.currentStreak = 0;
+        scouter.longestStreak = 0;
+      });
+    });
+
+    // Version 3: Rename points to stakes
+    this.version(3).stores({
+      scouters: 'name, stakes, totalPredictions, correctPredictions, currentStreak, longestStreak, lastUpdated',
+      predictions: 'id, scouterName, eventName, matchNumber, predictedWinner, timestamp, verified, [scouterName+eventName+matchNumber]'
+    }).upgrade(tx => {
+      // Migrate points to stakes
+      return tx.table('scouters').toCollection().modify(scouter => {
+        if (scouter.points !== undefined) {
+          scouter.stakes = scouter.points;
+          delete scouter.points;
+        }
+        if (scouter.stakes === undefined) {
+          scouter.stakes = 0;
+        }
+      });
+    });
+  }
+}
+
 export const db = new SimpleScoutingAppDB();
 export const pitDB = new PitScoutingDB();
+export const gameDB = new ScouterGameDB();
 
 const safeStringify = (value: unknown): string | undefined => {
   if (value === null || value === undefined || value === '') {
@@ -470,4 +540,241 @@ export const getPitScoutingStats = async (): Promise<{
     events,
     scouters
   };
+};
+
+// Scouter gamification functions
+export const getOrCreateScouter = async (name: string): Promise<Scouter> => {
+  const existingScouter = await gameDB.scouters.get(name);
+  
+  if (existingScouter) {
+    // Update last updated time
+    existingScouter.lastUpdated = Date.now();
+    await gameDB.scouters.put(existingScouter);
+    return existingScouter;
+  }
+  
+  // Create new scouter
+  const newScouter: Scouter = {
+    name: name.trim(),
+    stakes: 0,
+    totalPredictions: 0,
+    correctPredictions: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    createdAt: Date.now(),
+    lastUpdated: Date.now()
+  };
+  
+  await gameDB.scouters.put(newScouter);
+  return newScouter;
+};
+
+export const getScouter = async (name: string): Promise<Scouter | undefined> => {
+  return await gameDB.scouters.get(name);
+};
+
+export const getAllScouters = async (): Promise<Scouter[]> => {
+  return await gameDB.scouters.orderBy('points').reverse().toArray();
+};
+
+export const updateScouterPoints = async (name: string, pointsToAdd: number): Promise<void> => {
+  const scouter = await gameDB.scouters.get(name);
+  if (scouter) {
+    scouter.stakes += pointsToAdd;
+    scouter.lastUpdated = Date.now();
+    await gameDB.scouters.put(scouter);
+  }
+};
+
+export const updateScouterStats = async (
+  name: string, 
+  newStakes: number, 
+  correctPredictions: number, 
+  totalPredictions: number,
+  currentStreak?: number,
+  longestStreak?: number
+): Promise<void> => {
+  const scouter = await gameDB.scouters.get(name);
+  if (scouter) {
+    scouter.stakes = newStakes;
+    scouter.correctPredictions = correctPredictions;
+    scouter.totalPredictions = totalPredictions;
+    if (currentStreak !== undefined) scouter.currentStreak = currentStreak;
+    if (longestStreak !== undefined) scouter.longestStreak = longestStreak;
+    scouter.lastUpdated = Date.now();
+    await gameDB.scouters.put(scouter);
+  }
+};
+
+// New function to update scouter with prediction result and handle streaks
+export const updateScouterWithPredictionResult = async (
+  name: string,
+  isCorrect: boolean,
+  basePoints: number,
+  eventName: string,
+  matchNumber: string
+): Promise<number> => {
+  const scouter = await gameDB.scouters.get(name);
+  if (!scouter) return 0;
+
+  let pointsAwarded = 0;
+  let newCurrentStreak = scouter.currentStreak;
+  let newLongestStreak = scouter.longestStreak;
+
+  // Check if this match is sequential to the last verified prediction
+  const isSequential = await isMatchSequential(name, eventName, matchNumber);
+
+  if (isCorrect) {
+    // Award base points for correct prediction
+    pointsAwarded += basePoints;
+    
+    // Only increment streak if the match is sequential OR this is the first prediction
+    if (isSequential || scouter.totalPredictions === 0) {
+      newCurrentStreak += 1;
+    } else {
+      // Reset streak if there's a gap in matches
+      newCurrentStreak = 1; // Start new streak at 1
+    }
+    
+    // Update longest streak if current streak is better
+    if (newCurrentStreak > newLongestStreak) {
+      newLongestStreak = newCurrentStreak;
+    }
+    
+    // Award streak bonus if streak is 2 or more
+    if (newCurrentStreak >= 2) {
+      const streakBonus = 2 * (newCurrentStreak - 1); // 2 extra points for streak 2, 4 for streak 3, etc.
+      pointsAwarded += streakBonus;
+    }
+  } else {
+    // Reset streak on incorrect prediction
+    newCurrentStreak = 0;
+  }
+
+  // Update scouter stats
+  await updateScouterStats(
+    name,
+    scouter.stakes + pointsAwarded,
+    scouter.correctPredictions + (isCorrect ? 1 : 0),
+    scouter.totalPredictions + 1,
+    newCurrentStreak,
+    newLongestStreak
+  );
+
+  return pointsAwarded;
+};
+
+// Helper function to check if current match is sequential to last verified prediction
+const isMatchSequential = async (
+  scouterName: string,
+  eventName: string,
+  currentMatchNumber: string
+): Promise<boolean> => {
+  // Get the most recent verified prediction for this scouter in this event
+  const lastPrediction = await gameDB.predictions
+    .where('scouterName')
+    .equals(scouterName)
+    .and(prediction => prediction.eventName === eventName && prediction.verified)
+    .reverse()
+    .sortBy('timestamp');
+
+  if (!lastPrediction || lastPrediction.length === 0) {
+    return true; // No previous predictions, so this is sequential (first prediction)
+  }
+
+  const lastMatchNumber = parseInt(lastPrediction[0].matchNumber);
+  const currentMatch = parseInt(currentMatchNumber);
+  
+  // Check if current match is exactly one more than the last match
+  // Allow for some flexibility (e.g., within 3 matches) to account for missed matches
+  const gap = currentMatch - lastMatchNumber;
+  
+  return gap <= 3 && gap > 0; // Sequential if gap is 1, 2, or 3 matches
+};
+
+export const createMatchPrediction = async (
+  scouterName: string,
+  eventName: string,
+  matchNumber: string,
+  predictedWinner: 'red' | 'blue'
+): Promise<MatchPrediction> => {
+  // Check if prediction already exists for this match
+  const existingPrediction = await gameDB.predictions
+    .where('[scouterName+eventName+matchNumber]')
+    .equals([scouterName, eventName, matchNumber])
+    .first();
+
+  if (existingPrediction) {
+    // Update existing prediction
+    existingPrediction.predictedWinner = predictedWinner;
+    existingPrediction.timestamp = Date.now();
+    await gameDB.predictions.put(existingPrediction);
+    return existingPrediction;
+  }
+
+  // Create new prediction
+  const prediction: MatchPrediction = {
+    id: `prediction_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    scouterName,
+    eventName,
+    matchNumber,
+    predictedWinner,
+    timestamp: Date.now(),
+    verified: false
+  };
+
+  await gameDB.predictions.put(prediction);
+
+  // Update scouter's total predictions count
+  const scouter = await gameDB.scouters.get(scouterName);
+  if (scouter) {
+    scouter.totalPredictions += 1;
+    scouter.lastUpdated = Date.now();
+    await gameDB.scouters.put(scouter);
+  }
+
+  return prediction;
+};
+
+export const getPredictionForMatch = async (
+  scouterName: string,
+  eventName: string,
+  matchNumber: string
+): Promise<MatchPrediction | undefined> => {
+  return await gameDB.predictions
+    .where('[scouterName+eventName+matchNumber]')
+    .equals([scouterName, eventName, matchNumber])
+    .first();
+};
+
+export const getAllPredictionsForScouter = async (scouterName: string): Promise<MatchPrediction[]> => {
+  return await gameDB.predictions
+    .where('scouterName')
+    .equals(scouterName)
+    .reverse()
+    .toArray();
+};
+
+export const getAllPredictionsForMatch = async (
+  eventName: string,
+  matchNumber: string
+): Promise<MatchPrediction[]> => {
+  return await gameDB.predictions
+    .where('eventName')
+    .equals(eventName)
+    .and(prediction => prediction.matchNumber === matchNumber)
+    .toArray();
+};
+
+export const markPredictionAsVerified = async (predictionId: string): Promise<void> => {
+  await gameDB.predictions.update(predictionId, { verified: true });
+};
+
+export const deleteScouter = async (name: string): Promise<void> => {
+  await gameDB.scouters.delete(name);
+};
+
+export const clearGameData = async (): Promise<void> => {
+  await gameDB.scouters.clear();
+  await gameDB.predictions.clear();
 };

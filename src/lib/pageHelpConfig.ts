@@ -220,6 +220,28 @@ export const PAGE_HELP_CONFIG: Record<string, PageHelpConfig> = {
       "Consider exporting important data before clearing.",
       "Useful for starting fresh at new competitions or clearing test data."
     ]
+  },
+  "/match-results": {
+    title: "Match Results (TBA)",
+    useDialog: true,
+    content: [
+      "Verify scouter predictions against official match results from The Blue Alliance API.",
+      "**Setup Required:**",
+      "1. Get an API key from [thebluealliance.com/account](https://www.thebluealliance.com/account)",
+      "2. Replace 'YOUR_TBA_API_KEY_HERE' in src/lib/tbaUtils.ts with your actual key",
+      "3. Restart the development server",
+      "**Usage:**",
+      "1. Enter an event key (e.g., '2024necmp' for 2024 NE Championship)",
+      "2. Click 'Load Matches' to fetch qualification match results",
+      "3. Select the matches you want to process for prediction verification",
+      "4. Click 'Process Selected' to verify predictions and award points",
+      "**Stakes System:**",
+      "• 10 stakes for each correct prediction",
+      "• Streak bonuses: 2 extra stakes for 2 in a row, 4 for 3 in a row, 6 for 4 in a row, etc.",
+      "• Streaks reset when a prediction is incorrect or when there's a gap in sequential matches",
+      "• Sequential matches: Must be within 3 matches of the previous prediction to maintain streak",
+      "This feature automatically checks stored predictions against official results and awards stakes for correct predictions with exciting streak bonuses!"
+    ]
   }
 };
 
