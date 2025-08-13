@@ -189,7 +189,7 @@ export const ScouterProfileWithSelector: React.FC = () => {
           </div>
 
           {/* Refresh Button */}
-          <Button variant="outline" onClick={refreshScouts} className="w-full">
+          <Button onClick={refreshScouts} className="w-full">
             Refresh Stats
           </Button>
         </CardContent>
