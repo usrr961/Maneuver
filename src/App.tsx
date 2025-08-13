@@ -20,6 +20,7 @@ import MatchDataPage from "@/pages/MatchDataPage";
 import ClearDataPage from "@/pages/ClearDataPage";
 import QRDataTransferPage from "@/pages/QRDataTransferPage";
 import JSONDataTransferPage from "@/pages/JSONDataTransferPage";
+import MatchDataQRPage from "@/pages/MatchDataQRPage";
 import MatchStrategyPage from "@/pages/MatchStrategyPage";
 import { AutoScoringPage, TeleopScoringPage } from "@/pages/ScoringPage";
 import EndgamePage from "@/pages/EndgamePage";
@@ -27,7 +28,7 @@ import TeamStatsPage from "@/pages/TeamStatsPage";
 import PitScoutingPage from "@/pages/PitScoutingPage";
 import PickListPage from "./pages/PickListPage";
 import StrategyOverviewPage from "./pages/StrategyOverviewPage";
-import ScouterTestPage from "./pages/ScouterTestPage";
+import ScoutManagementDashboardPage from "./pages/ScoutManagementDashboardPage";
 import MatchResultsPage from "./pages/MatchResultsPage";
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { StatusBarSpacer } from '@/components/StatusBarSpacer';
@@ -47,6 +48,7 @@ function App() {
         <Route path="/auto-start" element={<AutoStartPage />} />
         <Route path="/qr-data-transfer" element={<QRDataTransferPage />} />
         <Route path="/json-transfer" element={<JSONDataTransferPage />} />
+        <Route path="/match-data-qr" element={<MatchDataQRPage />} />
         <Route path="/match-strategy" element={<MatchStrategyPage />} />
         <Route path="/auto-scoring" element={<AutoScoringPage />} />
         <Route path="/teleop-scoring" element={<TeleopScoringPage />} />
@@ -55,8 +57,8 @@ function App() {
         <Route path="/pit-scouting" element={<PitScoutingPage />} />
         <Route path="/strategy-overview" element={<StrategyOverviewPage />} />
         <Route path="/pick-list" element={<PickListPage />} />
-        <Route path="/scouter-test" element={<ScouterTestPage />} />
         <Route path="/match-results" element={<MatchResultsPage />} />
+        <Route path="/scout-management" element={<ScoutManagementDashboardPage />} />
         {/* Add more routes as needed */}
         <Route path="*" element={<NotFoundPage />} />
       </Route>

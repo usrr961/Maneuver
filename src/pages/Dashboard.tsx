@@ -1,6 +1,7 @@
 import { AppSidebar } from "@/components/DashboardComponents/app-sidebar"
 import { SiteHeader } from "@/components/DashboardComponents/site-header"
 import { BottomNavigation } from "@/components/BottomNavigation"
+import { ScrollToTop } from "@/components/ScrollToTop"
 import {
   SidebarInset,
   SidebarProvider,
@@ -23,6 +24,7 @@ export default function Dashboard() {
         <AppSidebar variant="inset" />
         <SidebarInset>
             <SiteHeader />
+            <ScrollToTop />
             <div 
                 className="pb-20 2xl:pb-0"
                 style={{ paddingTop: 'var(--header-height)' }}

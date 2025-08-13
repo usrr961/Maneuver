@@ -574,7 +574,7 @@ export const getScouter = async (name: string): Promise<Scouter | undefined> => 
 };
 
 export const getAllScouters = async (): Promise<Scouter[]> => {
-  return await gameDB.scouters.orderBy('points').reverse().toArray();
+  return await gameDB.scouters.orderBy('stakes').reverse().toArray();
 };
 
 export const updateScouterPoints = async (name: string, pointsToAdd: number): Promise<void> => {
