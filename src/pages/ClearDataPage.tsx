@@ -1,25 +1,24 @@
 import { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { loadScoutingData } from "@/lib/scoutingDataUtils";
-import { clearAllScoutingData } from "@/lib/dexieDB";
+import { clearAllScoutingData, clearGameData, gameDB, pitDB } from "@/lib/dexieDB";
 import { clearAllPitScoutingData, getPitScoutingStats } from "@/lib/pitScoutingUtils";
 import { convertTeamRole } from "@/lib/utils";
-import { AlertTriangle } from "lucide-react";
+import { DataClearCard } from "@/components/DataTransferComponents/DataClearCard";
 
 
 const ClearDataPage = () => {
   const [scoutingDataCount, setScoutingDataCount] = useState(0);
   const [pitScoutingDataCount, setPitScoutingDataCount] = useState(0);
   const [matchDataCount, setMatchDataCount] = useState(0);
+  const [scouterGameDataCount, setScouterGameDataCount] = useState(0);
   const [playerStation, setPlayerStation] = useState("");
   const [scoutingDataSize, setScoutingDataSize] = useState("0 B");
-  const [showScoutingConfirm, setShowScoutingConfirm] = useState(false);
-  const [showPitScoutingConfirm, setShowPitScoutingConfirm] = useState(false);
-  const [showMatchConfirm, setShowMatchConfirm] = useState(false);
+  const [pitScoutingDataSize, setPitScoutingDataSize] = useState("0 B");
+  const [matchDataSize, setMatchDataSize] = useState("0 B");
+  const [scouterGameDataSize, setScouterGameDataSize] = useState("0 B");
 
   const loadScoutingCount = useCallback(async () => {
     try {
@@ -43,16 +42,52 @@ const ClearDataPage = () => {
     try {
       const pitStats = await getPitScoutingStats();
       setPitScoutingDataCount(pitStats.totalEntries);
+      
+      // Calculate pit scouting data size from IndexedDB
+      const pitData = await pitDB.pitScoutingData.toArray();
+      const pitSize = formatDataSize(JSON.stringify(pitData));
+      setPitScoutingDataSize(pitSize);
     } catch (error) {
       console.error("Error loading pit scouting data:", error);
       setPitScoutingDataCount(0);
+      setPitScoutingDataSize("0 B");
+    }
+  }, []);
+
+  const loadScouterGameCount = useCallback(async () => {
+    try {
+      console.log("ClearDataPage - Loading scouter game data count...");
+      
+      // Get counts directly from the database tables
+      const scoutersCount = await gameDB.scouters.count();
+      const predictionsCount = await gameDB.predictions.count();
+      
+      console.log("ClearDataPage - Scouters:", scoutersCount, "Predictions:", predictionsCount);
+      
+      // Count total entries: scouters + predictions
+      const totalEntries = scoutersCount + predictionsCount;
+      setScouterGameDataCount(totalEntries);
+      
+      // Calculate storage size by getting all data
+      const scoutersData = await gameDB.scouters.toArray();
+      const predictionsData = await gameDB.predictions.toArray();
+      const combinedData = { scouters: scoutersData, predictions: predictionsData };
+      const gameDataSize = formatDataSize(JSON.stringify(combinedData));
+      setScouterGameDataSize(gameDataSize);
+      
+      console.log("ClearDataPage - Total scouter game entries:", totalEntries, "Size:", gameDataSize);
+    } catch (error) {
+      console.error("Error loading scouter game data:", error);
+      setScouterGameDataCount(0);
+      setScouterGameDataSize("0 B");
     }
   }, []);
 
   const refreshData = useCallback(async () => {
     await loadScoutingCount();
     await loadPitScoutingCount();
-  }, [loadScoutingCount, loadPitScoutingCount]);
+    await loadScouterGameCount();
+  }, [loadScoutingCount, loadPitScoutingCount, loadScouterGameCount]);
 
   useEffect(() => {
     const matchData = localStorage.getItem("matchData");
@@ -62,16 +97,23 @@ const ClearDataPage = () => {
     
     loadScoutingCount();
     loadPitScoutingCount();
+    loadScouterGameCount();
 
     if (matchData) {
       try {
         const parsed = JSON.parse(matchData);
-        setMatchDataCount(Array.isArray(parsed) ? parsed.length : 0);
+        const count = Array.isArray(parsed) ? parsed.length : 0;
+        setMatchDataCount(count);
+        setMatchDataSize(formatDataSize(matchData));
       } catch {
         setMatchDataCount(0);
+        setMatchDataSize("0 B");
       }
+    } else {
+      setMatchDataCount(0);
+      setMatchDataSize("0 B");
     }
-  }, [loadScoutingCount, loadPitScoutingCount]);
+  }, [loadScoutingCount, loadPitScoutingCount, loadScouterGameCount]);
 
   const handleClearScoutingData = async () => {
     try {
@@ -80,7 +122,6 @@ const ClearDataPage = () => {
       localStorage.setItem("scoutingData", JSON.stringify({ data: [] }));
       
       await refreshData();
-      setShowScoutingConfirm(false);
       toast.success("Cleared all scouting data");
       console.log("ClearDataPage - Data cleared successfully");
     } catch (error) {
@@ -88,7 +129,6 @@ const ClearDataPage = () => {
       // Clear localStorage as fallback and refresh
       localStorage.setItem("scoutingData", JSON.stringify({ data: [] }));
       await refreshData();
-      setShowScoutingConfirm(false);
       toast.success("Cleared all scouting data");
     }
   };
@@ -99,20 +139,43 @@ const ClearDataPage = () => {
       await clearAllPitScoutingData();
       
       await refreshData();
-      setShowPitScoutingConfirm(false);
       toast.success("Cleared all pit scouting data");
       console.log("ClearDataPage - Pit scouting data cleared successfully");
     } catch (error) {
       console.error("Error clearing pit scouting data:", error);
       toast.error("Failed to clear pit scouting data");
-      setShowPitScoutingConfirm(false);
+    }
+  };
+
+  const handleClearScouterGameData = async () => {
+    try {
+      console.log("ClearDataPage - Starting scouter game data clear...");
+      await clearGameData();
+      
+      // Clear all scouter-related localStorage data
+      localStorage.removeItem("scoutersList");
+      localStorage.removeItem("currentScouter");
+      localStorage.removeItem("scouterInitials");
+      console.log("ClearDataPage - Cleared all scouter data from localStorage");
+      
+      await refreshData();
+      toast.success("Cleared all scouter game data");
+      console.log("ClearDataPage - Scouter game data cleared successfully");
+      
+      // Force page refresh to ensure nav-user component reloads
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000); // Give toast time to show
+    } catch (error) {
+      console.error("Error clearing scouter game data:", error);
+      toast.error("Failed to clear scouter game data");
     }
   };
 
   const handleClearMatchData = () => {
     localStorage.setItem("matchData", "");
     setMatchDataCount(0);
-    setShowMatchConfirm(false);
+    setMatchDataSize("0 B");
     toast.success("Cleared match schedule data");
   };
 
@@ -122,11 +185,6 @@ const ClearDataPage = () => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
-  const getMatchDataSize = () => {
-    const data = localStorage.getItem("matchData");
-    return formatDataSize(data);
   };
 
   return (
@@ -156,174 +214,45 @@ const ClearDataPage = () => {
         </Alert>
 
         {/* Scouting Data Card */}
-        <Card className="w-full">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Scouting Data</CardTitle>
-              <Badge variant={scoutingDataCount > 0 ? "default" : "secondary"}>
-                {scoutingDataCount} entries
-              </Badge>
-            </div>
-            <CardDescription>
-              Match scouting data collected on this device
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-medium">Storage size:</span> {scoutingDataSize}
-            </p>
-
-            {!showScoutingConfirm ? (
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={() => setShowScoutingConfirm(true)}
-                disabled={scoutingDataCount === 0}
-              >
-                {scoutingDataCount === 0 ? "No Scouting Data" : "Clear Scouting Data"}
-              </Button>
-            ) : (
-              <div className="space-y-3">
-                <Alert>
-                  <AlertTriangle className="h-5 w-5" color="red"/>
-                  <AlertDescription className="text-white">
-                    This will permanently delete {scoutingDataCount} scouting entries.
-                  </AlertDescription>
-                </Alert>
-                <div className="flex gap-2">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="flex-1"
-                    onClick={handleClearScoutingData}
-                  >
-                    Yes, Delete All
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => setShowScoutingConfirm(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <DataClearCard
+          title="Scouting Data"
+          description="Match scouting data collected on this device"
+          entryCount={scoutingDataCount}
+          entryLabel="entries"
+          storageSize={scoutingDataSize}
+          onClear={handleClearScoutingData}
+        />
 
         {/* Pit Scouting Data Card */}
-        <Card className="w-full">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Pit Scouting Data</CardTitle>
-              <Badge variant={pitScoutingDataCount > 0 ? "default" : "secondary"}>
-                {pitScoutingDataCount} entries
-              </Badge>
-            </div>
-            <CardDescription>
-              Robot pit scouting data collected at events
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {!showPitScoutingConfirm ? (
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={() => setShowPitScoutingConfirm(true)}
-                disabled={pitScoutingDataCount === 0}
-              >
-                {pitScoutingDataCount === 0 ? "No Pit Scouting Data" : "Clear Pit Scouting Data"}
-              </Button>
-            ) : (
-              <div className="space-y-3">
-                <Alert>
-                  <AlertTriangle className="h-5 w-5" color="red"/>
-                  <AlertDescription className="text-white">
-                    This will permanently delete {pitScoutingDataCount} pit scouting entries.
-                  </AlertDescription>
-                </Alert>
-                <div className="flex gap-2">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="flex-1"
-                    onClick={handleClearPitScoutingData}
-                  >
-                    Yes, Delete All
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => setShowPitScoutingConfirm(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <DataClearCard
+          title="Pit Scouting Data"
+          description="Robot pit scouting data collected at events"
+          entryCount={pitScoutingDataCount}
+          entryLabel="entries"
+          storageSize={pitScoutingDataSize}
+          onClear={handleClearPitScoutingData}
+        />
+
+        {/* Scouter Profile Data Card */}
+        <DataClearCard
+          title="Scouter Profile Data"
+          description="Scouter predictions, stakes, and leaderboard data"
+          entryCount={scouterGameDataCount}
+          entryLabel="entries"
+          storageSize={scouterGameDataSize}
+          onClear={handleClearScouterGameData}
+          warningMessage={`This will permanently delete ${scouterGameDataCount} scouter game entries (scouters and predictions).`}
+        />
 
         {/* Match Data Card */}
-        <Card className="w-full">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Match Schedule Data</CardTitle>
-              <Badge variant={matchDataCount > 0 ? "default" : "secondary"}>
-                {matchDataCount} matches
-              </Badge>
-            </div>
-            <CardDescription>
-              Tournament match schedule and team information
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-medium">Storage size:</span> {getMatchDataSize()}
-            </p>
-
-            {!showMatchConfirm ? (
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={() => setShowMatchConfirm(true)}
-                disabled={matchDataCount === 0}
-              >
-                {matchDataCount === 0 ? "No Match Data" : "Clear Match Data"}
-              </Button>
-            ) : (
-              <div className="space-y-3">
-                <Alert>
-                  <AlertTriangle className="h-5 w-5" color="red"/>
-                  <AlertDescription className="text-white">
-                    This will delete the match schedule for {matchDataCount} matches.
-                  </AlertDescription>
-                </Alert>
-                <div className="flex gap-2">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="flex-1"
-                    onClick={handleClearMatchData}
-                  >
-                    Yes, Delete All
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => setShowMatchConfirm(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <DataClearCard
+          title="Match Schedule Data"
+          description="Tournament match schedule and team information"
+          entryCount={matchDataCount}
+          entryLabel="matches"
+          storageSize={matchDataSize}
+          onClear={handleClearMatchData}
+        />
       </div>
     </div>
   );
