@@ -143,12 +143,6 @@ export function NavMain({
               <span>Scout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <SidebarMenuItem className="flex items-center gap-2">
-            <SidebarMenuButton tooltip={"Scout Management"} onClick={() => proceedClick("/scout-management")}>
-              <LayoutDashboard />
-              <span>Scout Management</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
           {items.map((item) => (
             <Collapsible
               key={item.title}

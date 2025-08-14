@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Settings, SquarePen } from "lucide-react"
+import { LayoutDashboard, Settings, SquarePen } from "lucide-react"
 
 // import { NavDocuments } from "@/components/DashboardComponents/nav-documents"
 import { NavMain } from "@/components/DashboardComponents/nav-main"
@@ -88,6 +88,25 @@ const data = {
           title: "Pick Lists",
           url: "/pick-list",
         }
+      ],
+    },
+    {
+      title: "Scout Management",
+      url: "#",
+      icon: LayoutDashboard,
+      items: [
+        {
+          title: "Scout Dashboard",
+          url: "/scout-management",
+        },
+        {
+          title: "Achievements",
+          url: "/achievements",
+        },
+        ...(import.meta.env.DEV ? [{
+          title: "Dev Utilities",
+          url: "/dev-utilities",
+        }] : [])
       ],
     },
   ],

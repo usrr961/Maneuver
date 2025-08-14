@@ -1,4 +1,4 @@
-import { Home, Binoculars, QrCode, TrendingUp } from 'lucide-react';
+import { Home, Binoculars, QrCode, TrendingUp, Settings } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { usePWA } from '@/hooks/usePWA';
@@ -26,7 +26,7 @@ interface BottomNavItem {
   href: string;
 }
 
-const navItems: BottomNavItem[] = [
+const baseNavItems: BottomNavItem[] = [
   {
     icon: Home,
     label: 'Home',
@@ -48,6 +48,16 @@ const navItems: BottomNavItem[] = [
     href: '/strategy-overview',
   },
 ];
+
+const devNavItem: BottomNavItem = {
+  icon: Settings,
+  label: 'Dev',
+  href: '/dev-utilities',
+};
+
+const navItems: BottomNavItem[] = import.meta.env.DEV 
+  ? [...baseNavItems, devNavItem] 
+  : baseNavItems;
 
 export function BottomNavigation() {
   const location = useLocation();

@@ -6,7 +6,6 @@ import {
 } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ThemeProvider } from "@/components/theme-provider"
-import { FullscreenProvider } from "@/contexts/FullscreenContext";
 import { analytics } from '@/lib/analytics';
 
 import MainLayout from "@/layouts/MainLayout";
@@ -28,11 +27,14 @@ import TeamStatsPage from "@/pages/TeamStatsPage";
 import PitScoutingPage from "@/pages/PitScoutingPage";
 import PickListPage from "./pages/PickListPage";
 import StrategyOverviewPage from "./pages/StrategyOverviewPage";
-import ScoutManagementDashboardPage from "./pages/ScoutManagementDashboardPage";
 import MatchResultsPage from "./pages/MatchResultsPage";
+import ScoutManagementDashboardPage from "./pages/ScoutManagementDashboardPage";
+import AchievementsPage from "./pages/AchievementsPage";
+import DevUtilitiesPage from "./pages/DevUtilitiesPage";
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { StatusBarSpacer } from '@/components/StatusBarSpacer';
 import { SplashScreen } from '@/components/SplashScreen';
+import { FullscreenProvider } from '@/contexts/FullscreenContext';
 
 
 
@@ -59,6 +61,8 @@ function App() {
         <Route path="/pick-list" element={<PickListPage />} />
         <Route path="/match-results" element={<MatchResultsPage />} />
         <Route path="/scout-management" element={<ScoutManagementDashboardPage />} />
+        <Route path="/achievements" element={<AchievementsPage />} />
+        <Route path="/dev-utilities" element={<DevUtilitiesPage />} />
         {/* Add more routes as needed */}
         <Route path="*" element={<NotFoundPage />} />
       </Route>
@@ -68,7 +72,6 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    console.log('🚀 App loaded, initializing analytics...');
     
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js");
@@ -76,13 +79,11 @@ function App() {
 
     // Track PWA install prompt
     window.addEventListener('beforeinstallprompt', () => {
-      console.log('💾 PWA install prompt shown');
       analytics.trackEvent('pwa_install_prompt_shown');
     });
 
     // Track if app was launched as PWA
     if (window.matchMedia('(display-mode: standalone)').matches) {
-      console.log('📱 App launched as PWA');
       analytics.trackPWALaunched();
     }
 
@@ -92,8 +93,53 @@ function App() {
         analytics.debug();
         // Make analytics available globally for testing
         (window as typeof window & { analytics: typeof analytics }).analytics = analytics;
-        console.log('💡 Analytics available globally as window.analytics');
-        console.log('💡 Try: window.analytics.testTracking()');
+        
+        // Make achievement functions available globally for debugging
+        import('./lib/achievementUtils').then(achievementUtils => {
+          (window as typeof window & { achievements: { backfillAll: () => Promise<void>, checkForNewAchievements: (name: string) => Promise<unknown[]> } }).achievements = {
+            backfillAll: achievementUtils.backfillAchievementsForAllScouters,
+            checkForNewAchievements: achievementUtils.checkForNewAchievements
+          };
+        });
+
+        // Make test data generator available globally for testing
+        import('./lib/testDataGenerator').then(testData => {
+          (window as typeof window & { testData: { createTestProfiles: () => Promise<unknown>, clearAll: () => Promise<void> } }).testData = {
+            createTestProfiles: testData.createTestScouterProfiles,
+            clearAll: testData.clearTestData
+          };
+          console.log('🧪 Test data functions available:');
+          console.log('  - window.testData.createTestProfiles() - Create test scouter profiles');
+          console.log('  - window.testData.clearAll() - Clear all scouter data');
+        });
+
+        // Make gameDB available for debugging
+        import('./lib/dexieDB').then(db => {
+          (window as typeof window & { gameDB: typeof db.gameDB }).gameDB = db.gameDB;
+          console.log('🗄️ Database available at window.gameDB');
+        });
+
+        // Debug function to check scouter data
+        (window as typeof window & { debugScouterData: (name: string) => Promise<void> }).debugScouterData = async (scouterName: string) => {
+          const { gameDB } = await import('./lib/dexieDB');
+          const scouter = await gameDB.scouters.get(scouterName);
+          console.log(`Scouter data for ${scouterName}:`, scouter);
+          
+          const achievements = await gameDB.scouterAchievements.where('scouterName').equals(scouterName).toArray();
+          console.log(`Achievements for ${scouterName}:`, achievements);
+          
+          // Check specific stake achievements
+          const { checkAchievement, ACHIEVEMENT_DEFINITIONS } = await import('./lib/achievementTypes');
+          const stakeAchievements = ACHIEVEMENT_DEFINITIONS.filter(a => a.id.startsWith('stakes_'));
+          
+          stakeAchievements.forEach(achievement => {
+            const isUnlocked = achievements.some(a => a.achievementId === achievement.id);
+            const meetsRequirements = checkAchievement(achievement, scouter!);
+            console.log(`${achievement.name}: unlocked=${isUnlocked}, meetsReq=${meetsRequirements}, stakesFromPredictions=${scouter?.stakesFromPredictions}`);
+          });
+        };
+
+        console.log('🐛 Debug function available: window.debugScouterData("Riley Davis")');
       }, 2000);
     }
 

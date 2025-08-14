@@ -1,15 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ScouterProfileWithSelector } from '../components/GameComponents/ScouterProfileWithSelector';
+import { AchievementOverview } from '../components/ScoutManagementComponents/AchievementOverview';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GenericSelector } from "@/components/ui/generic-selector";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { TrendingUp, Trophy, Target, Award, Sigma, TrendingUpDown } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell, LineChart, Line, Legend } from "recharts";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { getAllScouters, calculateAccuracy } from '@/lib/scouterGameUtils';
 import type { Scouter } from '@/lib/dexieDB';
 import { analytics } from '@/lib/analytics';
+import { useCurrentScouter } from '@/hooks/useCurrentScouter';
+import { useNavigate } from 'react-router-dom';
 
 type ScouterMetric = "stakes" | "totalPredictions" | "correctPredictions" | "accuracy" | "currentStreak" | "longestStreak";
 
@@ -24,6 +28,8 @@ const ScoutManagementDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [chartMetric, setChartMetric] = useState<ScouterMetric>("stakes");
   const [chartType, setChartType] = useState<"bar" | "line" | "table">("bar");
+  const { currentScouter } = useCurrentScouter();
+  const navigate = useNavigate();
 
   const metricOptions = [
     { key: "stakes", label: "Stakes", icon: Trophy },
@@ -137,10 +143,14 @@ const ScoutManagementDashboardPage: React.FC = () => {
   return (
     <div className="min-h-screen container mx-auto p-4 space-y-6">
       <div className="text-start space-y-2">
-        <h1 className="text-3xl font-bold">Scout Management Dashboard</h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Monitor scout performance and leaderboards
-        </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold">Scout Management Dashboard</h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Monitor scout performance and leaderboards
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Chart Section */}
@@ -365,10 +375,39 @@ const ScoutManagementDashboardPage: React.FC = () => {
       </Card>
 
       {/* Profile and Stats Section - Combined on larger screens */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
         {/* Profile Section - Takes 2 columns on large screens */}
         <div className="lg:col-span-2 flex justify-center lg:justify-start">
           <ScouterProfileWithSelector />
+        </div>
+
+        {/* Achievement Overview - Takes 2 columns on large screens */}
+        <div className="lg:col-span-2">
+          {currentScouter ? (
+            <AchievementOverview 
+              scouterName={currentScouter.name} 
+              onViewAll={() => navigate('/achievements')}
+              onDataRefresh={async () => {
+                const scoutData = await getAllScouters();
+                setScouters(scoutData);
+              }}
+            />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5" />
+                  Achievements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-gray-500">
+                  <Trophy className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>Select a scout to view achievements</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Stats Summary - Takes 3 columns on large screens, stacked on smaller */}

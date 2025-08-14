@@ -5,7 +5,8 @@ import type { PitScoutingEntry } from './pitScoutingTypes';
 // Scouter gamification types
 export interface Scouter {
   name: string; // Primary key - matches the name from nav-user sidebar
-  stakes: number;
+  stakes: number; // Total stakes including bonuses from achievements
+  stakesFromPredictions: number; // Stakes earned only from predictions/matches
   totalPredictions: number;
   correctPredictions: number;
   currentStreak: number; // Current consecutive correct predictions
@@ -25,6 +26,13 @@ export interface MatchPrediction {
   pointsAwarded?: number;
   timestamp: number;
   verified: boolean;
+}
+
+export interface ScouterAchievement {
+  scouterName: string;
+  achievementId: string;
+  unlockedAt: number;
+  progress?: number;
 }
 
 export interface ScoutingEntryDB {
@@ -62,45 +70,29 @@ export class PitScoutingDB extends Dexie {
   }
 }
 
-// Scouter gamification database
-export class ScouterGameDB extends Dexie {
+export class ScouterProfileDB extends Dexie {
   scouters!: Table<Scouter>;
   predictions!: Table<MatchPrediction>;
+  scouterAchievements!: Table<ScouterAchievement>;
 
   constructor() {
-    super('ScouterGameDB');
+    super('ScouterProfileDB');
     
     this.version(1).stores({
-      scouters: 'name, stakes, totalPredictions, correctPredictions, lastUpdated',
-      predictions: 'id, scouterName, eventName, matchNumber, predictedWinner, timestamp, verified, [scouterName+eventName+matchNumber]'
+      scouters: 'name, stakes, totalPredictions, correctPredictions, currentStreak, longestStreak, lastUpdated',
+      predictions: 'id, scouterName, eventName, matchNumber, predictedWinner, timestamp, verified, [scouterName+eventName+matchNumber]',
+      scouterAchievements: '[scouterName+achievementId], scouterName, achievementId, unlockedAt'
     });
 
-    // Version 2: Add streak tracking
+    // Version 2: Add stakesFromPredictions field
     this.version(2).stores({
-      scouters: 'name, stakes, totalPredictions, correctPredictions, currentStreak, longestStreak, lastUpdated',
-      predictions: 'id, scouterName, eventName, matchNumber, predictedWinner, timestamp, verified, [scouterName+eventName+matchNumber]'
+      scouters: 'name, stakes, stakesFromPredictions, totalPredictions, correctPredictions, currentStreak, longestStreak, lastUpdated',
+      predictions: 'id, scouterName, eventName, matchNumber, predictedWinner, timestamp, verified, [scouterName+eventName+matchNumber]',
+      scouterAchievements: '[scouterName+achievementId], scouterName, achievementId, unlockedAt'
     }).upgrade(tx => {
-      // Add default values for new streak fields
+      // Add default stakesFromPredictions value for existing scouters
       return tx.table('scouters').toCollection().modify(scouter => {
-        scouter.currentStreak = 0;
-        scouter.longestStreak = 0;
-      });
-    });
-
-    // Version 3: Rename points to stakes
-    this.version(3).stores({
-      scouters: 'name, stakes, totalPredictions, correctPredictions, currentStreak, longestStreak, lastUpdated',
-      predictions: 'id, scouterName, eventName, matchNumber, predictedWinner, timestamp, verified, [scouterName+eventName+matchNumber]'
-    }).upgrade(tx => {
-      // Migrate points to stakes
-      return tx.table('scouters').toCollection().modify(scouter => {
-        if (scouter.points !== undefined) {
-          scouter.stakes = scouter.points;
-          delete scouter.points;
-        }
-        if (scouter.stakes === undefined) {
-          scouter.stakes = 0;
-        }
+        scouter.stakesFromPredictions = scouter.stakes || 0; // Assume current stakes are all from predictions for existing users
       });
     });
   }
@@ -108,7 +100,7 @@ export class ScouterGameDB extends Dexie {
 
 export const db = new SimpleScoutingAppDB();
 export const pitDB = new PitScoutingDB();
-export const gameDB = new ScouterGameDB();
+export const gameDB = new ScouterProfileDB();
 
 const safeStringify = (value: unknown): string | undefined => {
   if (value === null || value === undefined || value === '') {
@@ -557,6 +549,7 @@ export const getOrCreateScouter = async (name: string): Promise<Scouter> => {
   const newScouter: Scouter = {
     name: name.trim(),
     stakes: 0,
+    stakesFromPredictions: 0,
     totalPredictions: 0,
     correctPredictions: 0,
     currentStreak: 0,
@@ -592,11 +585,13 @@ export const updateScouterStats = async (
   correctPredictions: number, 
   totalPredictions: number,
   currentStreak?: number,
-  longestStreak?: number
+  longestStreak?: number,
+  additionalStakesFromPredictions: number = 0
 ): Promise<void> => {
   const scouter = await gameDB.scouters.get(name);
   if (scouter) {
     scouter.stakes = newStakes;
+    scouter.stakesFromPredictions += additionalStakesFromPredictions;
     scouter.correctPredictions = correctPredictions;
     scouter.totalPredictions = totalPredictions;
     if (currentStreak !== undefined) scouter.currentStreak = currentStreak;
@@ -658,7 +653,8 @@ export const updateScouterWithPredictionResult = async (
     scouter.correctPredictions + (isCorrect ? 1 : 0),
     scouter.totalPredictions + 1,
     newCurrentStreak,
-    newLongestStreak
+    newLongestStreak,
+    pointsAwarded // This tracks stakes earned from predictions
   );
 
   return pointsAwarded;
@@ -698,21 +694,18 @@ export const createMatchPrediction = async (
   matchNumber: string,
   predictedWinner: 'red' | 'blue'
 ): Promise<MatchPrediction> => {
-  // Check if prediction already exists for this match
   const existingPrediction = await gameDB.predictions
     .where('[scouterName+eventName+matchNumber]')
     .equals([scouterName, eventName, matchNumber])
     .first();
 
   if (existingPrediction) {
-    // Update existing prediction
     existingPrediction.predictedWinner = predictedWinner;
     existingPrediction.timestamp = Date.now();
     await gameDB.predictions.put(existingPrediction);
     return existingPrediction;
   }
 
-  // Create new prediction
   const prediction: MatchPrediction = {
     id: `prediction_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     scouterName,
@@ -725,12 +718,18 @@ export const createMatchPrediction = async (
 
   await gameDB.predictions.put(prediction);
 
-  // Update scouter's total predictions count
   const scouter = await gameDB.scouters.get(scouterName);
   if (scouter) {
     scouter.totalPredictions += 1;
     scouter.lastUpdated = Date.now();
     await gameDB.scouters.put(scouter);
+    
+    const { checkForNewAchievements } = await import('./achievementUtils');
+    const newAchievements = await checkForNewAchievements(scouterName);
+    
+    if (newAchievements.length > 0) {
+      console.log('🏆 New achievements unlocked for', scouterName, ':', newAchievements.map(a => a.name));
+    }
   }
 
   return prediction;

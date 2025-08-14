@@ -14,6 +14,8 @@ import {
   deleteScouter,
   clearGameData
 } from './dexieDB';
+import { checkForNewAchievements } from './achievementUtils';
+import type { Achievement } from './achievementTypes';
 
 // Stake values for different activities
 export const STAKE_VALUES = {
@@ -43,6 +45,41 @@ export const calculateAccuracy = (scouter: Scouter): number => {
 // Get leaderboard
 export const getLeaderboard = async (): Promise<Scouter[]> => {
   return await getAllScouters();
+};
+
+// Wrapper function to update scouter stats with achievement checking
+export const updateScouterStatsWithAchievements = async (
+  name: string, 
+  newStakes: number, 
+  correctPredictions: number, 
+  totalPredictions: number,
+  currentStreak?: number,
+  longestStreak?: number
+): Promise<{ newAchievements: Achievement[] }> => {
+  // Update the stats first
+  await updateScouterStats(name, newStakes, correctPredictions, totalPredictions, currentStreak, longestStreak);
+  
+  // Check for new achievements
+  const newAchievements = await checkForNewAchievements(name);
+  
+  return { newAchievements };
+};
+
+// Wrapper function to update scouter with prediction result and achievement checking
+export const updateScouterWithPredictionAndAchievements = async (
+  name: string,
+  isCorrect: boolean,
+  basePoints: number,
+  eventName: string,
+  matchNumber: string
+): Promise<{ newAchievements: Achievement[] }> => {
+  // Update with prediction result first
+  await updateScouterWithPredictionResult(name, isCorrect, basePoints, eventName, matchNumber);
+  
+  // Check for new achievements
+  const newAchievements = await checkForNewAchievements(name);
+  
+  return { newAchievements };
 };
 
 export {
