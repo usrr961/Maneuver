@@ -1,4 +1,4 @@
-import { Binoculars, ChevronRight, Home, LayoutDashboard, type LucideIcon } from "lucide-react"
+import { Binoculars, ChevronRight, Home, type LucideIcon } from "lucide-react"
 
 import { useEffect, useState } from "react";
 import {
