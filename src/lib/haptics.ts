@@ -28,19 +28,16 @@ class HapticFeedback {
       attempts: []
     };
     
-    console.log('Haptics Debug:', this.debugInfo);
   }
 
   private canVibrate(): boolean {
     if (!('vibrate' in navigator) || !navigator.vibrate) {
-      console.log('Haptics: No vibrate API support');
       return false;
     }
     
     // iOS Safari does not support the Vibration API at all
     // Even when installed as PWA, Apple has disabled it
     if (this.isIOS) {
-      console.log('Haptics: iOS does not support the Vibration API');
       return false;
     }
     
@@ -61,10 +58,7 @@ class HapticFeedback {
       result,
       timestamp: new Date().toLocaleTimeString()
     });
-    
-    console.log('Haptics: Attempting vibration with pattern:', pattern);
-    console.log('Haptics: canVibrate():', canVib);
-    console.log('Haptics: navigator.vibrate() returned:', result);
+
     
     // For iOS, provide visual feedback instead
     if (this.isIOS && !result) {

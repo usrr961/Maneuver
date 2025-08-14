@@ -14,12 +14,6 @@ const FountainCodeGenerator = ({ onBack, onSwitchToScanner }: FountainCodeGenera
       // Send the full entries with IDs preserved for proper deduplication
       const formattedData = { entries: scoutingDataWithIds.entries };
       
-      console.log("Loaded scouting data for fountain codes:", {
-        totalEntries: scoutingDataWithIds.entries.length,
-        sampleEntryFields: scoutingDataWithIds.entries[0]?.data ? Object.keys(scoutingDataWithIds.entries[0].data).slice(0, 5) : [],
-        sampleEntryId: scoutingDataWithIds.entries[0]?.id,
-      });
-      
       return formattedData;
     } else {
       console.log("No scouting data found");

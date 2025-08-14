@@ -67,7 +67,6 @@ function Tabs({ className, enableSwipe = false, value, onValueChange, ...props }
       
       const newValue = tabValues[newIndex];
       if (typeof newValue === 'string') {
-        console.log(`Tab swipe: ${value} → ${newValue}`);
         onValueChange(newValue);
       }
     }

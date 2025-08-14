@@ -18,7 +18,6 @@ export function InstallPrompt() {
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
-      console.log('beforeinstallprompt event fired!');
       e.preventDefault();
       const prompt = e as BeforeInstallPromptEvent;
       setDeferredPrompt(prompt);
@@ -56,9 +55,7 @@ export function InstallPrompt() {
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) {
-      console.log('❌ No deferred prompt available');
-      
+    if (!deferredPrompt) {      
       // Platform-aware install instructions
       const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -89,11 +86,9 @@ export function InstallPrompt() {
       
       if (outcome === 'accepted') {
         analytics.trackPWAInstall();
-        console.log('✅ App installation accepted');
       } else {
         // User dismissed the browser's install dialog
         localStorage.setItem('install-prompt-dismissed', Date.now().toString());
-        console.log('❌ App installation dismissed');
       }
     } catch (error) {
       console.error('Install prompt error:', error);

@@ -15,7 +15,6 @@ interface FountainCodeScannerProps {
 
 const FountainCodeScanner = ({ onBack, onSwitchToGenerator }: FountainCodeScannerProps) => {
   const saveScoutingDataFromFountain = async (data: unknown) => {
-    console.log('Saving scouting data from fountain:', data);
     
     // Load existing data
     const existingScoutingData = await loadScoutingData();
@@ -25,10 +24,8 @@ const FountainCodeScanner = ({ onBack, onSwitchToGenerator }: FountainCodeScanne
     if (data && typeof data === 'object' && 'entries' in data && Array.isArray((data as any).entries)) {
       // New format: entries with preserved IDs
       newDataWithIds = (data as any).entries;
-      console.log(`Received ${newDataWithIds.length} entries with preserved IDs`);
     } else if (data && typeof data === 'object' && 'data' in data && Array.isArray((data as any).data)) {
       // Fallback: old format without IDs (regenerate them)
-      console.log('Received old format data, regenerating IDs');
       const newDataObjects = (data as any).data;
       newDataWithIds = addIdsToScoutingData(newDataObjects);
     }

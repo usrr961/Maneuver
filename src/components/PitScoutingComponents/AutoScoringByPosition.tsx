@@ -26,7 +26,6 @@ export const AutoScoringByPosition = ({ autoScoring, setAutoScoring }: AutoScori
   const [activeTab, setActiveTab] = useState("0");
   
   const handleTabChange = (value: string) => {
-    console.log("Tab changed to:", value);
     setActiveTab(value);
   };
   

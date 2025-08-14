@@ -33,9 +33,7 @@ export const AchievementOverview: React.FC<AchievementOverviewProps> = ({
   const handleBackfillAchievements = async () => {
     setBackfillLoading(true);
     try {
-      console.log('🔄 Starting achievement backfill...');
       await backfillAchievementsForAllScouters();
-      console.log('✅ Achievement backfill completed!');
       
       // Reload achievement data
       const [achievementStats, upcomingAchievements] = await Promise.all([

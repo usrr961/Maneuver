@@ -79,18 +79,7 @@ const enhanceEntry = (entry: ScoutingDataWithId): ScoutingEntryDB => {
       actualData = data.data as Record<string, unknown>;
     }
   }
-  
-  console.log('Enhancing entry - data structure:', {
-    entryId: entry.id,
-    actualDataKeys: actualData ? Object.keys(actualData).slice(0, 5) : [],
-    extractedMetadata: {
-      matchNumber: safeStringify(actualData?.matchNumber),
-      selectTeam: safeStringify(actualData?.selectTeam),
-      alliance: safeStringify(actualData?.alliance),
-      scouterInitials: safeStringify(actualData?.scouterInitials),
-      eventName: safeStringify(actualData?.eventName),
-    }
-  });
+
   
   const matchNumber = safeStringify(actualData?.matchNumber);
   const alliance = safeStringify(actualData?.alliance);
@@ -128,7 +117,6 @@ export const saveScoutingEntry = async (entry: ScoutingDataWithId): Promise<void
 
 
 export const saveScoutingEntries = async (entries: ScoutingDataWithId[]): Promise<void> => {
-  console.log(`Saving ${entries.length} entries to IndexedDB`);
   
   const db = await initializeDB();
   const transaction = db.transaction([STORE_NAME], 'readwrite');
@@ -277,7 +265,6 @@ export const resetDatabase = async (): Promise<void> => {
     const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
     
     deleteRequest.onsuccess = async () => {
-      console.log('Database deleted successfully');
       try {
         await initializeDB();
         resolve();
@@ -310,15 +297,12 @@ export const clearOldDatabases = async (): Promise<void> => {
     return new Promise<void>((resolve) => {
       const deleteRequest = indexedDB.deleteDatabase(dbName);
       deleteRequest.onsuccess = () => {
-        console.log(`Cleared old database: ${dbName}`);
         resolve();
       };
       deleteRequest.onerror = () => {
-        console.log(`Could not clear database ${dbName} (might not exist)`);
-        resolve(); // Don't fail if the database doesn't exist
+        resolve();
       };
       deleteRequest.onblocked = () => {
-        console.log(`Database ${dbName} deletion blocked`);
         resolve();
       };
     });

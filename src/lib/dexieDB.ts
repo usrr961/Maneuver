@@ -143,9 +143,7 @@ export const saveScoutingEntry = async (entry: ScoutingDataWithId): Promise<void
   await db.scoutingData.put(enhancedEntry);
 };
 
-export const saveScoutingEntries = async (entries: ScoutingDataWithId[]): Promise<void> => {
-  console.log(`Saving ${entries.length} entries to Dexie DB`);
-  
+export const saveScoutingEntries = async (entries: ScoutingDataWithId[]): Promise<void> => {  
   const enhancedEntries = entries.map(enhanceEntry);
   await db.scoutingData.bulkPut(enhancedEntries);
 };

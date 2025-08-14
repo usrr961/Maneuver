@@ -11,7 +11,6 @@ export const clearAllStrategies = (setActiveTab: (tab: string) => void, activeTa
     setActiveTab(currentTab);
   }, 50);
   
-  console.log('All strategy canvases cleared');
 };
 
 export const saveAllStrategyCanvases = (matchNumber: string, selectedTeams: string[]) => {
@@ -110,7 +109,6 @@ export const saveAllStrategyCanvases = (matchNumber: string, selectedTeams: stri
         link.download = filename;
         link.click();
 
-        console.log('Composite strategy image saved successfully');
       }
     };
 

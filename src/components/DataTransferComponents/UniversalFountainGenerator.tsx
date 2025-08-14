@@ -87,11 +87,7 @@ const UniversalFountainGenerator = ({
       console.warn(`Data too small for fountain codes: ${encodedData.length} bytes (min: ${minDataSize})`);
       return;
     }
-    
-    console.log(`🔧 GENERATING ${dataType.toUpperCase()} FOUNTAIN CODES:`);
-    console.log(`- Original data size: ${encodedData.length} bytes`);
-    console.log(`- JSON preview: ${jsonString.substring(0, 100)}...`);
-    
+        
     const blockSize = 200;
     const ltEncoder = createEncoder(encodedData, blockSize);
     const newSessionId = `${dataType}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -102,9 +98,6 @@ const UniversalFountainGenerator = ({
     const seenIndicesCombinations = new Set();
     let iterationCount = 0;
     const maxIterations = maxPackets * 10; // Safety limit to prevent infinite loops
-
-    console.log(`- Block size: ${blockSize}`);
-    console.log(`- Session ID: ${newSessionId}`);
 
     for (const block of ltEncoder.fountain()) {
       iterationCount++;
@@ -125,10 +118,6 @@ const UniversalFountainGenerator = ({
         }
         seenIndicesCombinations.add(indicesKey);
 
-        console.log(`📦 Generating packet ${packetId}:`);
-        console.log(`- Block k: ${block.k}`);
-        console.log(`- Block indices: [${block.indices.join(',')}]`);
-
         const binary = blockToBinary(block);
         const base64Data = fromUint8Array(binary);
         
@@ -144,8 +133,7 @@ const UniversalFountainGenerator = ({
         };
 
         const packetJson = JSON.stringify(packet);
-        console.log(`- Packet JSON size: ${packetJson.length} chars`);
-        
+
         if (packetJson.length > 1800) {
           console.warn(`Packet ${packetId} too large (${packetJson.length} chars), skipping`);
           continue;
@@ -158,12 +146,6 @@ const UniversalFountainGenerator = ({
         break;
       }
     }
-
-    console.log(`✅ GENERATION COMPLETE:`);
-    console.log(`- Generated ${generatedPackets.length} packets total`);
-    console.log(`- Total iterations: ${iterationCount}`);
-    console.log(`- K value: ${generatedPackets[0]?.k}`);
-    console.log(`- Unique index combinations: ${seenIndicesCombinations.size}`);
     
     setPackets(generatedPackets);
     setCurrentPacketIndex(0);

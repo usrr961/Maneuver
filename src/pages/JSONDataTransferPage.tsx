@@ -21,7 +21,6 @@ const JSONDataTransferPage = () => {
   const handleDownloadCSV = async () => {
     try {
       const scoutingDataWithIds = await loadScoutingData();
-      console.log("JSONDataTransferPage CSV - Loaded data:", scoutingDataWithIds.entries.length, "entries");
       
       if (scoutingDataWithIds.entries.length === 0) {
         alert("No scouting data found.");
@@ -29,7 +28,6 @@ const JSONDataTransferPage = () => {
       }
 
       const dataArr = extractLegacyData(scoutingDataWithIds.entries);
-      console.log("JSONDataTransferPage CSV - Legacy data:", dataArr.length, "entries");
       
       const defaultHeader = SCOUTING_DATA_HEADER;
       const finalDataArr = [defaultHeader, ...dataArr];
@@ -68,7 +66,6 @@ const JSONDataTransferPage = () => {
             onClick={async () => {
               try {
                 const scoutingDataWithIds = await loadScoutingData();
-                console.log("JSONDataTransferPage JSON - Loaded data:", scoutingDataWithIds.entries.length, "entries");
                 
                 if (scoutingDataWithIds.entries.length === 0) {
                   alert("No scouting data found.");
@@ -76,7 +73,6 @@ const JSONDataTransferPage = () => {
                 }
 
                 const dataArr = extractLegacyData(scoutingDataWithIds.entries);
-                console.log("JSONDataTransferPage JSON - Legacy data:", dataArr.length, "entries");
                 
                 const element = document.createElement("a");
                 element.setAttribute(

@@ -39,27 +39,21 @@ const MatchStrategyPage = () => {
           const match = matchData.find((m: any) => m.matchNum === matchNumber);
           
           if (match && match.redAlliance && match.blueAlliance) {
-            console.log("Found match in localStorage:", match);
             
-            const redTeams = match.redAlliance.slice(0, 3); // Up to 3 teams
-            const blueTeams = match.blueAlliance.slice(0, 3); // Up to 3 teams
+            const redTeams = match.redAlliance.slice(0, 3);
+            const blueTeams = match.blueAlliance.slice(0, 3);
             
-            // Update selectedTeams array
-            // Red alliance: indices 0, 1, 2
-            // Blue alliance: indices 3, 4, 5
+
             const newSelectedTeams = Array(6).fill("");
             
-            // Fill red teams
             for (let i = 0; i < redTeams.length && i < 3; i++) {
               newSelectedTeams[i] = redTeams[i];
             }
             
-            // Fill blue teams
             for (let i = 0; i < blueTeams.length && i < 3; i++) {
               newSelectedTeams[i + 3] = blueTeams[i];
             }
             
-            console.log("Setting teams from match data:", { redTeams, blueTeams, newSelectedTeams });
             setSelectedTeams(newSelectedTeams);
             setIsLookingUpMatch(false);
             return;
@@ -71,21 +65,15 @@ const MatchStrategyPage = () => {
       
       // Fallback: Try scouting database and legacy data (existing logic)
       const matchEntries = await loadScoutingEntriesByMatch(matchNum.trim());
-      console.log("Database match entries found:", matchEntries);
       
-      // Also check legacy data
       const legacyMatches = scoutingData.filter((entry: any) => 
         entry.matchNumber?.toString() === matchNum.trim()
       );
-      console.log("Legacy match entries found:", legacyMatches);
       
-      // Initialize team arrays
       const redTeams: string[] = [];
       const blueTeams: string[] = [];
       
-      // Process database entries
       matchEntries.forEach(entry => {
-        console.log("Processing DB entry:", { teamNumber: entry.teamNumber, alliance: entry.alliance });
         if (entry.teamNumber) {
           if (entry.alliance === "red" || entry.alliance === "redAlliance") {
             if (!redTeams.includes(entry.teamNumber)) {
@@ -99,10 +87,8 @@ const MatchStrategyPage = () => {
         }
       });
       
-      // Process legacy entries if no database entries found
       if (matchEntries.length === 0 && legacyMatches.length > 0) {
         legacyMatches.forEach((entry: any) => {
-          console.log("Processing legacy entry:", { teamNumber: entry.selectTeam, alliance: entry.alliance });
           const teamNumber = entry.selectTeam?.toString();
           if (teamNumber) {
             if (entry.alliance === "red" || entry.alliance === "redAlliance") {
@@ -119,26 +105,19 @@ const MatchStrategyPage = () => {
       }
       
       if (redTeams.length > 0 || blueTeams.length > 0) {
-        // Sort teams numerically
         redTeams.sort((a, b) => Number(a) - Number(b));
         blueTeams.sort((a, b) => Number(a) - Number(b));
         
-        console.log("Grouped teams from scouting data:", { redTeams, blueTeams });
-        
-        // Update selectedTeams array
         const newSelectedTeams = Array(6).fill("");
         
-        // Fill red teams (up to 3)
         for (let i = 0; i < 3; i++) {
           newSelectedTeams[i] = redTeams[i] || "";
         }
         
-        // Fill blue teams (up to 3)
         for (let i = 0; i < 3; i++) {
           newSelectedTeams[i + 3] = blueTeams[i] || "";
         }
         
-        console.log("Setting teams from scouting data:", { redTeams, blueTeams, newSelectedTeams });
         setSelectedTeams(newSelectedTeams);
       } else {
         console.log("No match entries found for match number:", matchNum);
@@ -148,31 +127,27 @@ const MatchStrategyPage = () => {
     } finally {
       setIsLookingUpMatch(false);
     }
-  }, [scoutingData]); // Add scoutingData dependency
+  }, [scoutingData]);
 
-  // Debounce match number input
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (matchNumber.trim()) {
         lookupMatchTeams(matchNumber);
       }
-    }, 500); // 500ms debounce
+    }, 500);
 
     return () => clearTimeout(timeoutId);
   }, [matchNumber, lookupMatchTeams]);
 
   useEffect(() => {
-    // Load scouting data using the new deduplication utilities
     const loadData = async () => {
       try {
         const data = await loadLegacyScoutingData();
         setScoutingData(data);
         
-        // Debug: Log all match numbers in the data
         const matchNumbers = [...new Set(data.map((entry: Record<string, unknown>) => entry.matchNumber?.toString()).filter(Boolean))];
         console.log("Available match numbers:", matchNumbers.sort((a, b) => Number(a) - Number(b)));
         
-        // Get unique team numbers from selectTeam field
         const teams = [...new Set(data.map((entry: Record<string, unknown>) => entry.selectTeam?.toString()).filter(Boolean))];
         teams.sort((a, b) => Number(a) - Number(b));
         setAvailableTeams(teams as string[]);
@@ -190,7 +165,6 @@ const MatchStrategyPage = () => {
     setSelectedTeams(newSelectedTeams);
   };
 
-  // Touch handlers for alliance card swipe functionality
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const handleAllianceCardTouchStart = (e: React.TouchEvent) => {
@@ -206,7 +180,6 @@ const MatchStrategyPage = () => {
     const deltaY = touch.clientY - touchStartRef.current.y;
     
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-      // Import haptics dynamically
       import('@/lib/haptics').then(({ haptics }) => {
         haptics.light();
       });
@@ -239,7 +212,7 @@ const MatchStrategyPage = () => {
         <h1 className="text-2xl font-bold">Match Strategy</h1>
       </div>
       <div className="flex flex-col items-center gap-4 max-w-7xl w-full">
-        {/* Header section - should scroll naturally */}
+        {/* Header section */}
         <div className="flex md:justify-between w-full flex-wrap md:flex-nowrap gap-2 pt-4">
           <div className="flex items-center gap-2 w-full md:w-auto pb-2 md:pb-0">
             <label htmlFor="match-number" className="font-semibold whitespace-nowrap">
@@ -366,7 +339,7 @@ const MatchStrategyPage = () => {
                   onTouchEnd={handleAllianceCardTouchEnd}
                 />
 
-                {/* Separator - Vertical on lg, horizontal on smaller screens */}
+                {/* Separator */}
                 <div className="lg:w-px lg:bg-border lg:mx-0 lg:h-auto h-px bg-border w-full my-0 lg:my-4"></div>
                 
                 {/* Red Alliance */}

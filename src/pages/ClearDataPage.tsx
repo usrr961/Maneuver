@@ -22,14 +22,11 @@ const ClearDataPage = () => {
 
   const loadScoutingCount = useCallback(async () => {
     try {
-      console.log("ClearDataPage - Loading scouting data count...");
       const scoutingData = await loadScoutingData();
-      console.log("ClearDataPage - Loaded scouting data:", scoutingData.entries.length, "entries");
       setScoutingDataCount(scoutingData.entries.length);
       
       const dataString = JSON.stringify(scoutingData.entries);
       const size = formatDataSize(dataString);
-      console.log("ClearDataPage - Data size:", size);
       setScoutingDataSize(size);
     } catch (error) {
       console.error("Error loading scouting data:", error);
@@ -56,26 +53,19 @@ const ClearDataPage = () => {
 
   const loadScouterGameCount = useCallback(async () => {
     try {
-      console.log("ClearDataPage - Loading scouter game data count...");
-      
-      // Get counts directly from the database tables
       const scoutersCount = await gameDB.scouters.count();
       const predictionsCount = await gameDB.predictions.count();
       
-      console.log("ClearDataPage - Scouters:", scoutersCount, "Predictions:", predictionsCount);
       
-      // Count total entries: scouters + predictions
       const totalEntries = scoutersCount + predictionsCount;
       setScouterGameDataCount(totalEntries);
       
-      // Calculate storage size by getting all data
       const scoutersData = await gameDB.scouters.toArray();
       const predictionsData = await gameDB.predictions.toArray();
       const combinedData = { scouters: scoutersData, predictions: predictionsData };
       const gameDataSize = formatDataSize(JSON.stringify(combinedData));
       setScouterGameDataSize(gameDataSize);
       
-      console.log("ClearDataPage - Total scouter game entries:", totalEntries, "Size:", gameDataSize);
     } catch (error) {
       console.error("Error loading scouter game data:", error);
       setScouterGameDataCount(0);
@@ -117,13 +107,11 @@ const ClearDataPage = () => {
 
   const handleClearScoutingData = async () => {
     try {
-      console.log("ClearDataPage - Starting data clear...");
       await clearAllScoutingData();
       localStorage.setItem("scoutingData", JSON.stringify({ data: [] }));
       
       await refreshData();
       toast.success("Cleared all scouting data");
-      console.log("ClearDataPage - Data cleared successfully");
     } catch (error) {
       console.error("Error clearing scouting data:", error);
       // Clear localStorage as fallback and refresh
@@ -135,12 +123,10 @@ const ClearDataPage = () => {
 
   const handleClearPitScoutingData = async () => {
     try {
-      console.log("ClearDataPage - Starting pit scouting data clear...");
       await clearAllPitScoutingData();
       
       await refreshData();
       toast.success("Cleared all pit scouting data");
-      console.log("ClearDataPage - Pit scouting data cleared successfully");
     } catch (error) {
       console.error("Error clearing pit scouting data:", error);
       toast.error("Failed to clear pit scouting data");
@@ -149,14 +135,11 @@ const ClearDataPage = () => {
 
   const handleClearScouterGameData = async () => {
     try {
-      console.log("ClearDataPage - Starting scouter profile data clear...");
       await clearGameData();
       
-      // Clear all scouter-related localStorage data
       localStorage.removeItem("scoutersList");
       localStorage.removeItem("currentScouter");
       localStorage.removeItem("scouterInitials");
-      console.log("ClearDataPage - Cleared all scouter data from localStorage");
       
       // Dispatch custom event to notify nav-user component to reload
       window.dispatchEvent(new CustomEvent('scouterDataCleared'));

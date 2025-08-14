@@ -44,11 +44,8 @@ const ScoutManagementDashboardPage: React.FC = () => {
     const loadScoutData = async () => {
       setLoading(true);
       try {
-        console.log('🔍 Starting to load scout data...');
         const scoutData = await getAllScouters();
-        console.log('📊 Raw scout data from getAllScouters:', scoutData);
         setScouters(scoutData);
-        console.log('📊 Loaded scout data:', scoutData.length, 'scouts');
         analytics.trackEvent('scout_dashboard_loaded', { scoutCount: scoutData.length });
       } catch (error) {
         console.error('❌ Error loading scout data:', error);

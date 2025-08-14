@@ -15,9 +15,7 @@ interface ScouterProfilesData {
 }
 
 const ScouterProfilesFountainScanner = ({ onBack, onSwitchToGenerator }: ScouterProfilesFountainScannerProps) => {
-  const saveScouterProfilesData = async (data: unknown) => {
-    console.log('Saving scouter profiles data from fountain:', data);
-    
+  const saveScouterProfilesData = async (data: unknown) => {    
     try {
       // Validate the received data structure
       if (!data || typeof data !== 'object') {
@@ -37,7 +35,6 @@ const ScouterProfilesFountainScanner = ({ onBack, onSwitchToGenerator }: Scouter
       const scoutersToImport: Scouter[] = profilesData.scouters;
       const predictionsToImport: MatchPrediction[] = profilesData.predictions;
       
-      console.log(`Importing ${scoutersToImport.length} scouters and ${predictionsToImport.length} predictions`);
       
       // Get existing data to merge intelligently
       const existingScouters = await gameDB.scouters.toArray();
@@ -111,13 +108,6 @@ const ScouterProfilesFountainScanner = ({ onBack, onSwitchToGenerator }: Scouter
       // Merge and deduplicate
       const mergedScouters = [...new Set([...scoutersListArray, ...allScouterNames])].sort();
       localStorage.setItem("scoutersList", JSON.stringify(mergedScouters));
-      
-      console.log('Scouter profiles import complete:', {
-        scoutersAdded,
-        scoutersUpdated,
-        predictionsAdded,
-        predictionsSkipped
-      });
       
       // Show summary to user
       const message = `Import complete! Added ${scoutersAdded} new scouters, updated ${scoutersUpdated} existing scouters, and imported ${predictionsAdded} predictions.`;

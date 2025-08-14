@@ -28,7 +28,6 @@ interface CombinedDataStructure {
 
 const CombinedDataFountainScanner = ({ onBack, onSwitchToGenerator }: CombinedDataFountainScannerProps) => {
   const saveCombinedData = async (data: unknown) => {
-    console.log('Saving combined data from fountain:', data);
     
     try {
       // Validate the received data structure
@@ -51,7 +50,6 @@ const CombinedDataFountainScanner = ({ onBack, onSwitchToGenerator }: CombinedDa
       
       // Process scouting data if present
       if (combinedData.scoutingData.entries && combinedData.scoutingData.entries.length > 0) {
-        console.log(`Importing ${combinedData.scoutingData.entries.length} scouting entries`);
         
         // Load existing scouting data
         const existingScoutingData = await loadScoutingData();
@@ -70,8 +68,6 @@ const CombinedDataFountainScanner = ({ onBack, onSwitchToGenerator }: CombinedDa
           existing: mergeResult.stats.existing,
           duplicates: mergeResult.stats.duplicates
         };
-        
-        console.log('Scouting data import results:', scoutingResults);
       }
       
       // Process scouter profiles data if present
@@ -79,7 +75,6 @@ const CombinedDataFountainScanner = ({ onBack, onSwitchToGenerator }: CombinedDa
         const scoutersToImport = combinedData.scouterProfiles.scouters || [];
         const predictionsToImport = combinedData.scouterProfiles.predictions || [];
         
-        console.log(`Importing ${scoutersToImport.length} scouters and ${predictionsToImport.length} predictions`);
         
         // Get existing data to merge intelligently
         const existingScouters = await gameDB.scouters.toArray();
@@ -151,7 +146,6 @@ const CombinedDataFountainScanner = ({ onBack, onSwitchToGenerator }: CombinedDa
           localStorage.setItem("scoutersList", JSON.stringify(mergedScouters));
         }
         
-        console.log('Scouter profiles import results:', scouterResults);
       }
       
       // Show comprehensive summary to user
@@ -165,11 +159,6 @@ const CombinedDataFountainScanner = ({ onBack, onSwitchToGenerator }: CombinedDa
       
       const fullMessage = `Combined import complete! ${scoutingMessage}${scouterMessage}`;
       toast.success(fullMessage);
-      
-      console.log('Combined data import complete:', {
-        scoutingResults,
-        scouterResults
-      });
       
     } catch (error) {
       console.error('Error importing combined data:', error);

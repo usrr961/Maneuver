@@ -98,7 +98,6 @@ export function NavUser() {
     
     // Listen for scouter data cleared event
     const handleScouterDataCleared = () => {
-      console.log("NavUser - Received scouterDataCleared event, clearing state...")
       setCurrentScouter("")
       setCurrentScouterStakes(0)
       setScoutersList([])
@@ -169,7 +168,6 @@ export function NavUser() {
     try {
       const scouter = await getOrCreateScouterByName(trimmedName)
       setCurrentScouterStakes(scouter.stakes)
-      console.log(`Scouter "${trimmedName}" created/updated in ScouterGameDB`)
     } catch (error) {
       console.error("Error creating scouter in database:", error)
       toast.error(`Failed to save scouter to database: ${error}`)
@@ -190,7 +188,6 @@ export function NavUser() {
     // Remove from database
     try {
       await deleteScouter(name)
-      console.log(`Scouter "${name}" removed from ScouterGameDB`)
     } catch (error) {
       console.error("Error removing scouter from database:", error)
       // Don't show error toast as this is not critical

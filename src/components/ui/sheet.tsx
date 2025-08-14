@@ -240,17 +240,6 @@ function SheetContent({
         break;
     }
 
-    // Debug logging to understand what's happening
-    console.log('Dismiss Debug:', {
-      side,
-      deltaX,
-      deltaY,
-      velocity,
-      hasRecentTouch,
-      shouldClose,
-      wasDragging
-    });
-
     // Re-enable transition for snap-back animation
     contentRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
 

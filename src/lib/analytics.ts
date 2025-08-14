@@ -11,16 +11,13 @@ class SimpleGA4 {
   private initializeGA4() {
     if (this.initialized) return;
     
-    try {
-      console.log('🔄 Initializing GA4...');
-      
+    try {      
       // Load gtag script
       const script = document.createElement('script');
       script.async = true;
       script.src = `https://www.googletagmanager.com/gtag/js?id=${this.measurementId}`;
       
       script.onload = () => {
-        console.log('✅ GA4 script loaded successfully');
         this.setupGtag();
       };
       
@@ -60,7 +57,6 @@ class SimpleGA4 {
       });
 
       this.initialized = true;
-      console.log('✅ GA4 initialized and configured');
       
       // Track initial page view
       this.trackPageView();
@@ -83,7 +79,6 @@ class SimpleGA4 {
         page_title: title,
       });
       
-      console.log('📊 Page view tracked:', path);
     } catch (error) {
       console.error('❌ Error tracking page view:', error);
     }
@@ -103,7 +98,6 @@ class SimpleGA4 {
         ...parameters,
       });
       
-      console.log('📊 Event tracked:', eventName, parameters);
     } catch (error) {
       console.error('❌ Error tracking event:', error);
     }

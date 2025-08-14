@@ -20,19 +20,10 @@ export const checkForNewAchievements = async (scouterName: string): Promise<Achi
   const unlockedIds = new Set(unlockedAchievements.map(a => a.achievementId));
   const newlyUnlocked: Achievement[] = [];
 
-  console.log('🔍 Checking achievements for', scouterName, '- Current stats:', {
-    totalPredictions: scouter.totalPredictions,
-    correctPredictions: scouter.correctPredictions,
-    stakes: scouter.stakes,
-    currentStreak: scouter.currentStreak,
-    longestStreak: scouter.longestStreak
-  });
-
   for (const achievement of ACHIEVEMENT_DEFINITIONS) {
     if (unlockedIds.has(achievement.id)) continue;
     
     if (checkAchievement(achievement, scouter)) {
-      console.log('✅ Achievement unlocked:', achievement.name, 'for', scouterName);
       
       if (achievement.requirements.type === 'special') {
         if (achievement.id === 'early_bird') {
@@ -66,12 +57,10 @@ export const checkForNewAchievements = async (scouterName: string): Promise<Achi
 };
 
 export const backfillAchievementsForAllScouters = async (): Promise<void> => {
-  console.log('🔄 Starting achievement backfill for all scouters...');
   
   const allScouters = await gameDB.scouters.toArray();
   
   for (const scouter of allScouters) {
-    console.log('🔍 Backfilling achievements for:', scouter.name);
     const newAchievements = await checkForNewAchievements(scouter.name);
     
     if (newAchievements.length > 0) {
@@ -79,7 +68,6 @@ export const backfillAchievementsForAllScouters = async (): Promise<void> => {
     }
   }
   
-  console.log('✅ Achievement backfill complete!');
 };
 
 export const getScouterAchievements = async (scouterName: string): Promise<{

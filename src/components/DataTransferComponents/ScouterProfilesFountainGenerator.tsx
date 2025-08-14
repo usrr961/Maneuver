@@ -9,16 +9,13 @@ interface ScouterProfilesFountainGeneratorProps {
 const ScouterProfilesFountainGenerator = ({ onBack, onSwitchToScanner }: ScouterProfilesFountainGeneratorProps) => {
   const loadScouterProfilesData = async () => {
     try {
-      console.log("Loading scouter profiles data for fountain codes...");
       
       // Get all scouters and predictions from the database
       const scoutersData = await gameDB.scouters.toArray();
       const predictionsData = await gameDB.predictions.toArray();
       
-      console.log(`Loaded ${scoutersData.length} scouters and ${predictionsData.length} predictions`);
       
       if (scoutersData.length === 0 && predictionsData.length === 0) {
-        console.log("No scouter profiles data found");
         return null;
       }
       

@@ -31,9 +31,7 @@ export const AchievementsSection: React.FC<AchievementsSectionProps> = ({ scoute
   const handleBackfillAchievements = async () => {
     setBackfillLoading(true);
     try {
-      console.log('🔄 Starting achievement backfill...');
       await backfillAchievementsForAllScouters();
-      console.log('✅ Achievement backfill completed!');
       
       // Reload achievement data
       const achievements = await getScouterAchievements(scouterName);

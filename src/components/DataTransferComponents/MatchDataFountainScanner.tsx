@@ -7,7 +7,6 @@ interface MatchDataFountainScannerProps {
 
 const MatchDataFountainScanner = ({ onBack, onSwitchToGenerator }: MatchDataFountainScannerProps) => {
   const saveMatchData = (data: unknown) => {
-    console.log('Saving match data from fountain:', data);
     
     // Save to localStorage under multiple keys for compatibility
     const dataStr = JSON.stringify(data);
@@ -15,7 +14,6 @@ const MatchDataFountainScanner = ({ onBack, onSwitchToGenerator }: MatchDataFoun
     localStorage.setItem('tbaMatchData', dataStr);
     localStorage.setItem('scoutingApp_matchData', dataStr);
     
-    console.log('Match data saved to localStorage');
   };
 
   const validateMatchData = (data: unknown): boolean => {

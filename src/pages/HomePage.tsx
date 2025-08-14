@@ -16,9 +16,7 @@ const HomePage = () => {
   useEffect(() => {
     const checkExistingData = async () => {
       try {
-        console.log("HomePage - Checking existing data...");
         const existingData = await loadLegacyScoutingData();
-        console.log("HomePage - Found existing data:", existingData.length, "entries");
         if (existingData.length > 0) {
           setIsLoaded(true);
         }
@@ -35,16 +33,11 @@ const HomePage = () => {
     setIsLoading(true);
 
     try {
-      console.log("HomePage - Starting demo data load...");
       const dataWithoutHeaders = demoData.slice(1);
-      console.log("HomePage - Demo data without headers:", dataWithoutHeaders.length, "entries");
 
       const dataWithIds = addIdsToScoutingData(dataWithoutHeaders);
-      console.log("HomePage - Demo data with IDs:", dataWithIds.length, "entries");
-      console.log("HomePage - Sample entry with ID:", dataWithIds[0]);
 
       await saveScoutingData({ entries: dataWithIds });
-      console.log("HomePage - Demo data saved to IndexedDB successfully");
 
       const verifyData = await loadScoutingData();
       console.log("HomePage - Verification: loaded", verifyData.entries.length, "entries from IndexedDB");
@@ -71,9 +64,7 @@ const HomePage = () => {
     haptics.medium();
     
     try {
-      console.log("HomePage - Clearing data...");
       await clearAllScoutingData();
-      console.log("HomePage - Data cleared successfully");
       setIsLoaded(false);
       analytics.trackDemoDataClear();
     } catch (error) {

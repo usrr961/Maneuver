@@ -10,7 +10,6 @@ interface CombinedDataFountainGeneratorProps {
 const CombinedDataFountainGenerator = ({ onBack, onSwitchToScanner }: CombinedDataFountainGeneratorProps) => {
   const loadCombinedData = async () => {
     try {
-      console.log("Loading combined data (scouting + scouter profiles) for fountain codes...");
       
       // Load scouting data
       const scoutingDataWithIds = await loadScoutingData();
@@ -19,15 +18,12 @@ const CombinedDataFountainGenerator = ({ onBack, onSwitchToScanner }: CombinedDa
       const scoutersData = await gameDB.scouters.toArray();
       const predictionsData = await gameDB.predictions.toArray();
       
-      console.log(`Loaded scouting: ${scoutingDataWithIds.entries.length} entries`);
-      console.log(`Loaded scouters: ${scoutersData.length} scouters and ${predictionsData.length} predictions`);
       
       // Check if we have any meaningful data
       const hasScoutingData = scoutingDataWithIds.entries.length > 0;
       const hasScouterData = scoutersData.length > 0 || predictionsData.length > 0;
       
       if (!hasScoutingData && !hasScouterData) {
-        console.log("No data found for combined export");
         return null;
       }
       
@@ -49,13 +45,6 @@ const CombinedDataFountainGenerator = ({ onBack, onSwitchToScanner }: CombinedDa
           predictionsCount: predictionsData.length
         }
       };
-      
-      console.log("Combined data prepared for fountain codes:", {
-        scoutingEntries: scoutingDataWithIds.entries.length,
-        scoutersCount: scoutersData.length,
-        predictionsCount: predictionsData.length,
-        totalDataSize: JSON.stringify(combinedData).length
-      });
       
       return combinedData;
     } catch (error) {
