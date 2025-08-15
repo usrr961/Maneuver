@@ -70,7 +70,7 @@ export const DataClearCard = ({
           <div className="space-y-3">
             <Alert>
               <AlertTriangle className="h-5 w-5" color="red"/>
-              <AlertDescription className="text-white">
+              <AlertDescription>
                 {warningMessage || `This will permanently delete ${entryCount} ${entryLabel}.`}
               </AlertDescription>
             </Alert>

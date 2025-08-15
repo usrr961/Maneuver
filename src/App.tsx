@@ -15,7 +15,7 @@ import HomePage from "@/pages/HomePage";
 import GameStartPage from "@/pages/GameStartPage";
 import AutoStartPage from "@/pages/AutoStartPage";
 // import ParseDataPage from "@/pages/ParseDataPage";
-import MatchDataPage from "@/pages/MatchDataPage";
+import TBADataPage from "@/pages/TBADataPage";
 import ClearDataPage from "@/pages/ClearDataPage";
 import QRDataTransferPage from "@/pages/QRDataTransferPage";
 import JSONDataTransferPage from "@/pages/JSONDataTransferPage";
@@ -27,7 +27,6 @@ import TeamStatsPage from "@/pages/TeamStatsPage";
 import PitScoutingPage from "@/pages/PitScoutingPage";
 import PickListPage from "./pages/PickListPage";
 import StrategyOverviewPage from "./pages/StrategyOverviewPage";
-import MatchResultsPage from "./pages/MatchResultsPage";
 import ScoutManagementDashboardPage from "./pages/ScoutManagementDashboardPage";
 import AchievementsPage from "./pages/AchievementsPage";
 import DevUtilitiesPage from "./pages/DevUtilitiesPage";
@@ -43,7 +42,9 @@ function App() {
     createRoutesFromElements(
       <Route path="/" element={<MainLayout />}>
         <Route index element={<HomePage />} />
-        <Route path="/match-data" element={<MatchDataPage />} />
+        <Route path="/tba-data" element={<TBADataPage />} />
+        <Route path="/match-data" element={<TBADataPage />} />
+        <Route path="/match-results" element={<TBADataPage />} />
         <Route path="/clear-data" element={<ClearDataPage />} /> 
         {/* <Route path="/parse-data" element={<ParseDataPage />} /> */}
         <Route path="/game-start" element={<GameStartPage />} />
@@ -59,7 +60,6 @@ function App() {
         <Route path="/pit-scouting" element={<PitScoutingPage />} />
         <Route path="/strategy-overview" element={<StrategyOverviewPage />} />
         <Route path="/pick-list" element={<PickListPage />} />
-        <Route path="/match-results" element={<MatchResultsPage />} />
         <Route path="/scout-management" element={<ScoutManagementDashboardPage />} />
         <Route path="/achievements" element={<AchievementsPage />} />
         <Route path="/dev-utilities" element={<DevUtilitiesPage />} />

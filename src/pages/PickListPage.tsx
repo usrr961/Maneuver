@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/animate-ui/radix/tabs";
 import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
+import { getAllStoredEventTeams } from "../lib/tbaUtils";
 import { 
   sortTeams, 
   filterTeams, 
@@ -59,8 +59,6 @@ const PickListPage = () => {
   // Load team data from scouting results
   useEffect(() => {
     const loadTeamData = async () => {
-      const matchDataStr = localStorage.getItem("matchData");
-      
       try {
         const scoutingData = await loadLegacyScoutingData();
         
@@ -77,27 +75,21 @@ const PickListPage = () => {
             return calculateTeamStats(teamNumber, teamEntries);
           }).filter(Boolean) as TeamStats[];
           
-          // Add teams from match data that might not have scouting data
-          if (matchDataStr) {
-            try {
-              const matchData = JSON.parse(matchDataStr);
-              const allMatchTeams = new Set<string>();
-              
-              matchData.forEach((match: any) => {
-                if (match.redAlliance) match.redAlliance.forEach((team: string) => allMatchTeams.add(team));
-                if (match.blueAlliance) match.blueAlliance.forEach((team: string) => allMatchTeams.add(team));
-              });
-              
-              // Add teams that don't have scouting data
-              allMatchTeams.forEach(teamNumber => {
-                if (!teamsWithStats.find(t => t.teamNumber === teamNumber)) {
-                  teamsWithStats.push(createDefaultTeamStats(teamNumber));
-                }
-              });
-            } catch (error) {
-              console.error("Error parsing match data:", error);
+          // Add teams from stored event teams that might not have scouting data
+          const storedEventTeams = getAllStoredEventTeams();
+          const allStoredTeams = new Set<string>();
+          
+          // Collect all team numbers from all stored events
+          Object.values(storedEventTeams).forEach(teamNumbers => {
+            teamNumbers.forEach(teamNumber => allStoredTeams.add(teamNumber.toString()));
+          });
+          
+          // Add teams that don't have scouting data but are in stored events
+          allStoredTeams.forEach(teamNumber => {
+            if (!teamsWithStats.find(t => t.teamNumber === teamNumber)) {
+              teamsWithStats.push(createDefaultTeamStats(teamNumber));
             }
-          }
+          });
           
           teamsWithStats.sort((a, b) => Number(a.teamNumber) - Number(b.teamNumber));
           setAvailableTeams(teamsWithStats);

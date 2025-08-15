@@ -24,7 +24,7 @@ export const ProcessingResults: React.FC<ProcessingResultsProps> = ({ results })
   const totalStakes = results.reduce((sum, r) => sum + r.stakesAwarded, 0);
 
   return (
-    <Card className="w-full max-w-6xl mx-auto">
+    <Card className="w-full">
       <CardHeader className="pb-4">
         <CardTitle className="text-xl">Processing Results</CardTitle>
         <p className="text-sm text-muted-foreground mb-4">

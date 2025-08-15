@@ -74,6 +74,30 @@ export interface TBAEvent {
   playoff_type_string?: string;
 }
 
+export interface TBATeam {
+  key: string;
+  team_number: number;
+  nickname: string;
+  name: string;
+  school_name?: string;
+  city?: string;
+  state_prov?: string;
+  country?: string;
+  address?: string;
+  postal_code?: string;
+  gmaps_place_id?: string;
+  gmaps_url?: string;
+  lat?: number;
+  lng?: number;
+  location_name?: string;
+  website?: string;
+  rookie_year?: number;
+  motto?: string;
+  home_championship?: {
+    [year: string]: string;
+  };
+}
+
 // Helper function to make TBA API requests
 const makeTBARequest = async (endpoint: string): Promise<unknown> => {
   const response = await fetch(`${TBA_BASE_URL}${endpoint}`, {
@@ -205,4 +229,105 @@ export const validateAPIKey = async (): Promise<boolean> => {
 // Get event info by key
 export const getEvent = async (eventKey: string): Promise<TBAEvent> => {
   return makeTBARequest(`/event/${eventKey}`) as Promise<TBAEvent>;
+};
+
+// Get teams for an event
+export const getEventTeams = async (eventKey: string, apiKey?: string): Promise<TBATeam[]> => {
+  const endpoint = `/event/${eventKey}/teams`;
+  
+  if (apiKey) {
+    // Use provided API key for this request
+    const response = await fetch(`${TBA_BASE_URL}${endpoint}`, {
+      headers: {
+        'X-TBA-Auth-Key': apiKey,
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`TBA API Error: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json() as Promise<TBATeam[]>;
+  } else {
+    return makeTBARequest(endpoint) as Promise<TBATeam[]>;
+  }
+};
+
+// Local storage utilities for event teams
+const TEAMS_STORAGE_PREFIX = 'tba_event_teams_';
+
+export const storeEventTeams = (eventKey: string, teams: TBATeam[]): void => {
+  const storageKey = `${TEAMS_STORAGE_PREFIX}${eventKey}`;
+  // Extract just the team numbers for more efficient storage
+  const teamNumbers = teams.map(team => team.team_number).sort((a, b) => a - b);
+  const data = {
+    teamNumbers,
+    timestamp: Date.now(),
+    eventKey
+  };
+  
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(data));
+    console.log(`Stored ${teamNumbers.length} team numbers for event ${eventKey}`);
+  } catch (error) {
+    console.error('Failed to store teams in localStorage:', error);
+    throw new Error('Failed to store teams data');
+  }
+};
+
+export const getStoredEventTeams = (eventKey: string): number[] | null => {
+  const storageKey = `${TEAMS_STORAGE_PREFIX}${eventKey}`;
+  
+  try {
+    const stored = localStorage.getItem(storageKey);
+    if (!stored) return null;
+    
+    const data = JSON.parse(stored);
+    // Check for both old format (teams) and new format (teamNumbers) for backward compatibility
+    if (data.teamNumbers) {
+      return data.teamNumbers;
+    } else if (data.teams) {
+      // Legacy format - extract team numbers from full team objects
+      return data.teams.map((team: TBATeam) => team.team_number).sort((a: number, b: number) => a - b);
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to retrieve teams from localStorage:', error);
+    return null;
+  }
+};
+
+export const clearStoredEventTeams = (eventKey: string): void => {
+  const storageKey = `${TEAMS_STORAGE_PREFIX}${eventKey}`;
+  localStorage.removeItem(storageKey);
+};
+
+export const getAllStoredEventTeams = (): { [eventKey: string]: number[] } => {
+  const result: { [eventKey: string]: number[] } = {};
+  
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(TEAMS_STORAGE_PREFIX)) {
+      try {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          const data = JSON.parse(stored);
+          const eventKey = key.replace(TEAMS_STORAGE_PREFIX, '');
+          
+          // Handle both new format (teamNumbers) and legacy format (teams)
+          if (data.teamNumbers) {
+            result[eventKey] = data.teamNumbers;
+          } else if (data.teams) {
+            // Legacy format - extract team numbers
+            result[eventKey] = data.teams.map((team: TBATeam) => team.team_number).sort((a: number, b: number) => a - b);
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to parse stored teams for key ${key}:`, error);
+      }
+    }
+  }
+  
+  return result;
 };

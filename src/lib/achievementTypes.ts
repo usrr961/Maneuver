@@ -83,80 +83,80 @@ export const ACHIEVEMENT_DEFINITIONS: Achievement[] = [
     stakesReward: 50
   },
   {
-    id: 'predictions_250',
+    id: 'predictions_200',
     name: 'Scout Veteran',
-    description: 'Make 250 predictions',
+    description: 'Make 200 predictions',
     icon: '🏆',
     category: 'volume',
     tier: 'platinum',
-    requirements: { type: 'minimum', value: 250, property: 'totalPredictions' },
+    requirements: { type: 'minimum', value: 200, property: 'totalPredictions' },
     stakesReward: 100
   },
   {
-    id: 'predictions_400',
+    id: 'predictions_300',
     name: 'Scout Legend',
-    description: 'Make 400 predictions',
+    description: 'Make 300 predictions',
     icon: '👑',
     category: 'volume',
     tier: 'legendary',
-    requirements: { type: 'minimum', value: 400, property: 'totalPredictions' },
+    requirements: { type: 'minimum', value: 300, property: 'totalPredictions' },
     stakesReward: 200
   },
 
   // Accuracy Achievements
   {
-    id: 'accuracy_70',
+    id: 'accuracy_60',
     name: 'Sharp Eye',
-    description: 'Achieve 70% accuracy with at least 10 predictions',
+    description: 'Achieve 60% accuracy with at least 10 predictions',
     icon: '🎯',
     category: 'accuracy',
     tier: 'bronze',
     requirements: { 
       type: 'custom', 
-      value: 70,
-      customCheck: (scouter) => scouter.totalPredictions >= 10 && (scouter.correctPredictions / scouter.totalPredictions * 100) >= 70
+      value: 60,
+      customCheck: (scouter) => scouter.totalPredictions >= 10 && (scouter.correctPredictions / scouter.totalPredictions * 100) >= 60
     },
     stakesReward: 20
   },
   {
-    id: 'accuracy_80',
+    id: 'accuracy_70',
     name: 'Scout Sharpshooter',
-    description: 'Achieve 80% accuracy with at least 20 predictions',
+    description: 'Achieve 70% accuracy with at least 20 predictions',
     icon: '🏹',
     category: 'accuracy',
     tier: 'silver',
     requirements: { 
       type: 'custom', 
-      value: 80,
-      customCheck: (scouter) => scouter.totalPredictions >= 20 && (scouter.correctPredictions / scouter.totalPredictions * 100) >= 80
+      value: 70,
+      customCheck: (scouter) => scouter.totalPredictions >= 20 && (scouter.correctPredictions / scouter.totalPredictions * 100) >= 70
     },
     stakesReward: 40
   },
   {
-    id: 'accuracy_90',
+    id: 'accuracy_80',
     name: 'Oracle',
-    description: 'Achieve 90% accuracy with at least 30 predictions',
+    description: 'Achieve 80% accuracy with at least 30 predictions',
     icon: '🔮',
     category: 'accuracy',
     tier: 'gold',
     requirements: { 
       type: 'custom', 
-      value: 90,
-      customCheck: (scouter) => scouter.totalPredictions >= 30 && (scouter.correctPredictions / scouter.totalPredictions * 100) >= 90
+      value: 80,
+      customCheck: (scouter) => scouter.totalPredictions >= 30 && (scouter.correctPredictions / scouter.totalPredictions * 100) >= 80
     },
     stakesReward: 75
   },
   {
-    id: 'accuracy_95',
+    id: 'accuracy_85',
     name: 'Prophet',
-    description: 'Achieve 95% accuracy with at least 50 predictions',
+    description: 'Achieve 85% accuracy with at least 50 predictions',
     icon: '✨',
     category: 'accuracy',
     tier: 'platinum',
     requirements: { 
       type: 'custom', 
-      value: 95,
-      customCheck: (scouter) => scouter.totalPredictions >= 50 && (scouter.correctPredictions / scouter.totalPredictions * 100) >= 95
+      value: 85,
+      customCheck: (scouter) => scouter.totalPredictions >= 50 && (scouter.correctPredictions / scouter.totalPredictions * 100) >= 85
     },
     stakesReward: 150
   },
@@ -257,64 +257,49 @@ export const ACHIEVEMENT_DEFINITIONS: Achievement[] = [
 
   // Special Achievements
   {
-    id: 'perfect_10',
-    name: 'Perfect Vision',
-    description: 'Get your first 10 predictions all correct',
+    id: 'perfectionist',
+    name: 'Perfectionist',
+    description: 'Get 5 consecutive predictions correct',
     icon: '💯',
     category: 'special',
     tier: 'gold',
     requirements: { 
-      type: 'custom', 
-      value: 10,
-      customCheck: (scouter) => scouter.totalPredictions >= 10 && scouter.correctPredictions >= 10 && scouter.longestStreak >= 10
+      type: 'minimum',
+      value: 5,
+      property: 'longestStreak'
     },
     stakesReward: 100,
     hidden: true
   },
   {
-    id: 'comeback_kid',
-    name: 'Comeback Kid',
-    description: 'Have a streak of 5+ after having accuracy below 50%',
-    icon: '🎭',
+    id: 'high_roller',
+    name: 'High Roller',
+    description: 'Earn 1000 total stakes (predictions + achievements)',
+    icon: '�',
+    category: 'special',
+    tier: 'platinum',
+    requirements: { 
+      type: 'minimum',
+      value: 1000,
+      property: 'stakesFromPredictions'
+    },
+    stakesReward: 200,
+    hidden: true
+  },
+  {
+    id: 'steady_hand',
+    name: 'Steady Hand',
+    description: 'Maintain 75% accuracy with at least 40 predictions',
+    icon: '🎯',
     category: 'special',
     tier: 'silver',
     requirements: { 
-      type: 'custom', 
-      value: 5,
-      customCheck: (scouter) => scouter.longestStreak >= 5 && scouter.totalPredictions >= 20
+      type: 'custom',
+      value: 75,
+      customCheck: (scouter) => scouter.totalPredictions >= 40 && (scouter.correctPredictions / scouter.totalPredictions * 100) >= 75
     },
     stakesReward: 75,
     hidden: true
-  },
-  {
-    id: 'early_bird',
-    name: 'Early Bird',
-    description: 'Be among the first 5 scouts to join',
-    icon: '🐦',
-    category: 'special',
-    tier: 'bronze',
-    requirements: { type: 'special', value: 5 },
-    stakesReward: 25,
-    hidden: true
-  },
-
-  // Time-based achievements
-  {
-    id: 'scout_veteran_time',
-    name: 'Time Served',
-    description: 'Scout for 30 days',
-    icon: '⏰',
-    category: 'time',
-    tier: 'silver',
-    requirements: { 
-      type: 'custom', 
-      value: 30,
-      customCheck: (scouter) => {
-        const daysDiff = (Date.now() - scouter.createdAt) / (1000 * 60 * 60 * 24);
-        return daysDiff >= 30;
-      }
-    },
-    stakesReward: 50
   }
 ];
 

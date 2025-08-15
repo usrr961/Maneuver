@@ -54,12 +54,8 @@ const data = {
           url: "/qr-data-transfer",
         },
         {
-          title: "Match Data Load",
-          url: "/match-data",
-        },
-        {
-          title: "Match Results (TBA)",
-          url: "/match-results",
+          title: "TBA Data",
+          url: "/tba-data",
         }
       ]
     },

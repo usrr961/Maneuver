@@ -115,7 +115,6 @@ const DevUtilitiesPage: React.FC = () => {
       
       let scoutersAdded = 0;
       let predictionsAdded = 0;
-      let predictionsSkipped = 0;
 
       // Process scouters - exactly like QR transfer
       for (const scouter of scoutersToImport) {
@@ -131,7 +130,6 @@ const DevUtilitiesPage: React.FC = () => {
         } catch {
           // Probably a duplicate ID constraint, skip it
           console.warn(`Skipping duplicate prediction: ${prediction.id}`);
-          predictionsSkipped++;
         }
       }
 

@@ -190,7 +190,7 @@ const UniversalFountainScanner = ({
   if (isComplete && reconstructedData) {
     return (
       <div className="h-screen w-full flex flex-col items-center px-4 pt-6 pb-6">
-        <div className="flex flex-col items-center gap-4 max-w-md w-full">
+        <div className="flex flex-col gap-4 max-w-md w-full">
           <Button
             onClick={onBack}
             variant="outline"
@@ -240,7 +240,7 @@ const UniversalFountainScanner = ({
             </CardContent>
           </Card>
 
-          <div className="text-xs text-muted-foreground text-center space-y-1">
+          <div className="text-xs text-muted-foreground text-start space-y-1">
             <p>• Data saved to local storage</p>
             <p>• Ready to use throughout the app</p>
           </div>

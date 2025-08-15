@@ -153,7 +153,7 @@ export const MatchSelector: React.FC<MatchSelectorProps> = ({
   }
 
   return (
-    <Card className="w-full max-w-6xl mx-auto">
+    <Card className="w-full">
       <CardHeader className="pb-4">
         <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
           <div className="space-y-1">
