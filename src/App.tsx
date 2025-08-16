@@ -25,6 +25,7 @@ import { AutoScoringPage, TeleopScoringPage } from "@/pages/ScoringPage";
 import EndgamePage from "@/pages/EndgamePage";
 import TeamStatsPage from "@/pages/TeamStatsPage";
 import PitScoutingPage from "@/pages/PitScoutingPage";
+import PitAssignmentsPage from "@/pages/PitAssignmentsPage";
 import PickListPage from "./pages/PickListPage";
 import StrategyOverviewPage from "./pages/StrategyOverviewPage";
 import ScoutManagementDashboardPage from "./pages/ScoutManagementDashboardPage";
@@ -58,6 +59,7 @@ function App() {
         <Route path="/endgame" element={<EndgamePage />} />
         <Route path="/team-stats" element={<TeamStatsPage />} />
         <Route path="/pit-scouting" element={<PitScoutingPage />} />
+        <Route path="/pit-assignments" element={<PitAssignmentsPage />} />
         <Route path="/strategy-overview" element={<StrategyOverviewPage />} />
         <Route path="/pick-list" element={<PickListPage />} />
         <Route path="/scout-management" element={<ScoutManagementDashboardPage />} />

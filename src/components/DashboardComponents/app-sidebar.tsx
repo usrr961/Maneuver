@@ -99,6 +99,10 @@ const data = {
           title: "Achievements",
           url: "/achievements",
         },
+        {
+          title: "Assign Pit Scouting",
+          url: "/pit-assignments",
+        },
         ...(import.meta.env.DEV ? [{
           title: "Dev Utilities",
           url: "/dev-utilities",

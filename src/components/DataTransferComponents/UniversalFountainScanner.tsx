@@ -3,6 +3,7 @@ import { Scanner } from "@yudiel/react-qr-scanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { createDecoder, binaryToBlock } from "luby-transform";
@@ -319,12 +320,10 @@ const UniversalFountainScanner = ({
                   <span>Progress</span>
                   <span>{progress.percentage.toFixed(1)}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
-                    style={{ width: `${Math.min(progress.percentage, 100)}%` }}
-                  ></div>
-                </div>
+                <Progress 
+                  value={Math.min(progress.percentage, 100)}
+                  className="w-full"
+                />
               </div>
             )}
 

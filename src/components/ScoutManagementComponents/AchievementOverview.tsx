@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Trophy, Star, Target, ChevronRight, RefreshCw } from 'lucide-react';
 import { getAchievementStats, getNextAchievements, backfillAchievementsForAllScouters } from '@/lib/achievementUtils';
 import { ACHIEVEMENT_TIERS, type Achievement } from '@/lib/achievementTypes';
@@ -169,12 +170,10 @@ export const AchievementOverview: React.FC<AchievementOverviewProps> = ({
                       <div className="text-xs text-gray-500 truncate">{achievement.description}</div>
                       {achievement.progress > 0 && (
                         <div className="flex items-center gap-2 mt-1">
-                          <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                            <div 
-                              className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
-                              style={{ width: `${achievement.progress}%` }}
-                            />
-                          </div>
+                          <Progress 
+                            value={achievement.progress}
+                            className="flex-1 h-1.5"
+                          />
                           <span className="text-xs text-gray-500">{Math.round(achievement.progress)}%</span>
                         </div>
                       )}
