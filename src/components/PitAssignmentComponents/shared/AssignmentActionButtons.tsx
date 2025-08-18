@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Users } from 'lucide-react';
 
-interface PitAssignmentActionButtonsProps {
+interface AssignmentActionButtonsProps {
   assignmentMode: 'sequential' | 'spatial' | 'manual';
   assignmentsConfirmed: boolean;
   assignmentsLength: number;
@@ -11,7 +11,7 @@ interface PitAssignmentActionButtonsProps {
   isMobile?: boolean;
 }
 
-export const PitAssignmentActionButtons: React.FC<PitAssignmentActionButtonsProps> = ({
+export const AssignmentActionButtons: React.FC<AssignmentActionButtonsProps> = ({
   assignmentMode,
   assignmentsConfirmed,
   assignmentsLength,

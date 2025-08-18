@@ -5,6 +5,7 @@ import { LayoutDashboard, Settings, SquarePen } from "lucide-react"
 import { NavMain } from "@/components/DashboardComponents/nav-main"
 // import { NavSecondary } from "@/components/DashboardComponents/nav-secondary"
 import { NavUser } from "@/components/DashboardComponents/nav-user"
+import { DataAttribution } from "@/components/DataAttribution"
 import {
   Sidebar,
   SidebarContent,
@@ -54,8 +55,8 @@ const data = {
           url: "/qr-data-transfer",
         },
         {
-          title: "TBA Data",
-          url: "/tba-data",
+          title: "API Data",
+          url: "/api-data",
         }
       ]
     },
@@ -227,6 +228,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
+        <div className="px-2 py-1">
+          <DataAttribution sources={['tba', 'nexus']} variant="compact" />
+        </div>
         <NavUser />
       </SidebarFooter>
     </Sidebar>

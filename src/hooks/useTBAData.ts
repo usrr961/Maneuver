@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { type TBAMatch, getMatchResult } from '@/lib/tbaUtils';
+import { setCurrentEvent } from '@/lib/eventDataUtils';
 import { 
   getEventTeams, 
   storeEventTeams, 
@@ -99,6 +100,9 @@ export const useTBAData = () => {
       const successMessage = `Match data loaded: ${qualMatchesCleaned.length} matches for ${tbaEventKey}`;
       toast.success(successMessage);
       
+      // Update current event in localStorage after successful load
+      setCurrentEvent(tbaEventKey.trim());
+      
       // Clear API key from memory after successful fetch if not remembering
       if (!rememberForSession) {
         setApiKey("");
@@ -145,6 +149,9 @@ export const useTBAData = () => {
       
       setMatches(qualMatches);
       toast.success(`Loaded ${qualMatches.length} qualification matches`);
+      
+      // Update current event in localStorage after successful load
+      setCurrentEvent(tbaEventKey.trim());
       
       // Store match results in localStorage for stakes calculation
       const matchResults = qualMatches.map((match: TBAMatch) => ({
@@ -208,6 +215,9 @@ export const useTBAData = () => {
       setIsStored(false);
       
       toast.success(`Loaded ${fetchedTeams.length} teams from TBA API`);
+      
+      // Update current event in localStorage after successful load
+      setCurrentEvent(tbaEventKey.trim());
       
       // Clear API key from memory if not remembering for session
       if (!rememberForSession) {

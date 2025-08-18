@@ -11,6 +11,7 @@ import { TeamStatsHeader } from "../components/TeamStatsComponents/TeamStatsHead
 import { StatCard } from "../components/TeamStatsComponents/StatCard";
 import { ProgressCard } from "../components/TeamStatsComponents/ProgressCard";
 import { PitScoutingData } from "../components/TeamStatsComponents/PitScoutingData";
+import { DataAttribution } from "@/components/DataAttribution";
 import { analytics } from '@/lib/analytics';
 import LogoNotFound from "../assets/Logo Not Found.png";
 
@@ -93,7 +94,15 @@ const TeamStatsPage = () => {
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-4 pt-4 pb-6">
       <div className="w-full max-w-7xl">
-        <h1 className="text-2xl font-bold mb-4">Team Statistics</h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">Team Statistics</h1>
+          <div className="hidden md:block">
+            <DataAttribution sources={['tba']} variant="compact" />
+          </div>
+        </div>
+        <div className="md:hidden mb-4">
+          <DataAttribution sources={['tba']} variant="compact" />
+        </div>
         <div className="flex flex-col gap-6 w-full">
         
         {/* Header */}

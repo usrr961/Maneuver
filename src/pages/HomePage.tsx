@@ -2,6 +2,7 @@ import ManeuverVerticalLogo from "../assets/Maneuver Wordmark Vertical.png";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { DataAttribution } from "@/components/DataAttribution";
 import { useState, useEffect } from "react";
 import demoData from "../app/dashboard/ManeuverData-5_52_53 PM-Blue 1.json";
 import { loadLegacyScoutingData, saveScoutingData, addIdsToScoutingData, loadScoutingData } from "../lib/scoutingDataUtils";
@@ -80,7 +81,7 @@ const HomePage = () => {
     <main className="relative min-h-screen w-full">
       <div
         className={cn(
-          "flex flex-col min-h-screen w-full justify-center items-center gap-6 pt-6",
+          "flex flex-col min-h-screen w-full justify-center items-center gap-6 pt-6 pb-24 2xl:pb-6",
           "[background-size:40px_40px]",
           "[background-image:linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)]",
           "dark:[background-image:linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)]"
@@ -94,9 +95,12 @@ const HomePage = () => {
             alt="Maneuver Logo"
             className="dark:invert"
           />
-          <p className="text-center">
-            <strong>Version</strong>: 2025.1.0
-          </p>
+          <div className="text-center space-y-2">
+            <p>
+              <strong>Version</strong>: 2025.1.0
+            </p>
+            <DataAttribution sources={['tba', 'nexus']} variant="compact" />
+          </div>
         </div>
 
         {/* Demo Data Section */}

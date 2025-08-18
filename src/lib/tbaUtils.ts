@@ -233,7 +233,7 @@ export const getEvent = async (eventKey: string): Promise<TBAEvent> => {
 
 // Get teams for an event
 export const getEventTeams = async (eventKey: string, apiKey?: string): Promise<TBATeam[]> => {
-  const endpoint = `/event/${eventKey}/teams`;
+  const endpoint = `/event/${eventKey}/teams/keys`;
   
   if (apiKey) {
     // Use provided API key for this request
@@ -248,9 +248,29 @@ export const getEventTeams = async (eventKey: string, apiKey?: string): Promise<
       throw new Error(`TBA API Error: ${response.status} ${response.statusText}`);
     }
 
-    return response.json() as Promise<TBATeam[]>;
+    const teamKeys = await response.json() as string[];
+    // Convert team keys (e.g., "frc1234") to team objects
+    return teamKeys.map(key => {
+      const teamNumber = parseInt(key.replace('frc', ''));
+      return {
+        key,
+        team_number: teamNumber,
+        nickname: `Team ${teamNumber}`,
+        name: `Team ${teamNumber}`,
+      };
+    }).sort((a, b) => a.team_number - b.team_number);
   } else {
-    return makeTBARequest(endpoint) as Promise<TBATeam[]>;
+    const teamKeys = await makeTBARequest(endpoint) as string[];
+    // Convert team keys (e.g., "frc1234") to team objects
+    return teamKeys.map(key => {
+      const teamNumber = parseInt(key.replace('frc', ''));
+      return {
+        key,
+        team_number: teamNumber,
+        nickname: `Team ${teamNumber}`,
+        name: `Team ${teamNumber}`,
+      };
+    }).sort((a, b) => a.team_number - b.team_number);
   }
 };
 

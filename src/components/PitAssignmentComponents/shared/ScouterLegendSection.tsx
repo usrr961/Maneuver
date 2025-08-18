@@ -1,10 +1,10 @@
 import React from 'react';
-import { PitScouterSelectionBar } from './PitScouterSelectionBar';
-import { PitAssignmentProgressBar } from './PitAssignmentProgressBar';
-import { PitAssignmentActionButtons } from './PitAssignmentActionButtons';
+import { ScouterSelectionBar } from './ScouterSelectionBar';
+import { AssignmentProgressBar } from './AssignmentProgressBar';
+import { AssignmentActionButtons } from './AssignmentActionButtons';
 import type { PitAssignment } from '@/lib/pitAssignmentTypes';
 
-interface PitScouterLegendProps {
+interface ScouterLegendSectionProps {
   scoutersList: string[];
   assignments: PitAssignment[];
   assignmentMode: 'sequential' | 'spatial' | 'manual';
@@ -18,7 +18,7 @@ interface PitScouterLegendProps {
   helpText?: string;
 }
 
-export const PitScouterLegend: React.FC<PitScouterLegendProps> = ({
+export const ScouterLegendSection: React.FC<ScouterLegendSectionProps> = ({
   scoutersList,
   assignments,
   assignmentMode,
@@ -43,7 +43,7 @@ export const PitScouterLegend: React.FC<PitScouterLegendProps> = ({
       </div>
 
       <div className="mb-3">
-        <PitScouterSelectionBar
+        <ScouterSelectionBar
           scoutersList={scoutersList}
           assignments={assignments}
           assignmentMode={assignmentMode}
@@ -57,12 +57,12 @@ export const PitScouterLegend: React.FC<PitScouterLegendProps> = ({
       {/* Progress Bar - inside the scouter selection card */}
       {hasAssignments && (
         <div className="mt-3 p-3">
-          <PitAssignmentProgressBar assignments={assignments} />
+          <AssignmentProgressBar assignments={assignments} />
           
           {/* Mobile Actions */}
           {showMobileActions && (
             <div className="md:hidden mt-3">
-              <PitAssignmentActionButtons
+              <AssignmentActionButtons
                 assignmentMode={assignmentMode}
                 assignmentsConfirmed={assignmentsConfirmed}
                 assignmentsLength={assignments.length}

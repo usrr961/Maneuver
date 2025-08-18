@@ -8,8 +8,10 @@ import {
   Trash2,
   CheckCircle,
   AlertCircle,
+  MapPin,
 } from 'lucide-react';
 import { type TBATeam } from '@/lib/tbaUtils';
+import { hasStoredNexusTeams } from '@/lib/nexusUtils';
 
 interface EventTeamsDisplayProps {
   teams: TBATeam[];
@@ -26,6 +28,8 @@ export const EventTeamsDisplay: React.FC<EventTeamsDisplayProps> = ({
   onStoreTeams,
   onClearStored,
 }) => {
+  const hasNexusTeams = hasStoredNexusTeams(eventKey);
+  
   if (teams.length === 0) {
     return null;
   }
@@ -47,6 +51,14 @@ export const EventTeamsDisplay: React.FC<EventTeamsDisplayProps> = ({
             </CardTitle>
             <CardTitle className="text-sm text-muted-foreground">
               Teams participating in event: {eventKey}
+              {hasNexusTeams && (
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    <MapPin className="h-3 w-3 mr-1" />
+                    Nexus teams also available with pit locations
+                  </Badge>
+                </div>
+              )}
             </CardTitle>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">

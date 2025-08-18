@@ -4,7 +4,7 @@ import { Plus } from 'lucide-react';
 import type { PitAssignment } from '@/lib/pitAssignmentTypes';
 import { getScouterColor } from './scouterUtils';
 
-interface PitScouterSelectionBarProps {
+interface ScouterSelectionBarProps {
   scoutersList: string[];
   assignments: PitAssignment[];
   assignmentMode: 'sequential' | 'spatial' | 'manual';
@@ -14,7 +14,7 @@ interface PitScouterSelectionBarProps {
   hasAssignments: boolean;
 }
 
-export const PitScouterSelectionBar: React.FC<PitScouterSelectionBarProps> = ({
+export const ScouterSelectionBar: React.FC<ScouterSelectionBarProps> = ({
   scoutersList,
   assignments,
   assignmentMode,

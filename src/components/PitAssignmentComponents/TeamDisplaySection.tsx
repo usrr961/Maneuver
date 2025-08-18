@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, UserPlus, X } from 'lucide-react';
 import type { PitAssignment } from '@/lib/pitAssignmentTypes';
+import type { NexusPitMap } from '@/lib/nexusUtils';
 import { getScouterColor } from './shared/scouterUtils';
 import { PitScouterLegend } from './shared/PitScouterLegend';
 import { PitAssignmentActionButtons } from './shared/PitAssignmentActionButtons';
+import PitMapCard from './PitMapCard';
 
 interface TeamDisplaySectionProps {
   eventKey: string;
@@ -13,7 +15,7 @@ interface TeamDisplaySectionProps {
   assignments?: PitAssignment[];
   scoutersList?: string[];
   onToggleCompleted?: (assignmentId: string) => void;
-  assignmentMode?: 'sequential' | 'manual';
+  assignmentMode?: 'sequential' | 'spatial' | 'manual';
   onManualAssignment?: (teamNumber: number, scouterName: string) => void;
   onRemoveAssignment?: (teamNumber: number) => void;
   selectedScouterForAssignment?: string | null;
@@ -21,6 +23,10 @@ interface TeamDisplaySectionProps {
   onConfirmAssignments?: () => void;
   onClearAllAssignments?: () => void;
   assignmentsConfirmed?: boolean;
+  pitAddresses?: { [teamNumber: string]: string } | null;
+  // Nexus pit map props
+  pitMapData?: NexusPitMap | null;
+  teamDataSource?: 'nexus' | 'tba';
 }
 
 export const TeamDisplaySection: React.FC<TeamDisplaySectionProps> = ({
@@ -36,11 +42,39 @@ export const TeamDisplaySection: React.FC<TeamDisplaySectionProps> = ({
   onScouterSelectionChange,
   onConfirmAssignments,
   onClearAllAssignments,
-  assignmentsConfirmed = false
+  assignmentsConfirmed = false,
+  pitAddresses = null,
+  pitMapData = null,
+  teamDataSource
 }) => {
   
   if (teams.length === 0) {
     return null;
+  }
+
+  // Determine whether to show pit map or team cards
+  const shouldShowPitMap = teamDataSource === 'nexus' && pitMapData && pitAddresses;
+
+  // If we have Nexus pit map data, render the interactive PitMapCard for visual assignment
+  // Otherwise, render the traditional team cards grid for basic assignment view
+  if (shouldShowPitMap) {
+    return (
+      <PitMapCard
+        selectedEvent={eventKey}
+        pitMapData={pitMapData!}
+        pitAddresses={pitAddresses!}
+        assignments={assignments}
+        scoutersList={scoutersList}
+        assignmentMode={assignmentMode}
+        assignmentsConfirmed={assignmentsConfirmed}
+        selectedScouterForAssignment={selectedScouterForAssignment || null}
+        onScouterSelectionChange={onScouterSelectionChange || (() => {})}
+        onClearAllAssignments={onClearAllAssignments || (() => {})}
+        onConfirmAssignments={onConfirmAssignments || (() => {})}
+        onManualAssignment={onManualAssignment || (() => {})}
+        onToggleCompleted={onToggleCompleted || (() => {})}
+      />
+    );
   }
 
   // Create a map of team number to scouter for quick lookup
@@ -219,11 +253,20 @@ export const TeamDisplaySection: React.FC<TeamDisplaySectionProps> = ({
                           : `Team ${teamNumber}`
                     }
                   >
-                    <span className={`font-semibold text-sm text-center transition-all duration-300 ${
-                      isCompleted ? 'line-through text-lg' : ''
-                    }`}>
-                      {isCompleted ? '✓ ' : ''}{teamNumber}
-                    </span>
+                    <div className="flex flex-col items-center">
+                      <span className={`font-semibold text-sm text-center transition-all duration-300 ${
+                        isCompleted ? 'line-through text-lg' : ''
+                      }`}>
+                        {isCompleted ? '✓ ' : ''}{teamNumber}
+                      </span>
+                      
+                      {/* Pit address display */}
+                      {pitAddresses && pitAddresses[teamNumber.toString()] && (
+                        <span className="text-xs text-muted-foreground bg-blue-100 px-1 rounded mt-1">
+                          Pit {pitAddresses[teamNumber.toString()]}
+                        </span>
+                      )}
+                    </div>
                     
                     {/* Manual assignment indicator */}
                     {assignmentMode === 'manual' && !isAssigned && selectedScouterForAssignment && (

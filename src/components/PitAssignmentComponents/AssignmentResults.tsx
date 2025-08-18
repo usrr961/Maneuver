@@ -25,7 +25,7 @@ interface AssignmentResultsProps {
   onToggleCompleted: (assignmentId: string) => void;
   onClearAllAssignments?: () => void;
   // Manual assignment props
-  assignmentMode?: 'sequential' | 'manual';
+  assignmentMode?: 'sequential' | 'spatial' | 'manual';
   scoutersList?: string[];
   onManualAssignment?: (teamNumber: number, scouterName: string) => void;
   onRemoveAssignment?: (teamNumber: number) => void;
@@ -34,6 +34,7 @@ interface AssignmentResultsProps {
   assignmentsConfirmed?: boolean;
   allTeams?: number[]; // All teams for the event (for unassigned teams)
   onConfirmAssignments?: () => void; // New prop for confirming manual assignments
+  pitAddresses?: { [teamNumber: string]: string } | null;
 }
 
 type SortOption = 'team' | 'scouter' | 'status' | 'assigned';
@@ -51,7 +52,8 @@ export const AssignmentResults: React.FC<AssignmentResultsProps> = ({
   onScouterSelectionChange,
   assignmentsConfirmed = false,
   allTeams = [],
-  onConfirmAssignments
+  onConfirmAssignments,
+  pitAddresses = null
 }) => {
   const [searchFilter, setSearchFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterOption>('all');
@@ -360,7 +362,14 @@ export const AssignmentResults: React.FC<AssignmentResultsProps> = ({
                   {/* Desktop Layout */}
                   <div className="hidden md:grid grid-cols-5 gap-4 items-center">
                     <div className="font-medium flex items-center gap-2">
-                      Team {item.teamNumber}
+                      <div className="flex flex-col">
+                        <span>Team {item.teamNumber}</span>
+                        {pitAddresses && pitAddresses[item.teamNumber.toString()] && (
+                          <span className="text-xs text-blue-600 bg-blue-50 px-1 rounded">
+                            Pit {pitAddresses[item.teamNumber.toString()]}
+                          </span>
+                        )}
+                      </div>
                       {canAssign && <UserPlus className="h-3 w-3 text-green-600" />}
                     </div>
                     <div className="text-sm flex items-center gap-2">
@@ -429,7 +438,14 @@ export const AssignmentResults: React.FC<AssignmentResultsProps> = ({
                   <div className="md:hidden space-y-3">
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-base">Team {item.teamNumber}</span>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-base">Team {item.teamNumber}</span>
+                          {pitAddresses && pitAddresses[item.teamNumber.toString()] && (
+                            <span className="text-xs text-blue-600 bg-blue-50 px-1 rounded">
+                              Pit {pitAddresses[item.teamNumber.toString()]}
+                            </span>
+                          )}
+                        </div>
                         {canAssign && <UserPlus className="h-4 w-4 text-green-600" />}
                       </div>
                       <div className="flex items-center gap-2">

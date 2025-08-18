@@ -15,7 +15,7 @@ import HomePage from "@/pages/HomePage";
 import GameStartPage from "@/pages/GameStartPage";
 import AutoStartPage from "@/pages/AutoStartPage";
 // import ParseDataPage from "@/pages/ParseDataPage";
-import TBADataPage from "@/pages/TBADataPage";
+import APIDataPage from "@/pages/APIDataPage";
 import ClearDataPage from "@/pages/ClearDataPage";
 import QRDataTransferPage from "@/pages/QRDataTransferPage";
 import JSONDataTransferPage from "@/pages/JSONDataTransferPage";
@@ -43,9 +43,8 @@ function App() {
     createRoutesFromElements(
       <Route path="/" element={<MainLayout />}>
         <Route index element={<HomePage />} />
-        <Route path="/tba-data" element={<TBADataPage />} />
-        <Route path="/match-data" element={<TBADataPage />} />
-        <Route path="/match-results" element={<TBADataPage />} />
+        <Route path="/api-data" element={<APIDataPage />} />
+
         <Route path="/clear-data" element={<ClearDataPage />} /> 
         {/* <Route path="/parse-data" element={<ParseDataPage />} /> */}
         <Route path="/game-start" element={<GameStartPage />} />

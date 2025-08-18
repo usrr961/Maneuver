@@ -1,86 +1,125 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/animate-ui/radix/tabs";
-import { AlertCircle, Shuffle, ClipboardList, Users, BarChart3 } from 'lucide-react';
+import { AlertCircle, Users, BarChart3 } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useScouterManagement } from '@/hooks/useScouterManagement';
 import { getAllStoredEventTeams } from '@/lib/tbaUtils';
+import { getStoredNexusTeams, getStoredPitAddresses, getStoredPitData } from '@/lib/nexusUtils';
 import { ScouterManagementSection } from '@/components/PitAssignmentComponents/ScouterManagementSection.tsx';
 import { TeamDisplaySection } from '@/components/PitAssignmentComponents/TeamDisplaySection';
 import { AssignmentResults } from '@/components/PitAssignmentComponents/AssignmentResults';
+import EventInformationCard from '@/components/PitAssignmentComponents/EventInformationCard';
+import AssignmentControlsCard from '@/components/PitAssignmentComponents/AssignmentControlsCard';
+import { DataAttribution } from '@/components/DataAttribution';
 import type { PitAssignment } from '@/lib/pitAssignmentTypes';
+import type { NexusPitMap } from '@/lib/nexusUtils';
 
 const PitAssignmentsPage: React.FC = () => {
   const { scoutersList } = useScouterManagement();
   const [selectedEvent, setSelectedEvent] = useState<string>('');
+  const [availableEvents, setAvailableEvents] = useState<string[]>([]);
   const [eventTeams, setEventTeams] = useState<{ [eventKey: string]: number[] }>({});
+  const [teamDataSource, setTeamDataSource] = useState<{ [eventKey: string]: 'nexus' | 'tba' }>({});
+  const [pitAddresses, setPitAddresses] = useState<{ [teamNumber: string]: string } | null>(null);
+  const [pitMapData, setPitMapData] = useState<NexusPitMap | null>(null);
   const [assignments, setAssignments] = useState<PitAssignment[]>([]);
-  const [assignmentMode, setAssignmentMode] = useState<'sequential' | 'manual'>('sequential');
+  const [assignmentMode, setAssignmentMode] = useState<'sequential' | 'spatial' | 'manual'>('sequential');
   const [activeTab, setActiveTab] = useState<string>('teams');
   const [selectedScouterForAssignment, setSelectedScouterForAssignment] = useState<string | null>(null);
   const [assignmentsConfirmed, setAssignmentsConfirmed] = useState<boolean>(false);
 
-  // Load stored teams from all events
+
+
+  // Load stored teams from all events, prioritizing Nexus over TBA
   useEffect(() => {
-    const storedTeams = getAllStoredEventTeams();
-    setEventTeams(storedTeams);
+    const tbaTeams = getAllStoredEventTeams();
+    const combinedTeams: { [eventKey: string]: number[] } = {};
+    const sourceTracking: { [eventKey: string]: 'nexus' | 'tba' } = {};
     
-    // Auto-select the first event if available
-    const eventKeys = Object.keys(storedTeams);
-    if (eventKeys.length > 0 && !selectedEvent) {
-      setSelectedEvent(eventKeys[0]);
+    // First, get all possible event keys from both TBA and Nexus sources
+    const allEventKeys = new Set<string>();
+    
+    // Add TBA event keys
+    Object.keys(tbaTeams).forEach(eventKey => allEventKeys.add(eventKey));
+    
+    // Add Nexus event keys by scanning localStorage
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('nexus_event_teams_')) {
+        const eventKey = key.replace('nexus_event_teams_', '');
+        allEventKeys.add(eventKey);
+      }
     }
-  }, [selectedEvent]);
+    
+    // Now process each event key, prioritizing Nexus over TBA
+    allEventKeys.forEach(eventKey => {
+      const nexusTeams = getStoredNexusTeams(eventKey);
+      const tbaTeamsForEvent = tbaTeams[eventKey];
+      
+      // Check for Nexus teams first (priority)
+      if (nexusTeams && nexusTeams.length > 0) {
+        // Convert from frc format to numbers (frc123 -> 123)
+        const teamNumbers = nexusTeams
+          .map(teamKey => teamKey.startsWith('frc') ? parseInt(teamKey.substring(3)) : parseInt(teamKey))
+          .filter(num => !isNaN(num))
+          .sort((a, b) => a - b);
+        
+        if (teamNumbers.length > 0) {
+          combinedTeams[eventKey] = teamNumbers;
+          sourceTracking[eventKey] = 'nexus';
+          return; // Use Nexus data, skip TBA check
+        }
+      }
+      
+      // Fallback to TBA teams if no valid Nexus teams
+      if (tbaTeamsForEvent && tbaTeamsForEvent.length > 0) {
+        combinedTeams[eventKey] = tbaTeamsForEvent;
+        sourceTracking[eventKey] = 'tba';
+      }
+    });
+    
+    setEventTeams(combinedTeams);
+    setTeamDataSource(sourceTracking);
+    setAvailableEvents(Array.from(allEventKeys));
+    
+    // Auto-select the first event, prioritizing Nexus events
+    const eventKeys = Array.from(allEventKeys);
+    const nexusEventKeys = eventKeys.filter(key => {
+      const teams = getStoredNexusTeams(key);
+      return teams && teams.length > 0;
+    });
+    
+    if (nexusEventKeys.length > 0) {
+      setSelectedEvent(nexusEventKeys[0]); // Prefer Nexus events
+    } else if (eventKeys.length > 0) {
+      setSelectedEvent(eventKeys[0]); // Fallback to any available event
+    }
+  }, []);
+
+  // Load pit addresses and map data when event changes and uses Nexus data
+  useEffect(() => {
+    if (selectedEvent && teamDataSource[selectedEvent] === 'nexus') {
+      const addresses = getStoredPitAddresses(selectedEvent);
+      const pitData = getStoredPitData(selectedEvent);
+      setPitAddresses(addresses);
+      setPitMapData(pitData.map);
+    } else {
+      setPitAddresses(null);
+      setPitMapData(null);
+    }
+  }, [selectedEvent, teamDataSource]);
 
   const currentTeams = selectedEvent ? eventTeams[selectedEvent] || [] : [];
 
-  const handleAssignScouters = () => {
-    if (scoutersList.length === 0) {
-      return;
-    }
+  const handleAssignmentModeChange = (mode: 'sequential' | 'spatial' | 'manual') => {
+    setAssignmentMode(mode);
+    setSelectedScouterForAssignment(null); // Clear selection when switching modes
+    setAssignmentsConfirmed(false); // Reset confirmed state
+  };
 
-    const newAssignments: PitAssignment[] = [];
-    
-    if (assignmentMode === 'sequential') {
-      // Sort teams numerically first
-      const sortedTeams = [...currentTeams].sort((a, b) => a - b);
-      const totalTeams = sortedTeams.length;
-      const totalScouters = scoutersList.length;
-      
-      // Calculate block size for each scouter
-      const baseBlockSize = Math.floor(totalTeams / totalScouters);
-      const remainder = totalTeams % totalScouters;
-      
-      let teamIndex = 0;
-      
-      // Assign blocks to each scouter
-      scoutersList.forEach((scouterName, scouterIndex) => {
-        // First 'remainder' scouters get one extra team
-        const blockSize = scouterIndex < remainder ? baseBlockSize + 1 : baseBlockSize;
-        
-        for (let i = 0; i < blockSize && teamIndex < totalTeams; i++) {
-          const teamNumber = sortedTeams[teamIndex];
-          newAssignments.push({
-            id: `${selectedEvent}-${teamNumber}`,
-            eventKey: selectedEvent,
-            teamNumber,
-            scouterName,
-            assignedAt: Date.now(),
-            completed: false
-          });
-          teamIndex++;
-        }
-      });
-      
-      setAssignments(newAssignments);
-      setAssignmentsConfirmed(true); // Sequential assignments are automatically confirmed
-    } else if (assignmentMode === 'manual') {
-      // For manual mode, start with empty assignments - users will click to assign
-      setAssignments([]);
-      setAssignmentsConfirmed(false);
-    }
+  const handleAssignmentsGenerated = (newAssignments: PitAssignment[], confirmed: boolean) => {
+    setAssignments(newAssignments);
+    setAssignmentsConfirmed(confirmed);
   };
 
   const handleManualAssignment = (teamNumber: number, scouterName: string) => {
@@ -131,118 +170,59 @@ const PitAssignmentsPage: React.FC = () => {
   return (
     <div className="min-h-screen container mx-auto p-4 space-y-6 max-w-7xl">
       <div className="text-start">
-        <h1 className="text-3xl font-bold">Pit Assignments</h1>
-        <p className="text-muted-foreground">
-          Manage scouters and assign teams for pit scouting
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Pit Assignments</h1>
+            <p className="text-muted-foreground">
+              Manage scouters and assign teams for pit scouting
+            </p>
+          </div>
+          {/* Data source attribution */}
+          <div className="hidden md:block">
+            <DataAttribution 
+              sources={selectedEvent && teamDataSource[selectedEvent] ? [teamDataSource[selectedEvent]] : ['tba', 'nexus']} 
+              variant="full" 
+            />
+          </div>
+        </div>
+        {/* Mobile attribution */}
+        <div className="md:hidden mt-2">
+          <DataAttribution 
+            sources={selectedEvent && teamDataSource[selectedEvent] ? [teamDataSource[selectedEvent]] : ['tba', 'nexus']} 
+            variant="compact" 
+          />
+        </div>
       </div>
 
       {/* Scouter Management - Moved to top */}
       <ScouterManagementSection />
 
-      {/* Event Selection and Assignment Controls - Side by side */}
+      {/* Event Information and Assignment Controls - Side by side */}
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Event Selection */}
-        <Card className="flex-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5" />
-              Event Selection
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {Object.keys(eventTeams).length === 0 ? (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  No team data found. Please import team lists from the TBA Data page first.
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Select Event:</label>
-                  <Select value={selectedEvent} onValueChange={setSelectedEvent}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select an event..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.keys(eventTeams).map(eventKey => (
-                        <SelectItem key={eventKey} value={eventKey}>
-                          {eventKey} ({eventTeams[eventKey].length} teams)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {selectedEvent && (
-                  <div className="text-sm text-muted-foreground">
-                    Selected: {selectedEvent} with {currentTeams.length} teams
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Event Information */}
+        <EventInformationCard
+          eventTeams={eventTeams}
+          availableEvents={availableEvents}
+          selectedEvent={selectedEvent}
+          teamDataSource={teamDataSource}
+          currentTeams={currentTeams}
+          pitAddresses={pitAddresses}
+          onEventChange={setSelectedEvent}
+        />
 
         {/* Assignment Controls */}
         {hasValidData && (
-          <Card className="flex-1">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shuffle className="h-5 w-5" />
-                Assignment Controls
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Assignment Mode:</label>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={assignmentMode === 'sequential' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => {
-                        setAssignmentMode('sequential');
-                        setSelectedScouterForAssignment(null); // Clear selection when switching modes
-                        setAssignmentsConfirmed(false); // Reset confirmed state
-                      }}
-                    >
-                      Block Assignment
-                    </Button>
-                    <Button
-                      variant={assignmentMode === 'manual' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => {
-                        setAssignmentMode('manual');
-                        setSelectedScouterForAssignment(null); // Clear selection when switching modes
-                        setAssignmentsConfirmed(false); // Reset confirmed state
-                      }}
-                    >
-                      Manual Assignment
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {assignmentMode === 'sequential' 
-                      ? `Block Assignment: Teams are divided into consecutive blocks, with each scouter getting ~${Math.ceil(currentTeams.length / scoutersList.length)} teams in sequence`
-                      : 'Manual Assignment: Click on team cards to assign them to specific scouters one by one'
-                    }
-                  </p>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button 
-                    disabled={hasAssignments || assignmentMode !== 'sequential'}
-                    onClick={handleAssignScouters}
-                    className="flex items-center gap-2"
-                  >
-                    <Shuffle className="h-4 w-4" />
-                    Generate Assignments
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <AssignmentControlsCard
+            assignmentMode={assignmentMode}
+            pitMapData={pitMapData}
+            pitAddresses={pitAddresses}
+            currentTeams={currentTeams}
+            scoutersList={scoutersList}
+            selectedEvent={selectedEvent}
+            hasAssignments={hasAssignments}
+            onAssignmentModeChange={handleAssignmentModeChange}
+            onAssignmentsGenerated={handleAssignmentsGenerated}
+          />
         )}
       </div>
 
@@ -281,6 +261,9 @@ const PitAssignmentsPage: React.FC = () => {
                 onConfirmAssignments={assignmentMode === 'manual' && !assignmentsConfirmed ? handleConfirmAssignments : undefined}
                 onClearAllAssignments={handleClearAssignments}
                 assignmentsConfirmed={assignmentsConfirmed}
+                pitAddresses={pitAddresses}
+                pitMapData={pitMapData}
+                teamDataSource={teamDataSource[selectedEvent]}
               />
             </div>
           </TabsContent>
@@ -300,6 +283,7 @@ const PitAssignmentsPage: React.FC = () => {
                 assignmentsConfirmed={assignmentsConfirmed}
                 allTeams={currentTeams}
                 onConfirmAssignments={assignmentMode === 'manual' && !assignmentsConfirmed ? handleConfirmAssignments : undefined}
+                pitAddresses={pitAddresses}
               />
             </div>
           </TabsContent>
