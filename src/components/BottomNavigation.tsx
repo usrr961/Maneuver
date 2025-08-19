@@ -40,7 +40,7 @@ const baseNavItems: BottomNavItem[] = [
   {
     icon: QrCode,
     label: 'QR Data',
-    href: '/scout-data-qr',
+    href: '/qr-data-transfer',
   },
   {
     icon: TrendingUp,
