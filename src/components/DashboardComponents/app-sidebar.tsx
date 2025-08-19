@@ -47,7 +47,7 @@ const data = {
           url: "/clear-data",
         },
         {
-          title: "Scouting Data JSON Transfer",
+          title: "JSON Data Transfer",
           url: "/json-transfer",
         },
         {

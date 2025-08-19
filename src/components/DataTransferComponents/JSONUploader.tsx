@@ -3,12 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { 
-  loadScoutingData, 
-  saveScoutingData, 
-  mergeScoutingData, 
-  addIdsToScoutingData
-} from "@/lib/scoutingDataUtils";
+import { detectDataType } from "@/lib/uploadHandlers/dataTypeDetector";
+import { handleScoutingDataUpload, type UploadMode } from "@/lib/uploadHandlers/scoutingDataUploadHandler";
+import { handleScouterProfilesUpload } from "@/lib/uploadHandlers/scouterProfilesUploadHandler";
+import { handlePitScoutingUpload } from "@/lib/uploadHandlers/pitScoutingUploadHandler";
 
 type JSONUploaderProps = {
   onBack: () => void;
@@ -16,10 +14,11 @@ type JSONUploaderProps = {
 
 const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [detectedDataType, setDetectedDataType] = useState<'scouting' | 'scouterProfiles' | 'pitScouting' | null>(null);
 
   type FileSelectEvent = React.ChangeEvent<HTMLInputElement>
 
-  const handleFileSelect = (event: FileSelectEvent): void => {
+  const handleFileSelect = async (event: FileSelectEvent): Promise<void> => {
     const file: File | undefined = event.target.files?.[0];
     if (!file) return;
 
@@ -28,20 +27,34 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack }) => {
       return;
     }
 
-    setSelectedFile(file);
-    toast.info(`Selected: ${file.name}`);
+    try {
+      const text = await file.text();
+      const jsonData: unknown = JSON.parse(text);
+      const dataType = detectDataType(jsonData);
+      
+      if (!dataType) {
+        toast.error("Unable to detect data type. Please check the JSON format.");
+        return;
+      }
+
+      setSelectedFile(file);
+      setDetectedDataType(dataType);
+      
+      const dataTypeNames = {
+        scouting: 'Scouting Data',
+        scouterProfiles: 'Scouter Profiles',
+        pitScouting: 'Pit Scouting Data'
+      };
+      
+      toast.info(`Selected: ${file.name} (${dataTypeNames[dataType]})`);
+    } catch (error) {
+      toast.error("Invalid JSON file");
+      console.error("File parsing error:", error);
+    }
   };
 
-  interface RawScoutingData {
-    data: unknown[];
-  }
-
-  type ProcessedScoutingData = unknown[][];
-
-  type UploadMode = "append" | "overwrite" | "smart-merge";
-
   const handleUpload = async (mode: UploadMode): Promise<void> => {
-    if (!selectedFile) {
+    if (!selectedFile || !detectedDataType) {
       toast.error("Please select a file first");
       return;
     }
@@ -50,76 +63,22 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack }) => {
       const text = await selectedFile.text();
       const jsonData: unknown = JSON.parse(text);
 
-      // Validate scouting data structure
-      let newData: unknown[] = [];
-      if (
-        typeof jsonData === "object" &&
-        jsonData !== null &&
-        "data" in jsonData &&
-        Array.isArray((jsonData as RawScoutingData).data)
-      ) {
-        // Raw scouting data format
-        newData = (jsonData as RawScoutingData).data;
-      } else if (Array.isArray(jsonData)) {
-        // Processed scouting data format - skip header row if it exists
-        const hasHeaderRow =
-          jsonData.length > 0 &&
-          Array.isArray(jsonData[0]) &&
-          typeof jsonData[0][0] === "string" &&
-          jsonData[0].some(
-            (cell: unknown) =>
-              typeof cell === "string" &&
-              (cell.includes("match") || cell.includes("team"))
-          );
-
-        newData = hasHeaderRow ? (jsonData as ProcessedScoutingData).slice(1) : (jsonData as ProcessedScoutingData);
-      } else {
-        toast.error("Invalid scouting data format");
-        return;
+      if (detectedDataType === 'scouting') {
+        await handleScoutingDataUpload(jsonData, mode);
+      } else if (detectedDataType === 'scouterProfiles') {
+        await handleScouterProfilesUpload(jsonData, mode);
+      } else if (detectedDataType === 'pitScouting') {
+        await handlePitScoutingUpload(jsonData, mode);
       }
-
-      // Load existing data using new utility
-      const existingScoutingData = await loadScoutingData();
-      
-      // Convert new data to ID structure
-      const newDataArrays = newData as unknown[][];
-      const newDataWithIds = addIdsToScoutingData(newDataArrays);
-      
-      // Merge data based on mode
-      const mergeResult = mergeScoutingData(
-        existingScoutingData.entries,
-        newDataWithIds,
-        mode
-      );
-      
-      // Save merged data
-      await saveScoutingData({ entries: mergeResult.merged });
-      
-      // Create success message based on mode and results
-      const { stats } = mergeResult;
-      let message = '';
-      
-      if (mode === "overwrite") {
-        message = `Overwritten with ${stats.final} scouting entries`;
-      } else if (mode === "append") {
-        message = `Appended ${stats.new} entries to existing ${stats.existing} entries (Total: ${stats.final})`;
-      } else if (mode === "smart-merge") {
-        if (stats.duplicates > 0) {
-          message = `Smart merge: ${stats.new} new entries added, ${stats.duplicates} duplicates skipped (Total: ${stats.final})`;
-        } else {
-          message = `Smart merge: ${stats.new} new entries added (Total: ${stats.final})`;
-        }
-      }
-      
-      toast.success(message);
 
       setSelectedFile(null);
+      setDetectedDataType(null);
       // Reset file input
       const fileInput = document.getElementById("jsonFileInput") as HTMLInputElement | null;
       if (fileInput) fileInput.value = "";
 
     } catch (error) {
-      toast.error("Error parsing JSON file");
+      toast.error("Error processing file");
       console.error("Upload error:", error);
     }
   };
@@ -141,9 +100,9 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack }) => {
 
         <Card className="w-full">
           <CardHeader>
-            <CardTitle className="text-center">Upload Scouting Data</CardTitle>
+            <CardTitle className="text-center">Upload JSON Data</CardTitle>
             <CardDescription className="text-center">
-              Upload JSON scouting data files to either overwrite your current data or append to your existing collection.
+              Upload JSON data files to import scouting data, scouter profiles, or pit scouting data. The system will automatically detect the data type.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -164,7 +123,10 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack }) => {
               variant="outline"
               className="w-full min-h-16 text-xl whitespace-normal text-wrap py-3 px-4"
             >
-              {selectedFile ? `Selected: ${selectedFile.name}` : "Select Scouting Data JSON"}
+              {selectedFile 
+                ? `Selected: ${selectedFile.name}${detectedDataType ? ` (${detectedDataType === 'scouting' ? 'Scouting Data' : detectedDataType === 'scouterProfiles' ? 'Scouter Profiles' : 'Pit Scouting Data'})` : ''}`
+                : "Select JSON Data File"
+              }
             </Button>
 
             {/* Upload Options */}
