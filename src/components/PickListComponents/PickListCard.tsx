@@ -3,24 +3,30 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SortableList, SortableListItem } from "@/components/ui/sortable-list";
 import { TeamStatsButton } from "@/components/ui/team-stats-button";
+import { GenericSelector } from "@/components/ui/generic-selector";
 import { Trash2 } from "lucide-react";
 import type { PickList, PickListItem, TeamStats } from "@/lib/pickListTypes";
+import type { Alliance } from "@/lib/allianceTypes";
 import LogoConfused from "../../assets/confused.png";
 
 interface PickListCardProps {
   pickList: PickList;
   availableTeams: TeamStats[];
+  alliances: Alliance[];
   canDelete: boolean;
   onDeleteList: (listId: number) => void;
   onUpdateTeams: (listId: number, newTeams: PickListItem[]) => void;
+  onAssignToAlliance: (teamNumber: string, allianceIndex: number) => void;
 }
 
 export const PickListCard = ({
   pickList,
   availableTeams,
+  alliances,
   canDelete,
   onDeleteList,
-  onUpdateTeams
+  onUpdateTeams,
+  onAssignToAlliance
 }: PickListCardProps) => {
   return (
     <Card>
@@ -40,7 +46,7 @@ export const PickListCard = ({
               onClick={() => onDeleteList(pickList.id)} 
               variant="outline" 
               size="sm"
-              className="text-red-600 hover:text-red-700"
+              className="text-red-400 hover:text-red-500"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -86,13 +92,27 @@ export const PickListCard = ({
                   onRemoveItem={onRemoveItem}
                   handleDrag={() => {}}
                   renderExtra={() => (
-                    <div className="flex flex-1 justify-end px-2 py-2">
+                    <div className="flex flex-1 justify-end px-2 py-2 gap-1">
+                      <GenericSelector
+                        label="Add to Alliance"
+                        value=""
+                        availableOptions={alliances.map((_, index) => `${index}`)}
+                        onValueChange={(value: string) => {
+                          if (value) {
+                            onAssignToAlliance(teamNumber, parseInt(value));
+                          }
+                        }}
+                        placeholder="Add to Alliance"
+                        displayFormat={(value: string) => `Alliance ${parseInt(value) + 1}`}
+                        buttonDisplayFormat={(value: string) => value ? `Alliance ${parseInt(value) + 1}` : "Add to Alliance"}
+                        className="h-8 w-fit"
+                      />
                       <TeamStatsButton 
                         teamNumber={teamNumber}
                         teamStats={teamStats}
                         variant="ghost"
                         size="sm"
-                        className="text-white/80 hover:text-white hover:bg-white/20 h-8"
+                        className="h-8"
                       />
                     </div>
                   )}

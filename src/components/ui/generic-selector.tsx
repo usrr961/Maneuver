@@ -11,6 +11,7 @@ interface GenericSelectorProps {
   onValueChange: (value: string) => void;
   placeholder?: string;
   displayFormat?: (value: string) => string;
+  buttonDisplayFormat?: (value: string) => string;
   className?: string;
 }
 
@@ -21,15 +22,16 @@ export const GenericSelector = ({
   onValueChange,
   placeholder = "Select option",
   displayFormat = (val) => val,
+  buttonDisplayFormat,
   className = ""
 }: GenericSelectorProps) => {
   const isMobile = useIsMobile();
 
   const getDisplayText = (val: string) => {
     if (!val) return placeholder;
-    if (val === "none") return "None";
+    if (val === "none") return buttonDisplayFormat ? buttonDisplayFormat(val) : "None";
     if (val === "all") return "All events";
-    return displayFormat(val);
+    return buttonDisplayFormat ? buttonDisplayFormat(val) : displayFormat(val);
   };
 
   if (isMobile) {
@@ -59,7 +61,7 @@ export const GenericSelector = ({
                     className="w-full justify-start h-12 px-4"
                     onClick={() => onValueChange("none")}
                   >
-                    None
+                    {displayFormat("none")}
                   </Button>
                 </SheetClose>
               )}
@@ -102,7 +104,7 @@ export const GenericSelector = ({
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {availableOptions.includes("none") && <SelectItem value="none">None</SelectItem>}
+        {availableOptions.includes("none") && <SelectItem value="none">{displayFormat("none")}</SelectItem>}
         {availableOptions.includes("all") && <SelectItem value="all">All events</SelectItem>}
         {availableOptions.filter(option => option !== "all" && option !== "none").map((option) => (
           <SelectItem key={option} value={option}>

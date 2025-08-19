@@ -4,26 +4,31 @@ import { Badge } from "@/components/ui/badge";
 import { TeamCard } from "./TeamCard";
 import { SortSelector } from "./SortSelector";
 import type { TeamStats, PickList, SortOption } from "@/lib/pickListTypes";
+import type { Alliance } from "@/lib/allianceTypes";
 import LogoSearching from "../../assets/searching.png";
 
 interface AvailableTeamsPanelProps {
   teams: TeamStats[];
   pickLists: PickList[];
+  alliances?: Alliance[];
   searchFilter: string;
   sortBy: SortOption;
   onSearchChange: (value: string) => void;
   onSortChange: (value: SortOption) => void;
   onAddTeamToList: (team: TeamStats, listId: number) => void;
+  onAddTeamToAlliance?: (teamNumber: string, allianceId: number) => void;
 }
 
 export const AvailableTeamsPanel = ({
   teams,
   pickLists,
+  alliances,
   searchFilter,
   sortBy,
   onSearchChange,
   onSortChange,
-  onAddTeamToList
+  onAddTeamToList,
+  onAddTeamToAlliance
 }: AvailableTeamsPanelProps) => {
   return (
     <Card className="lg:col-span-1 max-h-screen">
@@ -50,7 +55,9 @@ export const AvailableTeamsPanel = ({
             key={team.teamNumber}
             team={team}
             pickLists={pickLists}
+            alliances={alliances}
             onAddTeamToList={onAddTeamToList}
+            onAddTeamToAlliance={onAddTeamToAlliance}
           />
         ))}
 
