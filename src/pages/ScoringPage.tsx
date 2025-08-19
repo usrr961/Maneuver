@@ -30,6 +30,8 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
   const [showFlashing, setShowFlashing] = useState(false);
   const [passedStartLine, setPassedStartLine] = useState(false);
   const [playedDefense, setPlayedDefense] = useState(false);
+  const [lastCoralPickupLocation, setLastCoralPickupLocation] = useState<string | undefined>(undefined);
+  const [lastAlgaePickupLocation, setLastAlgaePickupLocation] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (phase === "auto") {
@@ -49,25 +51,32 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
   useEffect(() => {
     let coralCount = 0;
     let algaeCount = 0;
+    let lastCoralPickup: string | undefined = undefined;
+    let lastAlgaePickup: string | undefined = undefined;
     
-    scoringActions.forEach((action: { type: string; pieceType: string; }) => {
+    // Process actions in chronological order to track current piece possession
+    scoringActions.forEach((action: { type: string; pieceType: string; location: string; }) => {
       if (action.type === "pickup") {
         if (action.pieceType === "coral") {
-          coralCount = Math.min(1, coralCount + 1);
+          coralCount = 1; // Pick up coral (robot now holds 1)
+          lastCoralPickup = action.location;
         } else if (action.pieceType === "algae") {
-          algaeCount = Math.min(1, algaeCount + 1);
+          algaeCount = 1; // Pick up algae (robot now holds 1)
+          lastAlgaePickup = action.location;
         }
       } else if (action.type === "score" || action.type === "action") {
         if (action.pieceType === "coral") {
-          coralCount = Math.max(0, coralCount - 1);
+          coralCount = 0; // Scored/used coral (robot no longer holds it)
         } else if (action.pieceType === "algae") {
-          algaeCount = Math.max(0, algaeCount - 1);
+          algaeCount = 0; // Scored/used algae (robot no longer holds it)
         }
       }
     });
     
     setCurrentCoral(coralCount);
     setCurrentAlgae(algaeCount);
+    setLastCoralPickupLocation(lastCoralPickup);
+    setLastAlgaePickupLocation(lastAlgaePickup);
   }, [scoringActions]);
 
   useEffect(() => {
@@ -79,6 +88,22 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
 
   const addScoringAction = (action: any) => {
     const newAction = { ...action, timestamp: Date.now() };
+    
+    // Handle replacing last pickup if user is changing their mind
+    if (action.type === "pickup" && action.replaceLastPickup) {
+      setScoringActions((prev: any) => {
+        // Find the last pickup action of the same piece type and remove it
+        const actions = [...prev];
+        for (let i = actions.length - 1; i >= 0; i--) {
+          if (actions[i].type === "pickup" && actions[i].pieceType === action.pieceType) {
+            actions.splice(i, 1); // Remove the old pickup
+            break;
+          }
+        }
+        return [...actions, newAction]; // Add the new pickup
+      });
+      return;
+    }
     
     if (action.type === "score" && phase === "auto" && !passedStartLine) {
       setPassedStartLine(true);
@@ -188,6 +213,7 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
             currentCoral={currentCoral}
             phase={phase}
             showFlashing={showFlashing}
+            lastCoralPickupLocation={lastCoralPickupLocation}
           />
 
           {/* Algae Section */}
@@ -196,6 +222,7 @@ const ScoringPage = ({ phase }: ScoringPageProps) => {
             phase={phase}
             showFlashing={showFlashing}
             currentAlgae={currentAlgae}
+            lastAlgaePickupLocation={lastAlgaePickupLocation}
           />
 
           {/* Action Buttons */}

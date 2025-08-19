@@ -8,14 +8,21 @@ interface AlgaeSectionProps {
   phase: "auto" | "teleop";
   showFlashing: boolean;
   currentAlgae: number;
+  lastAlgaePickupLocation?: string;
 }
 
-const AlgaeSection = ({ onAlgaeAction, phase, showFlashing, currentAlgae }: AlgaeSectionProps) => {
+const AlgaeSection = ({ onAlgaeAction, phase, showFlashing, currentAlgae, lastAlgaePickupLocation }: AlgaeSectionProps) => {
 
   const handleAlgaeAction = (actionType: string, location: string) => {
-    // For pickup actions, check if robot can hold more algae
-    if (actionType === "pickup" && currentAlgae >= 1) {
-      console.log("Cannot pickup algae - already holding algae:", currentAlgae);
+    // For pickup actions, allow changing pickup location even if already holding algae
+    if (actionType === "pickup") {
+      onAlgaeAction({
+        type: actionType,
+        location: location,
+        pieceType: "algae",
+        phase,
+        replaceLastPickup: currentAlgae > 0 // If already holding algae, replace the last pickup
+      });
       return;
     }
     
@@ -35,17 +42,17 @@ const AlgaeSection = ({ onAlgaeAction, phase, showFlashing, currentAlgae }: Alga
 
   // Different algae actions based on phase
   const getAlgaeActions = () => {
+    // Reordered scoring actions: Net Shot, Remove, Processor, Miss
     const scoringActions = [
       { action: "net", label: "Net Shot", type: "score" },
+      { action: "remove", label: "Remove", type: "action" },
       { action: "processor", label: "Processor", type: "score" },
       { action: "miss", label: "Miss", type: "score" },
-      { action: "remove", label: "Remove", type: "action" },
     ];
 
     const pickupActions = phase === "auto" 
       ? [
           { action: "reef", label: "Reef", type: "pickup" },
-          { action: "carpet", label: "Carpet", type: "pickup" },
           { action: "mark1", label: "Mark 1", type: "pickup" },
           { action: "mark2", label: "Mark 2", type: "pickup" },
           { action: "mark3", label: "Mark 3", type: "pickup" },
@@ -63,9 +70,10 @@ const AlgaeSection = ({ onAlgaeAction, phase, showFlashing, currentAlgae }: Alga
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Algae</CardTitle>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg">Algae</CardTitle>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">
             {currentAlgae}/1 Algae Held
           </Badge>
           {currentAlgae === 0 && (
@@ -78,44 +86,47 @@ const AlgaeSection = ({ onAlgaeAction, phase, showFlashing, currentAlgae }: Alga
               Ready to score
             </Badge>
           )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Algae Pickup */}
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Algae Pickup</p>
-          <div className="grid grid-cols-2 gap-2">
-            {algaeActions.pickup.map((action) => (
-              <Button
-                key={action.action}
-                onClick={() => handleAlgaeAction(action.type, action.action)}
-                variant="outline"
-                className="h-10 text-sm"
-                disabled={currentAlgae >= 1}
-              >
-                {action.label}
-              </Button>
-            ))}
+        {/* Main Algae Interface - Side by Side Layout */}
+        <div className="flex gap-4 h-80">
+          {/* Algae Pickup Section - Left Side */}
+          <div className="flex flex-col gap-2 w-32 lg:w-40">
+            <div className="flex flex-col gap-2 flex-1">
+              {algaeActions.pickup.map((action) => (
+                <Button
+                  key={action.action}
+                  onClick={() => handleAlgaeAction(action.type, action.action)}
+                  variant={currentAlgae > 0 && lastAlgaePickupLocation === action.action ? "default" : "outline"}
+                  className={`h-12 text-xs lg:text-sm font-medium flex-1 ${
+                    currentAlgae > 0 && lastAlgaePickupLocation === action.action ? 'bg-primary text-primary-foreground' : ''
+                  }`}
+                >
+                  {action.label}
+                </Button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Algae Scoring */}
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Algae Scoring</p>
-          <div className="grid grid-cols-2 gap-2">
-            {algaeActions.scoring.map((action) => (
-              <Button
-                key={action.action}
-                onClick={() => handleAlgaeAction(action.type, action.action)}
-                variant={action.action === "miss" ? "destructive" : "outline"}
-                disabled={(action.type === "score" || action.type === "action") && currentAlgae <= 0}
-                className={`h-10 text-sm ${
-                  phase === "auto" && showFlashing ? 'animate-pulse' : ''
-                } ${(action.type === "score" || action.type === "action") && currentAlgae <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                {action.label}
-              </Button>
-            ))}
+          {/* Algae Scoring Section - Right Side */}
+          <div className="flex flex-col gap-2 flex-1">
+            <div className="flex flex-col gap-2 flex-1">
+              {algaeActions.scoring.map((action) => (
+                <Button
+                  key={action.action}
+                  onClick={() => handleAlgaeAction(action.type, action.action)}
+                  variant={action.action === "miss" ? "destructive" : "outline"}
+                  disabled={(action.type === "score" || action.type === "action") && currentAlgae <= 0}
+                  className={`h-16 text-sm font-medium flex-1 ${
+                    phase === "auto" && showFlashing ? 'animate-pulse' : ''
+                  } ${(action.type === "score" || action.type === "action") && currentAlgae <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {action.label}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </CardContent>

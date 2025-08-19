@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback, useMemo } from 'react';
 import redFieldImage from '@/assets/FieldMap.png';
 import blueFieldImage from '@/assets/FieldMapBlue.png';
 
@@ -13,64 +13,16 @@ const AutoStartMap = ({ startPoses, setStartPoses, alliance }: AutoStartMapProps
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Define click zones for starting positions - spanning full field width horizontally (0-4)
-  const clickZones = [
+  const clickZones = useMemo(() => [
     // All zones arranged horizontally across the field width (0-4 from left to right)
     { x: 0, y: 50, width: 128, height: 100, position: 0 },     // Position 0 (leftmost)
     { x: 128, y: 50, width: 128, height: 100, position: 1 },   // Position 1
     { x: 256, y: 50, width: 128, height: 100, position: 2 },   // Position 2 (center)
     { x: 384, y: 50, width: 128, height: 100, position: 3 },   // Position 3
     { x: 512, y: 50, width: 128, height: 100, position: 4 },   // Position 4 (rightmost)
-  ];
+  ], []);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Load the appropriate field image based on alliance
-    const img = new Image();
-    img.onload = () => {
-      // Calculate container size
-      const containerRect = container.getBoundingClientRect();
-      const containerWidth = containerRect.width;
-      const containerHeight = containerRect.height;
-
-      // Calculate aspect ratio preserving dimensions
-      const imgAspectRatio = img.width / img.height;
-      const containerAspectRatio = containerWidth / containerHeight;
-
-      let canvasWidth, canvasHeight;
-
-      if (imgAspectRatio > containerAspectRatio) {
-        // Image is wider relative to container
-        canvasWidth = containerWidth;
-        canvasHeight = containerWidth / imgAspectRatio;
-      } else {
-        // Image is taller relative to container
-        canvasHeight = containerHeight;
-        canvasWidth = containerHeight * imgAspectRatio;
-      }
-
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-      canvas.style.width = `${canvasWidth}px`;
-      canvas.style.height = `${canvasHeight}px`;
-
-      // Draw the field image
-      ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
-
-      // Draw selection indicators
-      drawSelectionIndicators(ctx, canvasWidth, canvasHeight);
-    };
-
-    // Use red field by default, or blue field if blue alliance is selected
-    img.src = alliance === 'blue' ? blueFieldImage : redFieldImage;
-  }, [startPoses, alliance]);
-
-  const drawSelectionIndicators = (ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHeight: number) => {
+  const drawSelectionIndicators = useCallback((ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHeight: number) => {
     // Add semi-transparent mask over the entire field image
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; // Dark mask with 40% opacity
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
@@ -130,7 +82,55 @@ const AutoStartMap = ({ startPoses, setStartPoses, alliance }: AutoStartMapProps
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
     });
-  };
+  }, [startPoses, clickZones]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Load the appropriate field image based on alliance
+    const img = new Image();
+    img.onload = () => {
+      // Calculate container size
+      const containerRect = container.getBoundingClientRect();
+      const containerWidth = containerRect.width;
+      const containerHeight = containerRect.height;
+
+      // Calculate aspect ratio preserving dimensions
+      const imgAspectRatio = img.width / img.height;
+      const containerAspectRatio = containerWidth / containerHeight;
+
+      let canvasWidth, canvasHeight;
+
+      if (imgAspectRatio > containerAspectRatio) {
+        // Image is wider relative to container
+        canvasWidth = containerWidth;
+        canvasHeight = containerWidth / imgAspectRatio;
+      } else {
+        // Image is taller relative to container
+        canvasHeight = containerHeight;
+        canvasWidth = containerHeight * imgAspectRatio;
+      }
+
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      canvas.style.width = `${canvasWidth}px`;
+      canvas.style.height = `${canvasHeight}px`;
+
+      // Draw the field image
+      ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+
+      // Draw selection indicators
+      drawSelectionIndicators(ctx, canvasWidth, canvasHeight);
+    };
+
+    // Use red field by default, or blue field if blue alliance is selected
+    img.src = alliance === 'blue' ? blueFieldImage : redFieldImage;
+  }, [alliance, drawSelectionIndicators]);
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -166,10 +166,10 @@ const AutoStartMap = ({ startPoses, setStartPoses, alliance }: AutoStartMapProps
   };
 
   return (
-    <div ref={containerRef} className="w-full h-full flex items-center justify-center">
+    <div ref={containerRef} className="w-full h-full flex items-center justify-center p-1 lg:p-2 xl:p-3">
       <canvas
         ref={canvasRef}
-        className="cursor-pointer max-w-full max-h-full"
+        className="cursor-pointer max-w-full max-h-full shadow-lg rounded-md xl:shadow-xl 2xl:shadow-2xl"
         onClick={handleCanvasClick}
       />
     </div>

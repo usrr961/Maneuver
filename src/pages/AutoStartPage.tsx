@@ -90,16 +90,16 @@ const AutoStartPage = () => {
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-4 pt-6 pb-8 md:pb-6">
-      <div className="w-full max-w-7xl">
-        <h1 className="text-2xl font-bold pb-4">Auto Start</h1>
+      <div className="w-full max-w-7xl xl:max-w-[90rem] 2xl:max-w-[100rem]">
+        <h1 className="text-2xl font-bold pb-4 xl:text-3xl 2xl:text-4xl xl:pb-6">Auto Start</h1>
       </div>
-      <div className="flex flex-col lg:flex-row items-start gap-6 max-w-7xl w-full h-full min-h-0">
+      <div className="flex flex-col lg:flex-row items-start gap-6 xl:gap-8 2xl:gap-10 max-w-7xl xl:max-w-[90rem] 2xl:max-w-[100rem] w-full flex-1">
         
         {/* Field Map Section */}
-        <div className="w-full lg:flex-1 h-96 lg:h-full min-h-96">
+        <div className="w-full lg:flex-1 h-96 lg:h-full min-h-96 lg:min-h-[32rem] xl:min-h-[40rem] 2xl:min-h-[48rem]">
           <Card className="w-full h-full">
-            <CardHeader>
-              <CardTitle className="text-xl">Starting Position</CardTitle>
+            <CardHeader className="pb-3 lg:pb-4">
+              <CardTitle className="text-xl xl:text-2xl">Starting Position</CardTitle>
               <p className="text-sm text-muted-foreground">
                 Click where your robot starts on the field
               </p>
@@ -109,7 +109,7 @@ const AutoStartPage = () => {
                 </Badge>
               )}
             </CardHeader>
-            <CardContent className="h-[calc(100%-100px)] p-4 pb-6">
+            <CardContent className="h-[calc(100%-90px)] lg:h-[calc(100%-100px)] xl:h-[calc(100%-110px)] p-3 pb-4">
               <div className="w-full h-full border rounded-lg overflow-hidden bg-green-50 dark:bg-green-950/20">
                 <AutoStartMap 
                   startPoses={startPoses} 
@@ -122,7 +122,7 @@ const AutoStartPage = () => {
         </div>
 
         {/* Instructions and Controls */}
-        <div className="flex flex-col gap-4 lg:gap-6 w-full lg:w-80 lg:h-full pb-4 lg:pb-0">
+        <div className="flex flex-col gap-4 lg:gap-6 w-full lg:w-80 xl:w-96 2xl:w-[26rem] lg:h-full pb-4 lg:pb-0">
           
           {/* Match Info Card */}
           {states?.inputs && (
