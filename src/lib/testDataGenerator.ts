@@ -1,4 +1,6 @@
 import { gameDB } from './dexieDB';
+import { savePitScoutingEntry } from './pitScoutingUtils';
+import type { PitScoutingEntry } from './pitScoutingTypes';
 
 export const createTestScouterProfiles = async () => {
   console.log('🧪 Creating test scouter profiles...');
@@ -205,12 +207,216 @@ export const createTestScouterProfiles = async () => {
   }
 };
 
+export const createTestPitScoutingData = async () => {
+  console.log('🔧 Creating test pit scouting data...');
+
+  const pitEntries: Omit<PitScoutingEntry, 'id' | 'timestamp'>[] = [
+    {
+      teamNumber: '2539',
+      eventName: '2025pawar', 
+      scouterInitials: 'Sarah Chen',
+      weight: 95,
+      drivetrain: 'Swerve',
+      programmingLanguage: 'Java',
+      groundPickupCapabilities: {
+        coralGroundPickup: true,
+        algaeGroundPickup: true
+      },
+      reportedAutoScoring: {
+        position0: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 2, algaeNet: 0, algaeProcessor: 0 },
+        position1: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 1, algaeNet: 0, algaeProcessor: 0 },
+        position2: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 1, algaeNet: 0, algaeProcessor: 0 },
+        position3: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 2, algaeNet: 0, algaeProcessor: 0 },
+        position4: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 1, algaeNet: 0, algaeProcessor: 0 }
+      },
+      reportedTeleopScoring: {
+        coralL1: 2,
+        coralL2: 4,
+        coralL3: 6,
+        coralL4: 5,
+        totalAlgae: 3,
+        algaeNetShots: false,
+        algaeProcessor: true
+      },
+      reportedEndgame: {
+        canShallowClimb: false,
+        canDeepClimb: true,
+        canPark: true
+      },
+      notes: 'Very consistent robot, great at L4 coral placement. Fast climb.'
+    },
+    {
+      teamNumber: '5895',
+      eventName: '2025pawar',
+      scouterInitials: 'Marcus Rodriguez', 
+      weight: 110,
+      drivetrain: 'Tank Drive',
+      programmingLanguage: 'C++',
+      groundPickupCapabilities: {
+        coralGroundPickup: true,
+        algaeGroundPickup: true
+      },
+      reportedAutoScoring: {
+        position0: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 1, algaeNet: 0, algaeProcessor: 0 },
+        position1: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 1, algaeNet: 0, algaeProcessor: 0 },
+        position2: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 0, algaeNet: 0, algaeProcessor: 0 },
+        position3: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 3, algaeNet: 0, algaeProcessor: 0 },
+        position4: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 1, algaeNet: 0, algaeProcessor: 0 }
+      },
+      reportedTeleopScoring: {
+        coralL1: 0,
+        coralL2: 3,
+        coralL3: 5,
+        coralL4: 6,
+        totalAlgae: 6,
+        algaeNetShots: true,
+        algaeProcessor: false
+      },
+      reportedEndgame: {
+        canShallowClimb: false,
+        canDeepClimb: true,
+        canPark: true
+      },
+      notes: 'Strong coral scoring, excellent algae net shots. Sometimes gets beached.'
+    },
+    {
+      teamNumber: '341',
+      eventName: '2025mrcmp',
+      scouterInitials: 'Alex Kim',
+      weight: 88,
+      drivetrain: 'Mecanum',
+      programmingLanguage: 'Python',
+      groundPickupCapabilities: {
+        coralGroundPickup: false,
+        algaeGroundPickup: false
+      },
+      reportedAutoScoring: {
+        position0: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 1, algaeNet: 0, algaeProcessor: 0 },
+        position1: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 1, algaeNet: 0, algaeProcessor: 0 },
+        position2: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 1, algaeNet: 0, algaeProcessor: 0 },
+        position3: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 2, algaeNet: 0, algaeProcessor: 0 },
+        position4: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 0, algaeNet: 0, algaeProcessor: 0 }
+      },
+      reportedTeleopScoring: {
+        coralL1: 3,
+        coralL2: 2,
+        coralL3: 3,
+        coralL4: 2,
+        totalAlgae: 0,
+        algaeNetShots: false,
+        algaeProcessor: false
+      },
+      reportedEndgame: {
+        canShallowClimb: true,
+        canDeepClimb: false,
+        canPark: true
+      },
+      notes: 'Coral-focused robot. Cannot pick up game pieces from ground.'
+    },
+    {
+      teamNumber: '1168',
+      eventName: '2025pawar',
+      scouterInitials: 'Emma Thompson',
+      weight: 102,
+      drivetrain: 'West Coast',
+      programmingLanguage: 'Java',
+      groundPickupCapabilities: {
+        coralGroundPickup: true,
+        algaeGroundPickup: false
+      },
+      reportedAutoScoring: {
+        position0: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 0, algaeNet: 0, algaeProcessor: 0 },
+        position1: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 1, algaeNet: 0, algaeProcessor: 0 },
+        position2: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 0, algaeNet: 0, algaeProcessor: 0 },
+        position3: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 1, algaeNet: 0, algaeProcessor: 0 },
+        position4: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 0, algaeNet: 0, algaeProcessor: 0 }
+      },
+      reportedTeleopScoring: {
+        coralL1: 1,
+        coralL2: 2,
+        coralL3: 2,
+        coralL4: 3,
+        totalAlgae: 2,
+        algaeNetShots: false,
+        algaeProcessor: true
+      },
+      reportedEndgame: {
+        canShallowClimb: true,
+        canDeepClimb: true,
+        canPark: true
+      },
+      notes: 'Well-rounded robot, reliable performance across all game elements.'
+    },
+    {
+      teamNumber: '3142',
+      eventName: '2025mrcmp',
+      scouterInitials: 'AN',
+      weight: 118,
+      drivetrain: 'Swerve',
+      programmingLanguage: 'C++',
+      groundPickupCapabilities: {
+        coralGroundPickup: true,
+        algaeGroundPickup: true
+      },
+      reportedAutoScoring: {
+        position0: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 1, algaeNet: 0, algaeProcessor: 0 },
+        position1: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 2, algaeNet: 0, algaeProcessor: 0 },
+        position2: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 1, algaeNet: 0, algaeProcessor: 0 },
+        position3: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 3, algaeNet: 0, algaeProcessor: 0 },
+        position4: { coralL1: 0, coralL2: 0, coralL3: 0, coralL4: 2, algaeNet: 0, algaeProcessor: 0 }
+      },
+      reportedTeleopScoring: {
+        coralL1: 0,
+        coralL2: 1,
+        coralL3: 4,
+        coralL4: 8,
+        totalAlgae: 4,
+        algaeNetShots: true,
+        algaeProcessor: true
+      },
+      reportedEndgame: {
+        canShallowClimb: false,
+        canDeepClimb: true,
+        canPark: false
+      },
+      notes: 'High-scoring robot, excellent at L4 coral and algae. Dedicated to deep climb only.'
+    }
+  ];
+
+  try {
+    let createdCount = 0;
+    
+    for (const entryData of pitEntries) {
+      console.log(`Creating pit entry for team ${entryData.teamNumber}...`);
+      
+      await savePitScoutingEntry(entryData);
+      createdCount++;
+    }
+
+    console.log('✅ Test pit scouting data created successfully!');
+    console.log(`📊 Created ${createdCount} pit scouting entries:`);
+    pitEntries.forEach(entry => {
+      console.log(`  - Team ${entry.teamNumber} (${entry.eventName}) by ${entry.scouterInitials}`);
+    });
+
+    return pitEntries;
+  } catch (error) {
+    console.error('❌ Error creating test pit scouting data:', error);
+    throw error;
+  }
+};
+
 export const clearTestData = async () => {
-  console.log('🧹 Clearing all scouter data...');
+  console.log('🧹 Clearing all scouter and pit scouting data...');
   try {
     await gameDB.scouters.clear();
     await gameDB.scouterAchievements.clear();
-    console.log('✅ All scouter data cleared!');
+    
+    // Also clear pit scouting data
+    const { clearAllPitScoutingData } = await import('./pitScoutingUtils');
+    await clearAllPitScoutingData();
+    
+    console.log('✅ All scouter and pit scouting data cleared!');
   } catch (error) {
     console.error('❌ Error clearing data:', error);
     throw error;

@@ -6,7 +6,9 @@ import { DataAttribution } from "@/components/DataAttribution";
 import { useState, useEffect } from "react";
 import demoData from "../app/dashboard/ManeuverData-5_52_53 PM-Blue 1.json";
 import { loadLegacyScoutingData, saveScoutingData, addIdsToScoutingData, loadScoutingData } from "../lib/scoutingDataUtils";
-import { clearAllScoutingData } from "../lib/dexieDB";
+import { clearAllScoutingData, gameDB } from "../lib/dexieDB";
+import { createTestScouterProfiles, createTestPitScoutingData } from "../lib/testDataGenerator";
+import { clearAllPitScoutingData } from "../lib/pitScoutingUtils";
 import { analytics } from '@/lib/analytics';
 import { haptics } from '@/lib/haptics';
 
@@ -18,7 +20,8 @@ const HomePage = () => {
     const checkExistingData = async () => {
       try {
         const existingData = await loadLegacyScoutingData();
-        if (existingData.length > 0) {
+        const existingScouters = await gameDB.scouters.count();
+        if (existingData.length > 0 || existingScouters > 0) {
           setIsLoaded(true);
         }
       } catch (error) {
@@ -34,14 +37,25 @@ const HomePage = () => {
     setIsLoading(true);
 
     try {
+      // Load demo scouting data
       const dataWithoutHeaders = demoData.slice(1);
-
       const dataWithIds = addIdsToScoutingData(dataWithoutHeaders);
-
       await saveScoutingData({ entries: dataWithIds });
+
+      // Load demo scouter profiles using the test data generator
+      const testProfiles = await createTestScouterProfiles();
+
+      // Load demo pit scouting data
+      const pitEntries = await createTestPitScoutingData();
+
+      // Also add the scouter names to the selectable list in localStorage
+      const scouterNames = testProfiles.map(profile => profile.name);
+      localStorage.setItem("scoutersList", JSON.stringify(scouterNames.sort()));
 
       const verifyData = await loadScoutingData();
       console.log("HomePage - Verification: loaded", verifyData.entries.length, "entries from IndexedDB");
+      console.log("HomePage - Loaded", testProfiles.length, "demo scouters with achievements");
+      console.log("HomePage - Loaded", pitEntries.length, "pit scouting entries");
 
       await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -66,12 +80,29 @@ const HomePage = () => {
     
     try {
       await clearAllScoutingData();
+      
+      // Also clear scouter profiles
+      await gameDB.scouters.clear();
+      await gameDB.predictions.clear();
+      await gameDB.scouterAchievements.clear();
+      
+      // Also clear pit scouting data
+      await clearAllPitScoutingData();
+      
+      // Clear scouter list from localStorage
+      localStorage.removeItem("scoutersList");
+      localStorage.removeItem("currentScouter");
+      localStorage.removeItem("scouterInitials");
+      
       setIsLoaded(false);
       analytics.trackDemoDataClear();
     } catch (error) {
       console.error("Error clearing data:", error);
       // Clear localStorage as fallback and update UI anyway
       localStorage.removeItem("scoutingData");
+      localStorage.removeItem("scoutersList");
+      localStorage.removeItem("currentScouter");
+      localStorage.removeItem("scouterInitials");
       setIsLoaded(false);
       analytics.trackDemoDataClear();
     }
@@ -109,7 +140,7 @@ const HomePage = () => {
             <div className="text-center space-y-4">
               <h2 className="text-lg font-semibold">Demo Data</h2>
               <p className="text-sm text-muted-foreground">
-                Load sample scouting data to explore the app's features
+                Load sample scouting data, scouter profiles, and pit scouting data to explore the app's features
               </p>
 
               {!isLoaded ? (
@@ -139,7 +170,7 @@ const HomePage = () => {
                     Demo data loaded successfully!
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    51 matches • 14 teams • Ready to explore
+                    51 matches • 14 teams • 8 scouters • 5 pit entries • Ready to explore
                   </p>
                   <Button
                     onClick={clearData}
