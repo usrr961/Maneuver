@@ -1,75 +1,59 @@
 # Maneuver - Advanced FRC Scouting Application
 
-A comprehensive scouting application for FIRST Robotics Competition (FRC) teams, built with React, TypeScript, and Vite. Maneuver provides powerful tools for match scouting, team analysis, and data management.
+A comprehensive, mobile-first scouting application for FIRST Robotics Competition (FRC) teams. Maneuver provides powerful tools for match scouting, team analysis, pit scouting, alliance selection, and data management.
+
 
 ## 🚀 Features
 
-### 📊 Match Scouting
-- **Comprehensive Data Collection**: Track autonomous, teleop, and endgame performance with real-time input
-- **Interactive Field Maps**: Visual interfaces for starting positions
-- **2025 Game Support**: Coral scoring (4 levels), algae management, and climb analysis
-- **Match Strategy Integration**: Import match data from The Blue Alliance API
 
-### 🔍 Team Analysis & Strategy
+- **Comprehensive Data Collection**: Track autonomous, teleop, and endgame performance with real-time input
+- **Interactive Field Maps**: Visual interfaces for starting positions and strategy
+- **2025 Game Support**: Coral scoring (4 levels), algae management, climb analysis
+- **Match Strategy Integration**: Import match data from The Blue Alliance API and Nexus
+- **Field Canvas**: Draw and annotate match strategies, auto-fill by match number
+
 - **Multi-Tab Dashboard**: Detailed performance metrics across Overall, Auto, Teleop, and Endgame phases
 - **Advanced Analytics**: Strategy overview with filtering, sorting, charts, and multiple aggregation types
 - **Team Comparisons**: Side-by-side analysis with visual indicators and statistical significance
 - **Position Analysis**: Field maps showing starting position preferences and success rates
-- **Alliance Selection**: Drag-and-drop pick lists with embedded team statistics
+- **Alliance Selection**: Drag-and-drop pick lists, desktop/mobile layouts, alliance initializer, and selection tables
 
-### 📱 Data Management
+
+### 🏆 Scouter Profiles & Achievements
+- **Persistent Scouter Profiles**: Stake tracking, prediction scoring, and achievement system
+- **Achievements**: Unlockable badges and progress tracking for scouters
+
+### 🏗️ Pit Scouting & Assignments
+- **Full Pit Scouting UI**: Forms for robot specs, photos, auto/teleop/endgame, technical notes
+- **Pit Assignment Tools**: Assignment controls, event configuration, pit map visualization, spatial clustering
+
+### 📱 Data Management & Transfer
 - **Flexible Transfer**: JSON files and fountain codes for large datasets
-- **Local Storage**: Persistent data with merge/overwrite capabilities
-- **Demo Integration**: Built-in sample data
+- **Local Storage**: Persistent data with merge/overwrite capabilities (IndexedDB via Dexie)
 
-## 🛠️ Technology Stack
+### 🛠️ Technology Stack
 
-- **Frontend**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **UI Framework**: Tailwind CSS with shadcn/ui components
-- **State Management**: React hooks and context
-- **Data Transfer**: Luby Transform fountain codes for robust QR transfers
-- **PWA Support**: Service worker integration for offline functionality
-- **Analytics**: Google Analytics 4 integration for usage tracking
+- **Frontend**: React 19 with TypeScript
+- **Build Tool**: Vite (dev server + build)
+- **UI Framework**: Tailwind CSS with shadcn/ui primitives
+- **Local DB**: Dexie (IndexedDB) — `src/lib/dexieDB.ts` is authoritative
+- **Data Transfer**: Luby Transform fountain codes (QR), JSON import/export
+- **PWA**: vite-plugin-pwa with service worker runtime caching
+- **Analytics**: Google Analytics 4 (lightweight wrapper at `src/lib/analytics`)
+
+```
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js (v16 or higher)
-- npm or yarn package manager
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/ShinyShips/maneuver.git
-   cd maneuver
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open your browser**
-   Navigate to `http://localhost:5173`
-
-### Building for Production
-
-```bash
-npm run build
-```
-
-The built files will be in the `dist` directory.
+- npm (preferred) or yarn
 
 ## 📖 Usage
 
 ### Quick Start
+
 1. **Demo Data**: Click "Load Demo Data" on homepage to explore all features
 2. **Core Workflows**: Match scouting → Team analysis → Strategy planning → Alliance selection
 3. **Data Transfer**: Use QR codes or JSON files to share data between devices
@@ -77,9 +61,13 @@ The built files will be in the `dist` directory.
 ### Key Workflows
 
 **Match Scouting**: Game Start → Auto Phase → Teleop → Endgame → Submit
+
 **Team Analysis**: Select team → View multi-tab statistics → Compare with others → Analyze positions
 **Strategy Planning**: Dashboard overview → Interactive charts → Column configuration → Event filtering
+
 **Alliance Selection**: Create pick lists → Research teams → Drag-and-drop ordering → Export/share
+**Pit Scouting**: Assign scouters → Fill out pit forms → Visualize pit map → Export pit data
+**Achievements**: Track scouter progress, unlock badges, and view leaderboard
 
 ## 🏗️ Project Structure
 
@@ -93,6 +81,8 @@ src/
 │   ├── StrategyComponents/ # Strategy overview and analysis
 │   ├── PickListComponents/ # Alliance selection tools
 │   ├── MatchStrategyComponents/ # Match planning tools
+│   ├── PitScoutingComponents/ # Pit scouting forms and displays
+│   ├── PitAssignmentComponents/ # Pit assignment and mapping
 │   └── ui/                # Base UI components (shadcn/ui)
 ├── pages/              # Application pages/routes
 ├── lib/                # Utility functions and helpers
@@ -101,30 +91,32 @@ src/
 └── layouts/            # Page layout components
 ```
 
-## 🔧 Architecture
+## 🔧 Architecture & Developer Notes
 
-### Core Components
-- **Match Data Models**: Performance tracking with statistical analysis
-- **Mobile-First UI**: Touch-friendly responsive design with interactive charts
-- **Data Transfer**: JSON, QR codes, and fountain codes with error resilience
-- **Modular Design**: Reusable components for maintainable development
+- **Database is authoritative**: Most app state and exports/imports flow through `src/lib/dexieDB.ts` (`db`, `pitDB`, `gameDB`).
 
 ## 🤝 Contributing
 
 We welcome contributions to Maneuver! Here's how you can help:
+
+---
 
 1. **Fork the repository**
 2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
 3. **Make your changes**: Follow the existing code style and patterns
 4. **Test thoroughly**: Ensure all features work as expected
 5. **Submit a pull request**: Describe your changes and their benefits
-
 ### Development Guidelines
 - Use TypeScript for type safety
 - Follow React best practices and hooks patterns
 - Maintain responsive design for mobile compatibility
 - Test data transfer features thoroughly
 - Document any new features or changes
+
+### PR checklist
+- Run typecheck: `npm run build` and fix errors.
+- Run linter: `npm run lint` and fix issues.
+- Smoke test: `npm run dev` → verify affected pages; if DB touched, confirm migration helpers/backups work.
 
 ## 📝 License
 
