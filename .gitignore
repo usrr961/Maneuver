@@ -35,3 +35,7 @@ __pycache__/
 # OS generated files
 Thumbs.db
 .DS_Store
+
+# Local docs / AI helper files
+.github/copilot-instructions.md
+docs/db-examples.md
