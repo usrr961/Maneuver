@@ -17,8 +17,8 @@ interface StrategyHeaderProps {
   onClearAllFilters: () => void;
   isSettingsOpen: boolean;
   onSettingsOpenChange: (open: boolean) => void;
-  chartType: "bar" | "scatter";
-  onChartTypeChange: (type: "bar" | "scatter") => void;
+  chartType: "bar" | "scatter" | "box" | "stacked";
+  onChartTypeChange: (type: "bar" | "scatter" | "box" | "stacked") => void;
 }
 
 export const StrategyHeader = ({
@@ -33,7 +33,7 @@ export const StrategyHeader = ({
   onClearAllFilters,
   // isSettingsOpen,
   // onSettingsOpenChange,
-  // chartType,
+  chartType,
   // onChartTypeChange,
 }: StrategyHeaderProps) => {
   const handleAggregationTypeChange = (value: string) => {
@@ -80,23 +80,25 @@ export const StrategyHeader = ({
         />
 
         {/* Aggregation Type */}
-        <GenericSelector
-          label="Select Aggregation Type"
-          value={aggregationType}
-          availableOptions={["average", "median", "max", "75th"]}
-          onValueChange={handleAggregationTypeChange}
-          placeholder="Aggregation type"
-          displayFormat={(val) => {
-            switch (val) {
-              case "average": return "Average";
-              case "median": return "Median";
-              case "max": return "Max";
-              case "75th": return "75th %";
-              default: return val;
-            }
-          }}
-          className="w-32"
-        />
+        <div className="relative">
+          <GenericSelector
+            label="Select Aggregation Type"
+            value={aggregationType}
+            availableOptions={["average", "median", "max", "75th"]}
+            onValueChange={chartType === "box" ? () => {} : handleAggregationTypeChange}
+            placeholder="Aggregation type"
+            displayFormat={(val) => {
+              switch (val) {
+                case "average": return "Average";
+                case "median": return "Median";
+                case "max": return "Max";
+                case "75th": return "75th %";
+                default: return val;
+              }
+            }}
+            className={`w-32 ${chartType === "box" ? "opacity-50 pointer-events-none" : ""}`}
+          />
+        </div>
 
         {/* Settings */}
         {/* <Sheet open={isSettingsOpen} onOpenChange={onSettingsOpenChange}>

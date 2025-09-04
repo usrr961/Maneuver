@@ -3,6 +3,7 @@ import { GenericSelector } from "@/components/ui/generic-selector";
 import { BarChart3 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell, ScatterChart, Scatter } from "recharts";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
+import { BoxPlot } from "./BoxPlot";
 
 interface ColumnConfig {
   key: string;
@@ -17,13 +18,17 @@ interface ChartData {
   value?: number;
   x?: number;
   y?: number;
+  autoPoints?: number;
+  teleopPoints?: number;
+  endgamePoints?: number;
+  totalPoints?: number;
   eventName: string;
 }
 
 interface StrategyChartProps {
   chartData: ChartData[];
-  chartType: "bar" | "scatter";
-  onChartTypeChange: (type: "bar" | "scatter") => void;
+  chartType: "bar" | "scatter" | "box" | "stacked";
+  onChartTypeChange: (type: "bar" | "scatter" | "box" | "stacked") => void;
   chartMetric: string;
   onChartMetricChange: (metric: string) => void;
   scatterXMetric: string;
@@ -32,9 +37,12 @@ interface StrategyChartProps {
   onScatterYMetricChange: (metric: string) => void;
   columnConfig: ColumnConfig[];
   chartConfig: {
-    value: { label: string; color: string };
-    x: { label: string; color: string };
-    y: { label: string; color: string };
+    value?: { label: string; color: string };
+    x?: { label: string; color: string };
+    y?: { label: string; color: string };
+    autoPoints?: { label: string; color: string };
+    teleopPoints?: { label: string; color: string };
+    endgamePoints?: { label: string; color: string };
   };
 }
 
@@ -52,7 +60,35 @@ export const StrategyChart = ({
   chartConfig,
 }: StrategyChartProps) => {
   const handleChartTypeChange = (value: string) => {
-    onChartTypeChange(value as "bar" | "scatter");
+    onChartTypeChange(value as "bar" | "scatter" | "box" | "stacked");
+  };
+
+  const getChartDescription = () => {
+    switch (chartType) {
+      case "scatter":
+        return "Compare two metrics across all teams";
+      case "box":
+        return "Performance distribution and consistency analysis (shows min, Q1, median, Q3, max, and outliers)";
+      case "stacked":
+        return "Points breakdown by game phase (Auto/Teleop/Endgame)";
+      default:
+        return "Top performing teams by selected metric";
+    }
+  };
+
+  const getChartDisplayName = (type: string) => {
+    switch (type) {
+      case "bar":
+        return "Bar Chart";
+      case "scatter":
+        return "Scatter Plot";
+      case "box":
+        return "Box Plot";
+      case "stacked":
+        return "Stacked Bar";
+      default:
+        return type;
+    }
   };
 
   return (
@@ -65,10 +101,7 @@ export const StrategyChart = ({
               Team Performance Chart
             </CardTitle>
             <CardDescription className="px-4">
-              {chartType === "scatter" 
-                ? "Compare two metrics across all teams" 
-                : "Top performing teams by selected metric"
-              }
+              {getChartDescription()}
             </CardDescription>
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-end gap-2 w-full">
@@ -78,10 +111,10 @@ export const StrategyChart = ({
               <GenericSelector
                 label="Select Chart Type"
                 value={chartType}
-                availableOptions={["bar", "scatter"]}
+                availableOptions={["bar", "scatter", "box", "stacked"]}
                 onValueChange={handleChartTypeChange}
                 placeholder="Chart type"
-                displayFormat={(val) => val === "bar" ? "Bar Chart" : "Scatter Plot"}
+                displayFormat={getChartDisplayName}
                 className="w-auto max-w-32"
               />
             </div>
@@ -112,8 +145,12 @@ export const StrategyChart = ({
                   className="w-auto max-w-40"
                 />
               </div>
+            ) : chartType === "stacked" ? (
+              <div className="flex gap-2 md:flex-none items-center">
+                <p className="text-sm text-muted-foreground">Points breakdown by game phase</p>
+              </div>
             ) : (
-              /* Bar Chart Metric */
+              /* Bar Chart and Box Plot Metric */
               <div className="flex gap-2 md:flex-none items-center">
                 <p className="whitespace-nowrap">Metric:</p>
                 <div className="w-full">
@@ -140,12 +177,12 @@ export const StrategyChart = ({
               <XAxis 
                 type="number"
                 dataKey="x"
-                name={chartConfig.x.label}
+                name={chartConfig.x?.label || "X"}
                 tickLine={false}
                 axisLine={false}
                 className="text-xs"
                 label={{ 
-                  value: chartConfig.x.label, 
+                  value: chartConfig.x?.label || "X", 
                   position: 'insideBottom', 
                   offset: -5,
                   style: { textAnchor: 'middle', fontSize: '12px', fill: 'currentColor' }
@@ -154,12 +191,12 @@ export const StrategyChart = ({
               <YAxis 
                 type="number"
                 dataKey="y"
-                name={chartConfig.y.label}
+                name={chartConfig.y?.label || "Y"}
                 tickLine={false}
                 axisLine={false}
                 className="text-xs"
                 label={{ 
-                  value: chartConfig.y.label, 
+                  value: chartConfig.y?.label || "Y", 
                   angle: -90, 
                   position: 'insideLeft',
                   style: { textAnchor: 'middle', fontSize: '12px', fill: 'currentColor' }
@@ -181,11 +218,11 @@ export const StrategyChart = ({
                       </div>
                       <div className="space-y-1">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">{chartConfig.x.label}:</span>
+                          <span className="text-sm text-muted-foreground">{chartConfig.x?.label || "X"}:</span>
                           <span className="font-medium">{typeof data.x === 'number' ? data.x.toFixed(1) : data.x}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">{chartConfig.y.label}:</span>
+                          <span className="text-sm text-muted-foreground">{chartConfig.y?.label || "Y"}:</span>
                           <span className="font-medium">{typeof data.y === 'number' ? data.y.toFixed(1) : data.y}</span>
                         </div>
                       </div>
@@ -203,6 +240,90 @@ export const StrategyChart = ({
                 ))}
               </Scatter>
             </ScatterChart>
+          ) : chartType === "stacked" ? (
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="team" 
+                tickLine={false}
+                axisLine={false}
+                className="text-xs"
+                label={{ 
+                  value: "Team", 
+                  position: 'insideBottom', 
+                  offset: -5,
+                  style: { textAnchor: 'middle', fontSize: '12px', fill: 'currentColor' }
+                }}
+              />
+              <YAxis 
+                tickLine={false}
+                axisLine={false}
+                className="text-xs"
+                label={{ 
+                  value: "Points", 
+                  angle: -90, 
+                  position: 'insideLeft',
+                  style: { textAnchor: 'middle', fontSize: '12px', fill: 'currentColor' }
+                }}
+              />
+              <ChartTooltip 
+                content={({ active, payload, label }) => {
+                  if (!active || !payload || !payload.length) return null;
+                  
+                  const data = payload[0].payload;
+                  const calculatedTotal = (data.autoPoints || 0) + (data.teleopPoints || 0) + (data.endgamePoints || 0);
+                  
+                  return (
+                    <div className="bg-background border border-border rounded-lg shadow-lg p-3 min-w-[200px]">
+                      <div className="font-medium text-foreground mb-2">
+                        Team {label}
+                      </div>
+                      <div className="text-sm text-muted-foreground mb-2">
+                        {data.eventName}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Auto Points:</span>
+                          <span className="font-medium" style={{color: "var(--color-chart-1)"}}>
+                            {data.autoPoints?.toFixed(1) || 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Teleop Points:</span>
+                          <span className="font-medium" style={{color: "var(--color-chart-2)"}}>
+                            {data.teleopPoints?.toFixed(1) || 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Endgame Points:</span>
+                          <span className="font-medium" style={{color: "var(--color-chart-3)"}}>
+                            {data.endgamePoints?.toFixed(1) || 0}
+                          </span>
+                        </div>
+                        <div className="border-t pt-1 mt-2">
+                          <div className="flex justify-between items-center font-medium">
+                            <span>Total:</span>
+                            <span>{calculatedTotal.toFixed(1)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }}
+                cursor={{ fill: "rgba(0, 0, 0, 0.1)" }}
+              />
+              <Bar dataKey="autoPoints" stackId="points" fill="var(--color-chart-1)" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="teleopPoints" stackId="points" fill="var(--color-chart-2)" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="endgamePoints" stackId="points" fill="var(--color-chart-3)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          ) : chartType === "box" ? (
+            <BoxPlot
+              data={chartData as Array<{ team: string; value: number; eventName: string }>}
+              width={480}
+              height={256}
+              margin={{ top: 20, right: 40, bottom: 60, left: 60 }}
+              metricLabel={chartConfig.value?.label || "Value"}
+            />
           ) : (
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -223,7 +344,7 @@ export const StrategyChart = ({
                 axisLine={false}
                 className="text-xs"
                 label={{ 
-                  value: chartConfig.value.label, 
+                  value: chartConfig.value?.label || "Value", 
                   angle: -90, 
                   position: 'insideLeft',
                   style: { textAnchor: 'middle', fontSize: '12px', fill: 'currentColor' }
@@ -244,7 +365,7 @@ export const StrategyChart = ({
                         {data.eventName}
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">{chartConfig.value.label}:</span>
+                        <span className="text-sm text-muted-foreground">{chartConfig.value?.label || "Value"}:</span>
                         <span className="font-medium">{typeof data.value === 'number' ? data.value.toFixed(1) : data.value}</span>
                       </div>
                     </div>

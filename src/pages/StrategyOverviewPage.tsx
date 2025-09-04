@@ -28,7 +28,7 @@ const StrategyOverviewPage = () => {
   const [aggregationType, setAggregationType] = useState<AggregationType>("average");
   const [selectedEvent, setSelectedEvent] = useState<string>("all");
   const [chartMetric, setChartMetric] = useState<string>("totalPoints");
-  const [chartType, setChartType] = useState<"bar" | "scatter">("bar");
+  const [chartType, setChartType] = useState<"bar" | "scatter" | "box" | "stacked">("bar");
   const [scatterXMetric, setScatterXMetric] = useState<string>("totalCoral");
   const [scatterYMetric, setScatterYMetric] = useState<string>("totalAlgae");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
