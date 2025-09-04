@@ -4,11 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataAttribution } from "@/components/DataAttribution";
 import { useState, useEffect } from "react";
-import demoData from "../app/dashboard/ManeuverData-5_52_53 PM-Blue 1.json";
-import { loadLegacyScoutingData, saveScoutingData, addIdsToScoutingData, loadScoutingData } from "../lib/scoutingDataUtils";
-import { clearAllScoutingData, gameDB } from "../lib/dexieDB";
-import { createTestScouterProfiles, createTestPitScoutingData } from "../lib/testDataGenerator";
-import { clearAllPitScoutingData } from "../lib/pitScoutingUtils";
+import { loadLegacyScoutingData, loadScoutingData } from "../lib/scoutingDataUtils";
+import { gameDB } from "../lib/dexieDB";
+import { createAllTestData, clearTestData } from "../lib/testDataGenerator";
 import { analytics } from '@/lib/analytics';
 import { haptics } from '@/lib/haptics';
 
@@ -37,25 +35,42 @@ const HomePage = () => {
     setIsLoading(true);
 
     try {
-      // Load demo scouting data
-      const dataWithoutHeaders = demoData.slice(1);
-      const dataWithIds = addIdsToScoutingData(dataWithoutHeaders);
-      await saveScoutingData({ entries: dataWithIds });
+      // Load all demo data using the consolidated test data generator
+      await createAllTestData();
 
-      // Load demo scouter profiles using the test data generator
-      const testProfiles = await createTestScouterProfiles();
-
-      // Load demo pit scouting data
-      const pitEntries = await createTestPitScoutingData();
+      // Update events list
+      const savedEvents = localStorage.getItem('eventsList');
+      let eventsList: string[] = [];
+      
+      if (savedEvents) {
+        try {
+          eventsList = JSON.parse(savedEvents);
+        } catch {
+          eventsList = [];
+        }
+      }
+      
+      // Add both demo events
+      const demoEvents = ['2025mrcmp', '2025pawar'];
+      demoEvents.forEach(event => {
+        if (!eventsList.includes(event)) {
+          eventsList.push(event);
+        }
+      });
+      eventsList.sort();
+      localStorage.setItem('eventsList', JSON.stringify(eventsList));
+      localStorage.setItem('eventName', '2025mrcmp'); // Set default event
 
       // Also add the scouter names to the selectable list in localStorage
-      const scouterNames = testProfiles.map(profile => profile.name);
+      const scouterNames = [
+        "Sarah Chen", "Marcus Rodriguez", "Emma Thompson", "Alex Kim", 
+        "Jordan Smith", "Riley Davis", "Casey Park", "Taylor Wilson"
+      ];
       localStorage.setItem("scoutersList", JSON.stringify(scouterNames.sort()));
 
       const verifyData = await loadScoutingData();
       console.log("HomePage - Verification: loaded", verifyData.entries.length, "entries from IndexedDB");
-      console.log("HomePage - Loaded", testProfiles.length, "demo scouters with achievements");
-      console.log("HomePage - Loaded", pitEntries.length, "pit scouting entries");
+      console.log("HomePage - Loaded all demo data successfully");
 
       await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -79,20 +94,15 @@ const HomePage = () => {
     haptics.medium();
     
     try {
-      await clearAllScoutingData();
+      // Use the consolidated clear function
+      await clearTestData();
       
-      // Also clear scouter profiles
-      await gameDB.scouters.clear();
-      await gameDB.predictions.clear();
-      await gameDB.scouterAchievements.clear();
-      
-      // Also clear pit scouting data
-      await clearAllPitScoutingData();
-      
-      // Clear scouter list from localStorage
+      // Clear additional items from localStorage
       localStorage.removeItem("scoutersList");
       localStorage.removeItem("currentScouter");
       localStorage.removeItem("scouterInitials");
+      localStorage.removeItem("eventName");
+      localStorage.removeItem("eventsList");
       
       setIsLoaded(false);
       analytics.trackDemoDataClear();
@@ -103,6 +113,9 @@ const HomePage = () => {
       localStorage.removeItem("scoutersList");
       localStorage.removeItem("currentScouter");
       localStorage.removeItem("scouterInitials");
+      localStorage.removeItem("matchData");
+      localStorage.removeItem("eventName");
+      localStorage.removeItem("eventsList");
       setIsLoaded(false);
       analytics.trackDemoDataClear();
     }
@@ -140,7 +153,7 @@ const HomePage = () => {
             <div className="text-center space-y-4">
               <h2 className="text-lg font-semibold">Demo Data</h2>
               <p className="text-sm text-muted-foreground">
-                Load sample scouting data, scouter profiles, and pit scouting data to explore the app's features
+                Load sample scouting data, scouter profiles, pit scouting data, and match schedule from 2025mrcmp to explore the app's features
               </p>
 
               {!isLoaded ? (
@@ -170,7 +183,7 @@ const HomePage = () => {
                     Demo data loaded successfully!
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    51 matches • 14 teams • 8 scouters • 5 pit entries • Ready to explore
+                    120 matches • 60 teams • 8 scouters • 5 pit entries • 2025mrcmp event
                   </p>
                   <Button
                     onClick={clearData}
