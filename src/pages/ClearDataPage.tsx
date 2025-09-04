@@ -1,268 +1,30 @@
-import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { toast } from "sonner";
-import { loadScoutingData } from "@/lib/scoutingDataUtils";
-import { clearAllScoutingData, clearGameData, gameDB, pitDB } from "@/lib/dexieDB";
-import { clearAllPitScoutingData, getPitScoutingStats } from "@/lib/pitScoutingUtils";
-import { convertTeamRole } from "@/lib/utils";
-import { DataClearCard } from "@/components/DataTransferComponents/DataClearCard";
+import { useState, useEffect } from "react";
+import { useDataStats } from "@/hooks/useDataStats";
+import { useDataCleaning } from "@/hooks/useDataCleaning";
+import { DeviceInfoCard } from "@/components/ClearComponents/DeviceInfoCard";
+import { BackupRecommendationAlert } from "@/components/ClearComponents/BackupRecommendationAlert";
+import { ClearAllDataDialog } from "@/components/ClearComponents/ClearAllDataDialog";
+import { DataClearCard } from "@/components/ClearComponents/DataClearCard";
 
 
 const ClearDataPage = () => {
-  const [scoutingDataCount, setScoutingDataCount] = useState(0);
-  const [pitScoutingDataCount, setPitScoutingDataCount] = useState(0);
-  const [matchDataCount, setMatchDataCount] = useState(0);
-  const [scouterGameDataCount, setScouterGameDataCount] = useState(0);
-  const [apiDataCount, setApiDataCount] = useState(0);
   const [playerStation, setPlayerStation] = useState("");
-  const [scoutingDataSize, setScoutingDataSize] = useState("0 B");
-  const [pitScoutingDataSize, setPitScoutingDataSize] = useState("0 B");
-  const [matchDataSize, setMatchDataSize] = useState("0 B");
-  const [scouterGameDataSize, setScouterGameDataSize] = useState("0 B");
-  const [apiDataSize, setApiDataSize] = useState("0 B");
+  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
 
-  const loadScoutingCount = useCallback(async () => {
-    try {
-      const scoutingData = await loadScoutingData();
-      setScoutingDataCount(scoutingData.entries.length);
-      
-      const dataString = JSON.stringify(scoutingData.entries);
-      const size = formatDataSize(dataString);
-      setScoutingDataSize(size);
-    } catch (error) {
-      console.error("Error loading scouting data:", error);
-      setScoutingDataCount(0);
-      setScoutingDataSize("0 B");
-    }
-  }, []);
-
-  const loadPitScoutingCount = useCallback(async () => {
-    try {
-      const pitStats = await getPitScoutingStats();
-      setPitScoutingDataCount(pitStats.totalEntries);
-      
-      // Calculate pit scouting data size from IndexedDB
-      const pitData = await pitDB.pitScoutingData.toArray();
-      const pitSize = formatDataSize(JSON.stringify(pitData));
-      setPitScoutingDataSize(pitSize);
-    } catch (error) {
-      console.error("Error loading pit scouting data:", error);
-      setPitScoutingDataCount(0);
-      setPitScoutingDataSize("0 B");
-    }
-  }, []);
-
-  const loadScouterGameCount = useCallback(async () => {
-    try {
-      const scoutersCount = await gameDB.scouters.count();
-      const predictionsCount = await gameDB.predictions.count();
-      
-      
-      const totalEntries = scoutersCount + predictionsCount;
-      setScouterGameDataCount(totalEntries);
-      
-      const scoutersData = await gameDB.scouters.toArray();
-      const predictionsData = await gameDB.predictions.toArray();
-      const combinedData = { scouters: scoutersData, predictions: predictionsData };
-      const gameDataSize = formatDataSize(JSON.stringify(combinedData));
-      setScouterGameDataSize(gameDataSize);
-      
-    } catch (error) {
-      console.error("Error loading scouter game data:", error);
-      setScouterGameDataCount(0);
-      setScouterGameDataSize("0 B");
-    }
-  }, []);
-
-  const loadApiDataCount = useCallback(() => {
-    try {
-      // Count all API-related localStorage items
-      const allKeys = Object.keys(localStorage);
-      const apiKeys = allKeys.filter(key => 
-        // TBA data
-        key.includes('tba_') || 
-        key.startsWith('tba_') ||
-        // Nexus data
-        key.includes('nexus_') || 
-        key.startsWith('nexus_') ||
-        // Match and event data
-        key === 'matchData' ||
-        key === 'eventsList' ||
-        key === 'eventName' ||
-        key.includes('matchResults_') ||
-        key.includes('stakesAwarded_') ||
-        // Pit assignment data
-        key.includes('pit_assignments_')
-      );
-      
-      setApiDataCount(apiKeys.length);
-      
-      // Calculate total size of all API data
-      let totalSize = 0;
-      apiKeys.forEach(key => {
-        const data = localStorage.getItem(key);
-        if (data) {
-          totalSize += new Blob([data]).size;
-        }
-      });
-      
-      // Format size properly
-      let sizeStr = "0 B";
-      if (totalSize < 1024) {
-        sizeStr = `${totalSize} B`;
-      } else if (totalSize < 1024 * 1024) {
-        sizeStr = `${(totalSize / 1024).toFixed(1)} KB`;
-      } else {
-        sizeStr = `${(totalSize / (1024 * 1024)).toFixed(1)} MB`;
-      }
-      
-      setApiDataSize(sizeStr);
-    } catch (error) {
-      console.error("Error loading API data stats:", error);
-      setApiDataCount(0);
-      setApiDataSize("0 B");
-    }
-  }, []);
-
-  const refreshData = useCallback(async () => {
-    await loadScoutingCount();
-    await loadPitScoutingCount();
-    await loadScouterGameCount();
-    loadApiDataCount();
-  }, [loadScoutingCount, loadPitScoutingCount, loadScouterGameCount, loadApiDataCount]);
+  const { stats, refreshData, resetStats, updateMatchData } = useDataStats();
+  const {
+    handleClearScoutingData,
+    handleClearPitScoutingData,
+    handleClearScouterGameData,
+    handleClearMatchData,
+    handleClearApiData,
+    handleClearAllData,
+  } = useDataCleaning(refreshData, resetStats, updateMatchData);
 
   useEffect(() => {
-    const matchData = localStorage.getItem("matchData");
     const station = localStorage.getItem("playerStation") || "Unknown";
-
     setPlayerStation(station);
-    
-    loadScoutingCount();
-    loadPitScoutingCount();
-    loadScouterGameCount();
-    loadApiDataCount();
-
-    if (matchData) {
-      try {
-        const parsed = JSON.parse(matchData);
-        const count = Array.isArray(parsed) ? parsed.length : 0;
-        setMatchDataCount(count);
-        setMatchDataSize(formatDataSize(matchData));
-      } catch {
-        setMatchDataCount(0);
-        setMatchDataSize("0 B");
-      }
-    } else {
-      setMatchDataCount(0);
-      setMatchDataSize("0 B");
-    }
-  }, [loadScoutingCount, loadPitScoutingCount, loadScouterGameCount, loadApiDataCount]);
-
-  const handleClearScoutingData = async () => {
-    try {
-      await clearAllScoutingData();
-      localStorage.setItem("scoutingData", JSON.stringify({ data: [] }));
-      
-      await refreshData();
-      toast.success("Cleared all scouting data");
-    } catch (error) {
-      console.error("Error clearing scouting data:", error);
-      // Clear localStorage as fallback and refresh
-      localStorage.setItem("scoutingData", JSON.stringify({ data: [] }));
-      await refreshData();
-      toast.success("Cleared all scouting data");
-    }
-  };
-
-  const handleClearPitScoutingData = async () => {
-    try {
-      await clearAllPitScoutingData();
-      
-      await refreshData();
-      toast.success("Cleared all pit scouting data");
-    } catch (error) {
-      console.error("Error clearing pit scouting data:", error);
-      toast.error("Failed to clear pit scouting data");
-    }
-  };
-
-  const handleClearScouterGameData = async () => {
-    try {
-      await clearGameData();
-      
-      localStorage.removeItem("scoutersList");
-      localStorage.removeItem("currentScouter");
-      localStorage.removeItem("scouterInitials");
-      
-      // Dispatch custom event to notify nav-user component to reload
-      window.dispatchEvent(new CustomEvent('scouterDataCleared'));
-      
-      await refreshData();
-      toast.success("Cleared all scouter profile data");
-      console.log("ClearDataPage - Scouter profile data cleared successfully");
-    } catch (error) {
-      console.error("Error clearing scouter profile data:", error);
-      toast.error("Failed to clear scouter profile data");
-    }
-  };
-
-  const handleClearMatchData = () => {
-    localStorage.setItem("matchData", "");
-    setMatchDataCount(0);
-    setMatchDataSize("0 B");
-    toast.success("Cleared match schedule data");
-  };
-
-  const handleClearApiData = () => {
-    try {
-      // Clear all API-related localStorage items
-      const allKeys = Object.keys(localStorage);
-      const apiKeys = allKeys.filter(key => 
-        // TBA data
-        key.includes('tba_') || 
-        key.startsWith('tba_') ||
-        // Nexus data
-        key.includes('nexus_') || 
-        key.startsWith('nexus_') ||
-        // Match and event data
-        key === 'matchData' ||
-        key === 'eventsList' ||
-        key === 'eventName' ||
-        key.includes('matchResults_') ||
-        key.includes('stakesAwarded_') ||
-        // Pit assignment data
-        key.includes('pit_assignments_')
-      );
-      
-      // Log what we're about to clear for debugging
-      console.log('Clearing API data keys:', apiKeys);
-      
-      apiKeys.forEach(key => {
-        localStorage.removeItem(key);
-      });
-      
-      // Reset match data count and size as well since it's part of API data
-      setMatchDataCount(0);
-      setMatchDataSize("0 B");
-      
-      // Refresh API data counts
-      loadApiDataCount();
-      
-      toast.success(`Cleared all API data (${apiKeys.length} items)`);
-    } catch (error) {
-      console.error("Error clearing API data:", error);
-      toast.error("Failed to clear API data");
-    }
-  };
-
-  const formatDataSize = (data: BlobPart | null) => {
-    if (!data) return "0 B";
-    const bytes = new Blob([data]).size;
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
+  }, []);
 
   return (
     <div className="min-h-screen w-full px-4 pt-6 pb-6">
@@ -277,80 +39,73 @@ const ClearDataPage = () => {
 
         {/* Top Row - Device Info and Alert */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-          {/* Device Info Card */}
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle className="text-lg">Device Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-sm"><span className="font-medium">Player Station:</span> {convertTeamRole(playerStation)}</p>
-              <p className="text-sm"><span className="font-medium">Last Updated:</span> {new Date().toLocaleDateString()}</p>
-            </CardContent>
-          </Card>
-
-          <Alert>
-            <AlertTitle>💡 Backup Recommendation</AlertTitle>
-            <AlertDescription>
-              Consider downloading your data before clearing it. Use the JSON Transfer page to export your data.
-            </AlertDescription>
-          </Alert>
+          <DeviceInfoCard playerStation={playerStation} />
+          <BackupRecommendationAlert 
+            onClearAllClick={() => setShowClearAllConfirm(true)} 
+          />
         </div>
 
         {/* Data Clear Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {/* Scouting Data Card */}
           <DataClearCard
             title="Scouting Data"
             description="Match scouting data collected on this device"
-            entryCount={scoutingDataCount}
+            entryCount={stats.scoutingDataCount}
             entryLabel="entries"
-            storageSize={scoutingDataSize}
+            storageSize={stats.scoutingDataSize}
             onClear={handleClearScoutingData}
           />
 
-          {/* Pit Scouting Data Card */}
           <DataClearCard
             title="Pit Scouting Data"
             description="Robot pit scouting data collected at events"
-            entryCount={pitScoutingDataCount}
+            entryCount={stats.pitScoutingDataCount}
             entryLabel="entries"
-            storageSize={pitScoutingDataSize}
+            storageSize={stats.pitScoutingDataSize}
             onClear={handleClearPitScoutingData}
           />
 
-          {/* Scouter Profile Data Card */}
           <DataClearCard
             title="Scouter Profile Data"
             description="Scouter predictions, stakes, and leaderboard data"
-            entryCount={scouterGameDataCount}
+            entryCount={stats.scouterGameDataCount}
             entryLabel="entries"
-            storageSize={scouterGameDataSize}
+            storageSize={stats.scouterGameDataSize}
             onClear={handleClearScouterGameData}
-            warningMessage={`This will permanently delete ${scouterGameDataCount} scouter game entries (scouters and predictions).`}
+            warningMessage={`This will permanently delete ${stats.scouterGameDataCount} scouter game entries (scouters and predictions).`}
           />
 
-          {/* API Data Card */}
           <DataClearCard
             title="TBA & Nexus API Data"
             description="Teams, pit data, matches, and event data from APIs"
-            entryCount={apiDataCount}
+            entryCount={stats.apiDataCount}
             entryLabel="items"
-            storageSize={apiDataSize}
+            storageSize={stats.apiDataSize}
             onClear={handleClearApiData}
             warningMessage={`This will permanently delete all downloaded API data including teams, pit addresses, pit maps, match results, and event information.`}
           />
 
-          {/* Match Data Card */}
           <DataClearCard
             title="Match Schedule Data"
             description="Tournament match schedule and team information"
-            entryCount={matchDataCount}
+            entryCount={stats.matchDataCount}
             entryLabel="matches"
-            storageSize={matchDataSize}
+            storageSize={stats.matchDataSize}
             onClear={handleClearMatchData}
           />
         </div>
       </div>
+
+      <ClearAllDataDialog
+        open={showClearAllConfirm}
+        onOpenChange={setShowClearAllConfirm}
+        onConfirm={handleClearAllData}
+        scoutingDataCount={stats.scoutingDataCount}
+        pitScoutingDataCount={stats.pitScoutingDataCount}
+        scouterGameDataCount={stats.scouterGameDataCount}
+        apiDataCount={stats.apiDataCount}
+        matchDataCount={stats.matchDataCount}
+      />
     </div>
   );
 };
