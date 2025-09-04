@@ -6,6 +6,7 @@ import scouterProfilesData from './testData/scouterProfiles.json';
 import pitScoutingData from './testData/pitScoutingData.json';
 import matchScheduleData from './testData/matchSchedule.json';
 import matchScoutingData from './testData/matchScoutingData.json';
+import teamsData from './testData/teams.json';
 
 // Helper function to convert relative time to absolute timestamp
 const getTimestamp = (timeSpec: any): number => {
@@ -156,8 +157,17 @@ export const createAllTestData = async () => {
     await createTestPitScoutingData();
     await createTestMatchSchedule();
     await createTestMatchScoutingData();
+    createTestEventTeams(); // Add event teams creation
     
     console.log('✅ All test data created successfully!');
+    console.log('');
+    console.log('📋 Available demo data:');
+    console.log('  - Scouter profiles with achievements');
+    console.log('  - Pit scouting entries');
+    console.log('  - Match schedule and scouting data');
+    console.log('  - Event teams data (TBA and Nexus formats)');
+    console.log('');
+    console.log('💡 You can now use the Pit Assignments page to test team assignments!');
   } catch (error) {
     console.error('❌ Error creating test data:', error);
     throw error;
@@ -189,9 +199,100 @@ export const clearTestData = async () => {
       console.log('Match schedule clearing failed, skipping...');
     }
     
+    // Clear event teams data for pit assignments
+    clearTestEventTeams();
+    
+    // Clear pit assignments from localStorage
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('pit_assignments_')) {
+          localStorage.removeItem(key);
+          console.log(`  🗑️  Removed pit assignments: ${key}`);
+        }
+      }
+    } catch {
+      console.log('Pit assignments clearing failed, skipping...');
+    }
+    
     console.log('✅ All test data cleared!');
   } catch (error) {
     console.error('❌ Error clearing data:', error);
+    throw error;
+  }
+};
+
+/**
+ * Create demo event teams data for testing the pit assignments page
+ */
+export const createTestEventTeams = () => {
+  console.log('🏆 Creating test event teams data...');
+  
+  try {
+    // Create single demo event with all teams (realistic scenario)
+    const demoEvent = {
+      eventKey: '2025mrcmp',
+      eventName: 'Mars Robotics Championship',
+      teams: teamsData,
+      source: 'tba' as const
+    };
+
+    // Store TBA-style event teams
+    const storageKey = `tba_event_teams_${demoEvent.eventKey}`;
+    const data = {
+      teamNumbers: demoEvent.teams,
+      lastFetched: Date.now(),
+      eventName: demoEvent.eventName
+    };
+    localStorage.setItem(storageKey, JSON.stringify(data));
+    console.log(`  📋 Created TBA event: ${demoEvent.eventName} (${demoEvent.teams.length} teams)`);
+
+    console.log('✅ Test event teams data created successfully!');
+    console.log(`� Created 1 demo event with ${demoEvent.teams.length} teams`);
+    
+    return { [demoEvent.eventKey]: demoEvent };
+  } catch (error) {
+    console.error('❌ Error creating test event teams:', error);
+    throw error;
+  }
+};
+
+/**
+ * Clear all event teams data (both TBA and Nexus)
+ */
+export const clearTestEventTeams = () => {
+  console.log('🧹 Clearing test event teams data...');
+  
+  try {
+    // Clear TBA event teams
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('tba_event_teams_') || key.startsWith('nexus_event_teams_') || key.startsWith('nexus_pit_addresses_'))) {
+        localStorage.removeItem(key);
+        console.log(`  🗑️  Removed: ${key}`);
+      }
+    }
+    
+    console.log('✅ Test event teams data cleared!');
+  } catch (error) {
+    console.error('❌ Error clearing test event teams:', error);
+    throw error;
+  }
+};
+
+/**
+ * Clear all demo data from the application
+ */
+export const clearAllTestData = async () => {
+  console.log('🧹 Clearing all test data...');
+  
+  try {
+    await clearTestData();
+    clearTestEventTeams();
+    
+    console.log('✅ All test data cleared successfully!');
+  } catch (error) {
+    console.error('❌ Error clearing all test data:', error);
     throw error;
   }
 };
@@ -201,5 +302,6 @@ export {
   scouterProfilesData, 
   pitScoutingData, 
   matchScheduleData, 
-  matchScoutingData 
+  matchScoutingData,
+  teamsData 
 };

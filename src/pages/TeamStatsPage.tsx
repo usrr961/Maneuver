@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/animate-ui/radix/tabs";
 import AutoStartPositionMap from "@/components/TeamStatsComponents/AutoStartPositionMap";
 import { loadLegacyScoutingData } from "../lib/scoutingDataUtils";
@@ -13,6 +14,9 @@ import { ProgressCard } from "../components/TeamStatsComponents/ProgressCard";
 import { PitScoutingData } from "../components/TeamStatsComponents/PitScoutingData";
 import { DataAttribution } from "@/components/DataAttribution";
 import { analytics } from '@/lib/analytics';
+import { getAllStoredEventTeams, getStoredEventTeams } from '@/lib/tbaUtils';
+import { getStoredNexusTeams } from '@/lib/nexusUtils';
+import { getPitScoutingStats } from '@/lib/dexieDB';
 import LogoNotFound from "../assets/Logo Not Found.png";
 
 const TeamStatsPage = () => {
@@ -26,6 +30,46 @@ const TeamStatsPage = () => {
   const [compareStats, setCompareStats] = useState<TeamStatsType | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
 
+  // Helper function to create default team stats when no match data exists
+  const createDefaultTeamStats = (): TeamStatsType => {
+    return {
+      matchesPlayed: 0,
+      avgAutoCoralL1: 0,
+      avgAutoCoralL2: 0,
+      avgAutoCoralL3: 0,
+      avgAutoCoralL4: 0,
+      avgTeleopCoralL1: 0,
+      avgTeleopCoralL2: 0,
+      avgTeleopCoralL3: 0,
+      avgTeleopCoralL4: 0,
+      avgAutoAlgaeNet: 0,
+      avgAutoAlgaeProcessor: 0,
+      avgTeleopAlgaeNet: 0,
+      avgTeleopAlgaeProcessor: 0,
+      avgTotalPoints: 0,
+      avgAutoPoints: 0,
+      avgTeleopPoints: 0,
+      avgEndgamePoints: 0,
+      mobilityRate: 0,
+      climbRate: 0,
+      defenseRate: 0,
+      breakdownRate: 0,
+      shallowClimbRate: 0,
+      deepClimbRate: 0,
+      parkRate: 0,
+      climbFailRate: 0,
+      startPositions: {
+        position0: 0,
+        position1: 0,
+        position2: 0,
+        position3: 0,
+        position4: 0,
+        position5: 0,
+      },
+      matchResults: [],
+    };
+  };
+
   useEffect(() => {
     // Load scouting data using the new deduplication utilities
     const loadData = async () => {
@@ -33,10 +77,26 @@ const TeamStatsPage = () => {
         const data = await loadLegacyScoutingData();
         setScoutingData(data);
         
-        // Get unique event names
-        const events = [...new Set(data.map((entry: Record<string, unknown>) => entry.eventName?.toString()).filter(Boolean))];
-        events.sort();
-        setAvailableEvents(events as string[]);
+        // Get unique event names from scouting data
+        const scoutingEvents = [...new Set(data.map((entry: Record<string, unknown>) => entry.eventName?.toString()).filter(Boolean))];
+        
+        // Get events from TBA stored data
+        const tbaEvents = Object.keys(getAllStoredEventTeams());
+        
+        // Get events from Nexus stored data (iterate through localStorage for nexus_event_teams_*)
+        const nexusEvents: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('nexus_event_teams_')) {
+            const eventKey = key.replace('nexus_event_teams_', '');
+            nexusEvents.push(eventKey);
+          }
+        }
+        
+        // Combine all events and remove duplicates
+        const allEvents = [...new Set([...scoutingEvents, ...tbaEvents, ...nexusEvents])];
+        allEvents.sort();
+        setAvailableEvents(allEvents as string[]);
         
         // Track team stats page usage
         analytics.trackPageNavigation('team_stats');
@@ -50,23 +110,63 @@ const TeamStatsPage = () => {
 
   useEffect(() => {
     // Update available teams based on selected event
-    let filteredData = scoutingData;
+    const loadTeams = async () => {
+      let scoutingTeams: string[] = [];
+      const eventTeams: string[] = [];
+      let pitScoutingTeams: string[] = [];
+      
+      // Get teams from scouting data
+      let filteredData = scoutingData;
+      if (selectedEvent && selectedEvent !== "all") {
+        filteredData = scoutingData.filter((entry: Record<string, unknown>) => entry.eventName?.toString() === selectedEvent);
+      }
+      scoutingTeams = [...new Set(filteredData.map((entry: Record<string, unknown>) => entry.selectTeam?.toString()).filter(Boolean))] as string[];
+      
+      // Get teams from pit scouting data
+      try {
+        const pitStats = await getPitScoutingStats();
+        if (selectedEvent === "all") {
+          pitScoutingTeams = pitStats.teams;
+        } else if (selectedEvent) {
+          // Filter pit scouting teams by event
+          const { loadPitScoutingByEvent } = await import('@/lib/dexieDB');
+          const pitEntries = await loadPitScoutingByEvent(selectedEvent);
+          pitScoutingTeams = [...new Set(pitEntries.map(entry => entry.teamNumber))];
+        }
+      } catch (error) {
+        console.warn('Error loading pit scouting teams:', error);
+      }
+      
+      // Get teams from event team lists (TBA and Nexus)
+      if (selectedEvent && selectedEvent !== "all") {
+        // Try to get teams from TBA data
+        const tbaTeams = getStoredEventTeams(selectedEvent);
+        if (tbaTeams) {
+          eventTeams.push(...tbaTeams.map(team => team.toString()));
+        }
+        
+        // Try to get teams from Nexus data
+        const nexusTeams = getStoredNexusTeams(selectedEvent);
+        if (nexusTeams) {
+          eventTeams.push(...nexusTeams);
+        }
+      }
+      
+      // Combine all teams and remove duplicates
+      const allTeams = [...new Set([...scoutingTeams, ...pitScoutingTeams, ...eventTeams])];
+      allTeams.sort((a, b) => Number(a) - Number(b));
+      setAvailableTeams(allTeams);
+      
+      // Reset team selections if current selections are no longer available
+      if (selectedTeam && !allTeams.includes(selectedTeam)) {
+        setSelectedTeam("");
+      }
+      if (compareTeam && compareTeam !== "none" && !allTeams.includes(compareTeam)) {
+        setCompareTeam("none");
+      }
+    };
     
-    if (selectedEvent && selectedEvent !== "all") {
-      filteredData = scoutingData.filter((entry: Record<string, unknown>) => entry.eventName?.toString() === selectedEvent);
-    }
-    
-    const teams = [...new Set(filteredData.map((entry: Record<string, unknown>) => entry.selectTeam?.toString()).filter(Boolean))];
-    teams.sort((a, b) => Number(a) - Number(b));
-    setAvailableTeams(teams as string[]);
-    
-    // Reset team selections if current selections are no longer available
-    if (selectedTeam && !teams.includes(selectedTeam)) {
-      setSelectedTeam("");
-    }
-    if (compareTeam && compareTeam !== "none" && !teams.includes(compareTeam)) {
-      setCompareTeam("none");
-    }
+    loadTeams();
   }, [scoutingData, selectedEvent, selectedTeam, compareTeam]);
 
   const calculateTeamStatsCallback = useCallback((teamNumber: string) => {
@@ -76,7 +176,8 @@ const TeamStatsPage = () => {
   useEffect(() => {
     if (selectedTeam) {
       const stats = calculateTeamStatsCallback(selectedTeam);
-      setTeamStats(stats);
+      // If no match scouting data exists, create default stats so user can still access pit data
+      setTeamStats(stats || createDefaultTeamStats());
     } else {
       setTeamStats(null);
     }
@@ -85,7 +186,8 @@ const TeamStatsPage = () => {
   useEffect(() => {
     if (compareTeam && compareTeam !== "none") {
       const stats = calculateTeamStatsCallback(compareTeam);
-      setCompareStats(stats);
+      // If no match scouting data exists, create default stats for comparison
+      setCompareStats(stats || createDefaultTeamStats());
     } else {
       setCompareStats(null);
     }
@@ -136,16 +238,20 @@ const TeamStatsPage = () => {
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline">{teamStats.matchesPlayed} matches</Badge>
-                      <Badge variant="default">{teamStats.avgTotalPoints} avg pts</Badge>
+                      <Badge variant="outline">
+                        {teamStats.matchesPlayed > 0 ? `${teamStats.matchesPlayed} matches` : 'No match data'}
+                      </Badge>
+                      <Badge variant="default">
+                        {teamStats.matchesPlayed > 0 ? `${teamStats.avgTotalPoints} avg pts` : 'Pit data only'}
+                      </Badge>
                     </div>
                     {compareTeam && compareTeam !== "none" && compareStats && (
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300">
-                          {compareStats.matchesPlayed} matches
+                          {compareStats.matchesPlayed > 0 ? `${compareStats.matchesPlayed} matches` : 'No match data'}
                         </Badge>
                         <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                          {compareStats.avgTotalPoints} avg pts
+                          {compareStats.matchesPlayed > 0 ? `${compareStats.avgTotalPoints} avg pts` : 'Pit data only'}
                         </Badge>
                       </div>
                     )}
@@ -181,130 +287,175 @@ const TeamStatsPage = () => {
 
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-6 pb-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <StatCard 
-                    title="Total Points" 
-                    value={teamStats.avgTotalPoints} 
-                    color="green"
-                    compareValue={compareStats?.avgTotalPoints}
-                  />
-                  <StatCard 
-                    title="Auto Points" 
-                    value={teamStats.avgAutoPoints} 
-                    color="blue"
-                    compareValue={compareStats?.avgAutoPoints}
-                  />
-                  <StatCard 
-                    title="Teleop Points" 
-                    value={teamStats.avgTeleopPoints} 
-                    color="purple"
-                    compareValue={compareStats?.avgTeleopPoints}
-                  />
-                  <StatCard 
-                    title="Endgame Points" 
-                    value={teamStats.avgEndgamePoints} 
-                    color="orange"
-                    compareValue={compareStats?.avgEndgamePoints}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {teamStats.matchesPlayed === 0 && (
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Key Rates</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <ProgressCard 
-                        title="Mobility Rate" 
-                        value={teamStats.mobilityRate}
-                        compareValue={compareStats?.mobilityRate}
-                      />
-                      <ProgressCard 
-                        title="Climb Success Rate" 
-                        value={teamStats.climbRate}
-                        compareValue={compareStats?.climbRate}
-                      />
-                      <ProgressCard 
-                        title="Defense Rate" 
-                        value={teamStats.defenseRate}
-                        compareValue={compareStats?.defenseRate}
-                      />
-                      <ProgressCard 
-                        title="Breakdown Rate" 
-                        value={teamStats.breakdownRate}
-                        compareValue={compareStats?.breakdownRate}
-                      />
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Climb Breakdown</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <ProgressCard 
-                        title="Shallow Climb Rate" 
-                        value={teamStats.shallowClimbRate}
-                        compareValue={compareStats?.shallowClimbRate}
-                      />
-                      <ProgressCard 
-                        title="Deep Climb Rate" 
-                        value={teamStats.deepClimbRate}
-                        compareValue={compareStats?.deepClimbRate}
-                      />
-                      <ProgressCard 
-                        title="Park Rate" 
-                        value={teamStats.parkRate}
-                        compareValue={compareStats?.parkRate}
-                      />
-                      <ProgressCard 
-                        title="Climb Failure Rate" 
-                        value={teamStats.climbFailRate}
-                        compareValue={compareStats?.climbFailRate}
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Comments Section */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Match Comments</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
-                      {teamStats.matchResults
-                        .filter(match => match.comment && match.comment.trim() !== "")
-                        .map((match, index) => (
-                          <div key={index} className="flex flex-col p-3 border rounded gap-2">
-                            <div className="flex items-center gap-2">
-                              {match.eventName && (
-                                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                  {match.eventName}
-                                </Badge>
-                              )}
-                              <Badge variant="outline">Match {match.matchNumber}</Badge>
-                              <Badge variant={match.alliance === "red" ? "destructive" : "default"}>
-                                {match.alliance}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground italic">"{match.comment}"</p>
-                          </div>
-                        ))
-                      }
-                      {teamStats.matchResults.filter(match => match.comment && match.comment.trim() !== "").length === 0 && (
-                        <p className="text-center text-muted-foreground text-sm py-4">
-                          No comments recorded for this team's matches
+                    <CardContent className="flex flex-col items-center justify-center py-8">
+                      <div className="text-center space-y-3">
+                        <h3 className="text-lg font-semibold">No Match Scouting Data</h3>
+                        <p className="text-muted-foreground">
+                          This team doesn't have any match scouting data for the selected event.
                         </p>
-                      )}
+                        <p className="text-sm text-muted-foreground">
+                          Check the <strong>Pit Data</strong> tab to view pit scouting information for this team.
+                        </p>
+                        <Button  
+                          onClick={() => setActiveTab("pit")}
+                          className="mt-4 p-4"
+                        >
+                          View Pit Data →
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {teamStats.matchesPlayed > 0 && (
+                  <>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <StatCard 
+                        title="Total Points" 
+                        value={teamStats.avgTotalPoints} 
+                        color="green"
+                        compareValue={compareStats?.avgTotalPoints}
+                      />
+                      <StatCard 
+                        title="Auto Points" 
+                        value={teamStats.avgAutoPoints} 
+                        color="blue"
+                        compareValue={compareStats?.avgAutoPoints}
+                      />
+                      <StatCard 
+                        title="Teleop Points" 
+                        value={teamStats.avgTeleopPoints} 
+                        color="purple"
+                        compareValue={compareStats?.avgTeleopPoints}
+                      />
+                      <StatCard 
+                        title="Endgame Points" 
+                        value={teamStats.avgEndgamePoints} 
+                        color="orange"
+                        compareValue={compareStats?.avgEndgamePoints}
+                      />
                     </div>
-                  </CardContent>
-                </Card>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Key Rates</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <ProgressCard 
+                            title="Mobility Rate" 
+                            value={teamStats.mobilityRate}
+                            compareValue={compareStats?.mobilityRate}
+                          />
+                          <ProgressCard 
+                            title="Climb Success Rate" 
+                            value={teamStats.climbRate}
+                            compareValue={compareStats?.climbRate}
+                          />
+                          <ProgressCard 
+                            title="Defense Rate" 
+                            value={teamStats.defenseRate}
+                            compareValue={compareStats?.defenseRate}
+                          />
+                          <ProgressCard 
+                            title="Breakdown Rate" 
+                            value={teamStats.breakdownRate}
+                            compareValue={compareStats?.breakdownRate}
+                          />
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Climb Breakdown</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <ProgressCard 
+                            title="Shallow Climb Rate" 
+                            value={teamStats.shallowClimbRate}
+                            compareValue={compareStats?.shallowClimbRate}
+                          />
+                          <ProgressCard 
+                            title="Deep Climb Rate" 
+                            value={teamStats.deepClimbRate}
+                            compareValue={compareStats?.deepClimbRate}
+                          />
+                          <ProgressCard 
+                            title="Park Rate" 
+                            value={teamStats.parkRate}
+                            compareValue={compareStats?.parkRate}
+                          />
+                          <ProgressCard 
+                            title="Climb Failure Rate" 
+                            value={teamStats.climbFailRate}
+                            compareValue={compareStats?.climbFailRate}
+                          />
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Comments Section */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Match Comments</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3 max-h-64 overflow-y-auto">
+                          {teamStats.matchResults
+                            .filter(match => match.comment && match.comment.trim() !== "")
+                            .map((match, index) => (
+                              <div key={index} className="flex flex-col p-3 border rounded gap-2">
+                                <div className="flex items-center gap-2">
+                                  {match.eventName && (
+                                    <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                      {match.eventName}
+                                    </Badge>
+                                  )}
+                                  <Badge variant="outline">Match {match.matchNumber}</Badge>
+                                  <Badge variant={match.alliance === "red" ? "destructive" : "default"}>
+                                    {match.alliance}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground italic">"{match.comment}"</p>
+                              </div>
+                            ))
+                          }
+                          {teamStats.matchResults.filter(match => match.comment && match.comment.trim() !== "").length === 0 && (
+                            <p className="text-center text-muted-foreground text-sm py-4">
+                              No comments recorded for this team's matches
+                            </p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
+                )}
               </TabsContent>
 
               {/* Scoring Tab */}
               <TabsContent value="scoring" className="space-y-6 pb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {teamStats.matchesPlayed === 0 ? (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <div className="text-center space-y-3">
+                        <h3 className="text-lg font-semibold">No Match Scoring Data</h3>
+                        <p className="text-muted-foreground">
+                          This team doesn't have match scouting data to display scoring statistics.
+                        </p>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setActiveTab("pit")}
+                          className="mt-4"
+                        >
+                          View Pit Data →
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader>
                       <CardTitle>Auto Coral Scoring</CardTitle>
@@ -421,11 +572,31 @@ const TeamStatsPage = () => {
                     </CardContent>
                   </Card>
                 </div>
+                )}
               </TabsContent>
 
               {/* Auto Start Tab */}
               <TabsContent value="auto" className="space-y-6 pb-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {teamStats.matchesPlayed === 0 ? (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <div className="text-center space-y-3">
+                        <h3 className="text-lg font-semibold">No Autonomous Data</h3>
+                        <p className="text-muted-foreground">
+                          This team doesn't have match scouting data to display autonomous statistics.
+                        </p>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setActiveTab("pit")}
+                          className="mt-4"
+                        >
+                          View Pit Data →
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader>
                       <CardTitle>Starting Position Analysis</CardTitle>
@@ -532,11 +703,31 @@ const TeamStatsPage = () => {
                     </CardContent>
                   </Card>
                 </div>
+                )}
               </TabsContent>
 
               {/* Performance Tab - Similar updates for match results if needed */}
               <TabsContent value="performance" className="space-y-6 pb-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {teamStats.matchesPlayed === 0 ? (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <div className="text-center space-y-3">
+                        <h3 className="text-lg font-semibold">No Performance Data</h3>
+                        <p className="text-muted-foreground">
+                          This team doesn't have match scouting data to display performance statistics.
+                        </p>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setActiveTab("pit")}
+                          className="mt-4"
+                        >
+                          View Pit Data →
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader>
                       <CardTitle>Performance Summary</CardTitle>
@@ -660,6 +851,7 @@ const TeamStatsPage = () => {
                     </CardContent>
                   </Card>
                 </div>
+                )}
               </TabsContent>
 
               {/* Pit Scouting Tab */}

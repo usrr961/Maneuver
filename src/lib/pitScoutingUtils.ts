@@ -141,8 +141,14 @@ export const importPitScoutingData = async (
       return { imported: importData.entries.length, duplicatesSkipped: 0 };
     } else {
       const existingEntries = await loadAllPitScoutingEntries();
-      const existingIds = new Set(existingEntries.map(e => e.id));
-      const newEntries = importData.entries.filter(entry => !existingIds.has(entry.id));
+      // Create a set of existing team-event combinations instead of IDs
+      const existingTeamEvents = new Set(
+        existingEntries.map(e => `${e.teamNumber}-${e.eventName}`)
+      );
+      
+      const newEntries = importData.entries.filter(entry => 
+        !existingTeamEvents.has(`${entry.teamNumber}-${entry.eventName}`)
+      );
       
       // Save only new entries
       await Promise.all(newEntries.map(entry => dbSavePitScoutingEntry(entry)));

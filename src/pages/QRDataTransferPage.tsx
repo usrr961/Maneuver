@@ -11,8 +11,10 @@ import ScouterProfilesFountainGenerator from "@/components/DataTransferComponent
 import ScouterProfilesFountainScanner from "@/components/DataTransferComponents/ScouterProfilesFountainScanner";
 import CombinedDataFountainGenerator from "@/components/DataTransferComponents/CombinedDataFountainGenerator";
 import CombinedDataFountainScanner from "@/components/DataTransferComponents/CombinedDataFountainScanner";
+import PitScoutingFountainGenerator from "@/components/DataTransferComponents/PitScoutingFountainGenerator";
+import PitScoutingFountainScanner from "@/components/DataTransferComponents/PitScoutingFountainScanner";
 
-type DataType = 'scouting' | 'match' | 'scouter' | 'combined';
+type DataType = 'scouting' | 'match' | 'scouter' | 'combined' | 'pit-scouting';
 
 const QRDataTransferPage = () => {
   const [mode, setMode] = useState<'select' | 'generate' | 'scan'>('select');
@@ -36,6 +38,13 @@ const QRDataTransferPage = () => {
     } else if (dataType === 'scouter') {
       return (
         <ScouterProfilesFountainGenerator 
+          onBack={() => setMode('select')} 
+          onSwitchToScanner={() => setMode('scan')} 
+        />
+      );
+    } else if (dataType === 'pit-scouting') {
+      return (
+        <PitScoutingFountainGenerator 
           onBack={() => setMode('select')} 
           onSwitchToScanner={() => setMode('scan')} 
         />
@@ -68,6 +77,13 @@ const QRDataTransferPage = () => {
     } else if (dataType === 'scouter') {
       return (
         <ScouterProfilesFountainScanner 
+          onBack={() => setMode('select')} 
+          onSwitchToGenerator={() => setMode('generate')} 
+        />
+      );
+    } else if (dataType === 'pit-scouting') {
+      return (
+        <PitScoutingFountainScanner 
           onBack={() => setMode('select')} 
           onSwitchToGenerator={() => setMode('generate')} 
         />
@@ -106,6 +122,7 @@ const QRDataTransferPage = () => {
               <SelectContent>
                 <SelectItem value="combined">Combined (Scouting + Profiles)</SelectItem>
                 <SelectItem value="scouting">Scouting Data</SelectItem>
+                <SelectItem value="pit-scouting">Pit Scouting Data</SelectItem>
                 <SelectItem value="match">Match Schedule Data</SelectItem>
                 <SelectItem value="scouter">Scouter Profiles</SelectItem>
               </SelectContent>

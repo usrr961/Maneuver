@@ -234,7 +234,7 @@ export const AssignmentResults: React.FC<AssignmentResultsProps> = ({
                   ? `💡 Selected: ${selectedScouterForAssignment} - Click team rows below to assign`
                   : 'Select a scouter above, then click team rows to assign them to that scouter'
               ) : (
-                '💡 Click team rows to mark as completed'
+                '💡 Click team rows to mark as completed • Auto-marked when pit data exists'
               )
             }
           />

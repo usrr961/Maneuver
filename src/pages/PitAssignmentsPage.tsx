@@ -5,6 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useScouterManagement } from '@/hooks/useScouterManagement';
 import { getAllStoredEventTeams } from '@/lib/tbaUtils';
 import { getStoredNexusTeams, getStoredPitAddresses, getStoredPitData } from '@/lib/nexusUtils';
+import { loadPitScoutingEntry } from '@/lib/pitScoutingUtils';
 import { ScouterManagementSection } from '@/components/PitAssignmentComponents/ScouterManagementSection.tsx';
 import { TeamDisplaySection } from '@/components/PitAssignmentComponents/TeamDisplaySection';
 import { AssignmentResults } from '@/components/PitAssignmentComponents/AssignmentResults';
@@ -17,9 +18,8 @@ import type { NexusPitMap } from '@/lib/nexusUtils';
 const PitAssignmentsPage: React.FC = () => {
   const { scoutersList } = useScouterManagement();
   const [selectedEvent, setSelectedEvent] = useState<string>('');
-  const [availableEvents, setAvailableEvents] = useState<string[]>([]);
-  const [eventTeams, setEventTeams] = useState<{ [eventKey: string]: number[] }>({});
-  const [teamDataSource, setTeamDataSource] = useState<{ [eventKey: string]: 'nexus' | 'tba' }>({});
+  const [currentTeams, setCurrentTeams] = useState<number[]>([]);
+  const [teamDataSource, setTeamDataSource] = useState<'nexus' | 'tba' | null>(null);
   const [pitAddresses, setPitAddresses] = useState<{ [teamNumber: string]: string } | null>(null);
   const [pitMapData, setPitMapData] = useState<NexusPitMap | null>(null);
   const [assignments, setAssignments] = useState<PitAssignment[]>([]);
@@ -28,77 +28,83 @@ const PitAssignmentsPage: React.FC = () => {
   const [selectedScouterForAssignment, setSelectedScouterForAssignment] = useState<string | null>(null);
   const [assignmentsConfirmed, setAssignmentsConfirmed] = useState<boolean>(false);
 
+  // Save assignments to localStorage whenever they change
+  useEffect(() => {
+    if (selectedEvent && assignments.length > 0) {
+      const storageKey = `pit_assignments_${selectedEvent}`;
+      localStorage.setItem(storageKey, JSON.stringify(assignments));
+    }
+  }, [assignments, selectedEvent]);
 
+  // Load saved assignments when event changes
+  useEffect(() => {
+    if (selectedEvent) {
+      const storageKey = `pit_assignments_${selectedEvent}`;
+      const savedAssignments = localStorage.getItem(storageKey);
+      if (savedAssignments) {
+        try {
+          const parsedAssignments = JSON.parse(savedAssignments) as PitAssignment[];
+          setAssignments(parsedAssignments);
+        } catch (error) {
+          console.warn('Error loading saved assignments:', error);
+        }
+      }
+    }
+  }, [selectedEvent]);
 
-  // Load stored teams from all events, prioritizing Nexus over TBA
+  // Load the single available event (prioritizing Nexus over TBA)
   useEffect(() => {
     const tbaTeams = getAllStoredEventTeams();
-    const combinedTeams: { [eventKey: string]: number[] } = {};
-    const sourceTracking: { [eventKey: string]: 'nexus' | 'tba' } = {};
+    let foundEvent = '';
+    let foundTeams: number[] = [];
+    let foundSource: 'nexus' | 'tba' = 'tba';
     
-    // First, get all possible event keys from both TBA and Nexus sources
-    const allEventKeys = new Set<string>();
-    
-    // Add TBA event keys
-    Object.keys(tbaTeams).forEach(eventKey => allEventKeys.add(eventKey));
-    
-    // Add Nexus event keys by scanning localStorage
+    // Check for Nexus teams first (priority) by scanning localStorage
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.startsWith('nexus_event_teams_')) {
         const eventKey = key.replace('nexus_event_teams_', '');
-        allEventKeys.add(eventKey);
-      }
-    }
-    
-    // Now process each event key, prioritizing Nexus over TBA
-    allEventKeys.forEach(eventKey => {
-      const nexusTeams = getStoredNexusTeams(eventKey);
-      const tbaTeamsForEvent = tbaTeams[eventKey];
-      
-      // Check for Nexus teams first (priority)
-      if (nexusTeams && nexusTeams.length > 0) {
-        // Convert from frc format to numbers (frc123 -> 123)
-        const teamNumbers = nexusTeams
-          .map(teamKey => teamKey.startsWith('frc') ? parseInt(teamKey.substring(3)) : parseInt(teamKey))
-          .filter(num => !isNaN(num))
-          .sort((a, b) => a - b);
+        const nexusTeams = getStoredNexusTeams(eventKey);
         
-        if (teamNumbers.length > 0) {
-          combinedTeams[eventKey] = teamNumbers;
-          sourceTracking[eventKey] = 'nexus';
-          return; // Use Nexus data, skip TBA check
+        if (nexusTeams && nexusTeams.length > 0) {
+          // Convert from frc format to numbers (frc123 -> 123)
+          const teamNumbers = nexusTeams
+            .map(teamKey => teamKey.startsWith('frc') ? parseInt(teamKey.substring(3)) : parseInt(teamKey))
+            .filter(num => !isNaN(num))
+            .sort((a, b) => a - b);
+          
+          if (teamNumbers.length > 0) {
+            foundEvent = eventKey;
+            foundTeams = teamNumbers;
+            foundSource = 'nexus';
+            break; // Use first Nexus event found
+          }
         }
       }
-      
-      // Fallback to TBA teams if no valid Nexus teams
-      if (tbaTeamsForEvent && tbaTeamsForEvent.length > 0) {
-        combinedTeams[eventKey] = tbaTeamsForEvent;
-        sourceTracking[eventKey] = 'tba';
-      }
-    });
-    
-    setEventTeams(combinedTeams);
-    setTeamDataSource(sourceTracking);
-    setAvailableEvents(Array.from(allEventKeys));
-    
-    // Auto-select the first event, prioritizing Nexus events
-    const eventKeys = Array.from(allEventKeys);
-    const nexusEventKeys = eventKeys.filter(key => {
-      const teams = getStoredNexusTeams(key);
-      return teams && teams.length > 0;
-    });
-    
-    if (nexusEventKeys.length > 0) {
-      setSelectedEvent(nexusEventKeys[0]); // Prefer Nexus events
-    } else if (eventKeys.length > 0) {
-      setSelectedEvent(eventKeys[0]); // Fallback to any available event
     }
+    
+    // Fallback to TBA teams if no Nexus teams found
+    if (!foundEvent) {
+      const tbaEventKeys = Object.keys(tbaTeams);
+      if (tbaEventKeys.length > 0) {
+        const firstEventKey = tbaEventKeys[0];
+        const tbaTeamsForEvent = tbaTeams[firstEventKey];
+        if (tbaTeamsForEvent && tbaTeamsForEvent.length > 0) {
+          foundEvent = firstEventKey;
+          foundTeams = tbaTeamsForEvent;
+          foundSource = 'tba';
+        }
+      }
+    }
+    
+    setSelectedEvent(foundEvent);
+    setCurrentTeams(foundTeams);
+    setTeamDataSource(foundSource);
   }, []);
 
   // Load pit addresses and map data when event changes and uses Nexus data
   useEffect(() => {
-    if (selectedEvent && teamDataSource[selectedEvent] === 'nexus') {
+    if (selectedEvent && teamDataSource === 'nexus') {
       const addresses = getStoredPitAddresses(selectedEvent);
       const pitData = getStoredPitData(selectedEvent);
       setPitAddresses(addresses);
@@ -109,7 +115,91 @@ const PitAssignmentsPage: React.FC = () => {
     }
   }, [selectedEvent, teamDataSource]);
 
-  const currentTeams = selectedEvent ? eventTeams[selectedEvent] || [] : [];
+  // Check for existing pit scouting data and mark assignments as completed
+  useEffect(() => {
+    if (!selectedEvent || currentTeams.length === 0) return;
+
+    const checkPitScoutingData = async () => {
+      // Get event name for the selected event - for demo data, use selectedEvent as the event name
+      const eventName = selectedEvent;
+      
+      // Check each team for existing pit scouting data
+      const teamsWithPitData: number[] = [];
+      
+      for (const teamNumber of currentTeams) {
+        try {
+          const pitData = await loadPitScoutingEntry(teamNumber.toString(), eventName);
+          if (pitData) {
+            teamsWithPitData.push(teamNumber);
+          }
+        } catch (error) {
+          console.warn(`Error checking pit data for team ${teamNumber}:`, error);
+        }
+      }
+
+      // Update assignments to mark teams with pit data as completed
+      if (teamsWithPitData.length > 0) {
+        setAssignments(prev => {
+          return prev.map(assignment => {
+            if (teamsWithPitData.includes(assignment.teamNumber)) {
+              return { ...assignment, completed: true };
+            }
+            return assignment;
+          });
+        });
+      }
+    };
+
+    checkPitScoutingData();
+  }, [selectedEvent, currentTeams]);
+
+  // Check for updates when page regains focus (when user returns from scanner page)
+  useEffect(() => {
+    if (!selectedEvent || assignments.length === 0) return;
+
+    const checkForUpdates = async () => {
+      const eventName = selectedEvent;
+      let hasUpdates = false;
+      
+      const updatedAssignments = await Promise.all(
+        assignments.map(async (assignment) => {
+          try {
+            const pitData = await loadPitScoutingEntry(assignment.teamNumber.toString(), eventName);
+            const shouldBeCompleted = !!pitData;
+            
+            if (assignment.completed !== shouldBeCompleted) {
+              hasUpdates = true;
+              return { ...assignment, completed: shouldBeCompleted };
+            }
+          } catch (error) {
+            console.warn(`Error checking pit data for team ${assignment.teamNumber}:`, error);
+          }
+          return assignment;
+        })
+      );
+      
+      if (hasUpdates) {
+        setAssignments(updatedAssignments);
+      }
+    };
+
+    // Check when page regains focus (when user returns to tab/page)
+    const handleFocus = () => {
+      checkForUpdates();
+    };
+
+    // Also check immediately when assignments are loaded from localStorage
+    checkForUpdates();
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [selectedEvent, assignments]);
+
+  const hasValidData = currentTeams.length > 0 && scoutersList.length > 0;
+  const hasAssignments = assignments.length > 0;
 
   const handleAssignmentModeChange = (mode: 'sequential' | 'spatial' | 'manual') => {
     setAssignmentMode(mode);
@@ -117,13 +207,46 @@ const PitAssignmentsPage: React.FC = () => {
     setAssignmentsConfirmed(false); // Reset confirmed state
   };
 
-  const handleAssignmentsGenerated = (newAssignments: PitAssignment[], confirmed: boolean) => {
-    setAssignments(newAssignments);
+  const handleAssignmentsGenerated = async (newAssignments: PitAssignment[], confirmed: boolean) => {
+    // Check for existing pit scouting data and mark teams as completed
+    if (selectedEvent && newAssignments.length > 0) {
+      const eventName = selectedEvent;
+      
+      const updatedAssignments = await Promise.all(
+        newAssignments.map(async (assignment) => {
+          try {
+            const pitData = await loadPitScoutingEntry(assignment.teamNumber.toString(), eventName);
+            if (pitData) {
+              return { ...assignment, completed: true };
+            }
+          } catch (error) {
+            console.warn(`Error checking pit data for team ${assignment.teamNumber}:`, error);
+          }
+          return assignment;
+        })
+      );
+      
+      setAssignments(updatedAssignments);
+    } else {
+      setAssignments(newAssignments);
+    }
+    
     setAssignmentsConfirmed(confirmed);
   };
 
-  const handleManualAssignment = (teamNumber: number, scouterName: string) => {
+  const handleManualAssignment = async (teamNumber: number, scouterName: string) => {
     const assignmentId = `${selectedEvent}-${teamNumber}`;
+    
+    // Check if team already has pit scouting data
+    let completed = false;
+    if (selectedEvent) {
+      try {
+        const pitData = await loadPitScoutingEntry(teamNumber.toString(), selectedEvent);
+        completed = !!pitData;
+      } catch (error) {
+        console.warn(`Error checking pit data for team ${teamNumber}:`, error);
+      }
+    }
     
     setAssignments(prev => {
       // Remove any existing assignment for this team
@@ -136,7 +259,7 @@ const PitAssignmentsPage: React.FC = () => {
         teamNumber,
         scouterName,
         assignedAt: Date.now(),
-        completed: false
+        completed
       }];
     });
   };
@@ -149,6 +272,12 @@ const PitAssignmentsPage: React.FC = () => {
     setAssignments([]);
     setAssignmentsConfirmed(false);
     setSelectedScouterForAssignment(null);
+    
+    // Also clear from localStorage
+    if (selectedEvent) {
+      const storageKey = `pit_assignments_${selectedEvent}`;
+      localStorage.removeItem(storageKey);
+    }
   };
 
   const handleConfirmAssignments = () => {
@@ -164,9 +293,6 @@ const PitAssignmentsPage: React.FC = () => {
     ));
   };
 
-  const hasValidData = currentTeams.length > 0 && scoutersList.length > 0;
-  const hasAssignments = assignments.length > 0;
-
   return (
     <div className="min-h-screen container mx-auto p-4 space-y-6 max-w-7xl">
       <div className="text-start">
@@ -180,7 +306,7 @@ const PitAssignmentsPage: React.FC = () => {
           {/* Data source attribution */}
           <div className="hidden md:block">
             <DataAttribution 
-              sources={selectedEvent && teamDataSource[selectedEvent] ? [teamDataSource[selectedEvent]] : ['tba', 'nexus']} 
+              sources={teamDataSource ? [teamDataSource] : ['tba', 'nexus']} 
               variant="full" 
             />
           </div>
@@ -188,7 +314,7 @@ const PitAssignmentsPage: React.FC = () => {
         {/* Mobile attribution */}
         <div className="md:hidden mt-2">
           <DataAttribution 
-            sources={selectedEvent && teamDataSource[selectedEvent] ? [teamDataSource[selectedEvent]] : ['tba', 'nexus']} 
+            sources={teamDataSource ? [teamDataSource] : ['tba', 'nexus']} 
             variant="compact" 
           />
         </div>
@@ -201,13 +327,11 @@ const PitAssignmentsPage: React.FC = () => {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Event Information */}
         <EventInformationCard
-          eventTeams={eventTeams}
-          availableEvents={availableEvents}
           selectedEvent={selectedEvent}
           teamDataSource={teamDataSource}
           currentTeams={currentTeams}
           pitAddresses={pitAddresses}
-          onEventChange={setSelectedEvent}
+          hasTeamData={currentTeams.length > 0}
         />
 
         {/* Assignment Controls */}
@@ -263,7 +387,7 @@ const PitAssignmentsPage: React.FC = () => {
                 assignmentsConfirmed={assignmentsConfirmed}
                 pitAddresses={pitAddresses}
                 pitMapData={pitMapData}
-                teamDataSource={teamDataSource[selectedEvent]}
+                teamDataSource={teamDataSource || undefined}
               />
             </div>
           </TabsContent>
@@ -295,7 +419,7 @@ const PitAssignmentsPage: React.FC = () => {
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            {currentTeams.length === 0 && "Please select an event with teams."}
+            {currentTeams.length === 0 && "No team data found. Please load demo data from the home page or import teams from the TBA Data page."}
             {scoutersList.length === 0 && " Please add scouters to create assignments."}
           </AlertDescription>
         </Alert>

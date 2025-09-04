@@ -159,7 +159,7 @@ export const TeamDisplaySection: React.FC<TeamDisplaySectionProps> = ({
                   : hasAssignments 
                     ? '💡 Click a scouter above, then click team cards to assign them • Right-click to remove assignment'
                     : 'Click a scouter above, then click team cards to assign them to that scouter'
-                : '💡 Click team cards to mark as completed • Gray with ✓ = completed'
+                : '💡 Click team cards to mark as completed • Gray with ✓ = completed • Auto-marked when pit data exists'
             }
           />
         ) : (

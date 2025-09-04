@@ -1,27 +1,22 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertCircle, ClipboardList } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface EventInformationCardProps {
-  eventTeams: { [eventKey: string]: number[] };
-  availableEvents: string[];
   selectedEvent: string;
-  teamDataSource: { [eventKey: string]: 'nexus' | 'tba' };
+  teamDataSource: 'nexus' | 'tba' | null;
   currentTeams: number[];
   pitAddresses: { [teamNumber: string]: string } | null;
-  onEventChange: (eventKey: string) => void;
+  hasTeamData: boolean;
 }
 
 const EventInformationCard: React.FC<EventInformationCardProps> = ({
-  eventTeams,
-  availableEvents,
   selectedEvent,
   teamDataSource,
   currentTeams,
   pitAddresses,
-  onEventChange,
+  hasTeamData,
 }) => {
   return (
     <Card className="flex-1">
@@ -32,43 +27,16 @@ const EventInformationCard: React.FC<EventInformationCardProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {Object.keys(eventTeams).length === 0 ? (
+        {!hasTeamData ? (
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              No team data found. Please import team lists from the TBA Data page (TBA teams or Nexus pit data with teams).
+              No team data found. Please import team lists from the TBA Data page or load demo data from the home page.
             </AlertDescription>
           </Alert>
         ) : (
           <div className="space-y-4">
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Event Selection:</span>
-                {availableEvents.length > 0 ? (
-                  <Select value={selectedEvent} onValueChange={onEventChange}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue placeholder="Select event" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableEvents.map(eventKey => {
-                        const isNexus = teamDataSource[eventKey] === 'nexus';
-                        const teamCount = eventTeams[eventKey]?.length || 0;
-                        return (
-                          <SelectItem key={eventKey} value={eventKey}>
-                            <div className="flex items-center gap-2">
-                              <span>{eventKey}</span>
-                              {isNexus && <span className="text-xs text-blue-600">(Nexus)</span>}
-                              <span className="text-xs text-muted-foreground">({teamCount} teams)</span>
-                            </div>
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <span className="text-sm text-muted-foreground">No events available</span>
-                )}
-              </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Current Event:</span>
                 <span className="text-lg font-semibold text-primary">{selectedEvent}</span>
@@ -88,7 +56,7 @@ const EventInformationCard: React.FC<EventInformationCardProps> = ({
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Data Source:</span>
                 <span className="text-sm font-medium capitalize">
-                  {teamDataSource[selectedEvent] === 'nexus' ? (
+                  {teamDataSource === 'nexus' ? (
                     <span className="text-blue-600 flex items-center gap-1">
                       <span>Nexus</span>
                       <span className="text-xs text-muted-foreground">(with pit locations)</span>
@@ -99,7 +67,7 @@ const EventInformationCard: React.FC<EventInformationCardProps> = ({
                 </span>
               </div>
               <div className="text-xs text-muted-foreground pt-2 border-t">
-                {teamDataSource[selectedEvent] === 'nexus' 
+                {teamDataSource === 'nexus' 
                   ? 'Teams extracted from Nexus pit addresses. Pit locations available for enhanced assignments.'
                   : 'Teams imported from The Blue Alliance. Import new data on the TBA Data page to change events.'
                 }

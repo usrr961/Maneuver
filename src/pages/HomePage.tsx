@@ -6,7 +6,7 @@ import { DataAttribution } from "@/components/DataAttribution";
 import { useState, useEffect } from "react";
 import { loadLegacyScoutingData, loadScoutingData } from "../lib/scoutingDataUtils";
 import { gameDB } from "../lib/dexieDB";
-import { createAllTestData, clearTestData } from "../lib/testDataGenerator";
+import { createAllTestData, clearAllTestData } from "../lib/testDataGenerator";
 import { analytics } from '@/lib/analytics';
 import { haptics } from '@/lib/haptics';
 
@@ -95,7 +95,7 @@ const HomePage = () => {
     
     try {
       // Use the consolidated clear function
-      await clearTestData();
+      await clearAllTestData();
       
       // Clear additional items from localStorage
       localStorage.removeItem("scoutersList");
@@ -116,6 +116,19 @@ const HomePage = () => {
       localStorage.removeItem("matchData");
       localStorage.removeItem("eventName");
       localStorage.removeItem("eventsList");
+      
+      // Also clear any pit assignment data as fallback
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && (
+          key.startsWith('tba_event_teams_') || 
+          key.startsWith('nexus_event_teams_') || 
+          key.startsWith('nexus_pit_addresses_')
+        )) {
+          localStorage.removeItem(key);
+        }
+      }
+      
       setIsLoaded(false);
       analytics.trackDemoDataClear();
     }

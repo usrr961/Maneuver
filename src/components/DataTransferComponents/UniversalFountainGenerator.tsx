@@ -23,7 +23,7 @@ interface FountainPacket {
 interface UniversalFountainGeneratorProps {
   onBack: () => void;
   onSwitchToScanner?: () => void;
-  dataType: 'scouting' | 'match' | 'scouter' | 'combined';
+  dataType: 'scouting' | 'match' | 'scouter' | 'combined' | 'pit-scouting';
   loadData: () => Promise<unknown> | unknown;
   title: string;
   description: string;
