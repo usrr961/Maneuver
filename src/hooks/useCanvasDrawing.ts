@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { getGlobalBackgroundImage } from "./useCanvasSetup";
 
 interface Point {
   x: number;
@@ -37,6 +38,25 @@ export const useCanvasDrawing = ({
     };
   }, [canvasRef]);
 
+  const restoreBackgroundInArea = useCallback((x: number, y: number, width: number, height: number) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    const backgroundImage = getGlobalBackgroundImage();
+    
+    if (!canvas || !ctx || !backgroundImage) return;
+
+    // Create a clipping region and redraw background in that area
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, width, height);
+    ctx.clip();
+    
+    // Redraw the background image in the clipped area
+    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    
+    ctx.restore();
+  }, [canvasRef]);
+
   const startDrawing = useCallback((e: React.MouseEvent | React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -68,8 +88,7 @@ export const useCanvasDrawing = ({
     const currentPoint = getPointFromEvent(e);
 
     if (isErasing) {
-      // For erasing, use destination-out which removes pixels completely
-      // This will reveal the original background without needing to redraw it
+      // For erasing, first erase the user content, then restore background
       ctx.save();
       ctx.globalCompositeOperation = 'destination-out';
       ctx.lineWidth = brushSize;
@@ -84,6 +103,16 @@ export const useCanvasDrawing = ({
       }
       
       ctx.restore();
+      
+      // Restore background in the erased area
+      if (lastPoint && getGlobalBackgroundImage()) {
+        const minX = Math.min(lastPoint.x, currentPoint.x) - brushSize;
+        const minY = Math.min(lastPoint.y, currentPoint.y) - brushSize;
+        const maxX = Math.max(lastPoint.x, currentPoint.x) + brushSize;
+        const maxY = Math.max(lastPoint.y, currentPoint.y) + brushSize;
+        
+        restoreBackgroundInArea(minX, minY, maxX - minX, maxY - minY);
+      }
     } else {
       // Normal drawing
       ctx.globalCompositeOperation = 'source-over';
@@ -101,7 +130,7 @@ export const useCanvasDrawing = ({
     }
 
     setLastPoint(currentPoint);
-  }, [isDrawing, getPointFromEvent, isErasing, brushSize, brushColor, lastPoint, canvasRef]);
+  }, [isDrawing, getPointFromEvent, isErasing, brushSize, brushColor, lastPoint, canvasRef, restoreBackgroundInArea]);
 
   const stopDrawing = useCallback((e?: React.MouseEvent | React.PointerEvent) => {
     if (e) {

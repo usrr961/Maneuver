@@ -187,9 +187,6 @@ const PitAssignmentsPage: React.FC = () => {
     const handleFocus = () => {
       checkForUpdates();
     };
-
-    // Also check immediately when assignments are loaded from localStorage
-    checkForUpdates();
     
     window.addEventListener('focus', handleFocus);
     
@@ -197,6 +194,51 @@ const PitAssignmentsPage: React.FC = () => {
       window.removeEventListener('focus', handleFocus);
     };
   }, [selectedEvent, assignments]);
+
+  // Initial check for pit data when assignments are first created
+  const [hasRunInitialPitCheck, setHasRunInitialPitCheck] = useState<string>('');
+  useEffect(() => {
+    if (!selectedEvent || assignments.length === 0) return;
+    
+    // Create a unique key for this set of assignments to prevent repeated checks
+    const assignmentKey = `${selectedEvent}_${assignments.length}_${assignments.map(a => a.id).sort().join('_')}`;
+    
+    // Only run this check if we haven't checked this exact set of assignments before
+    if (hasRunInitialPitCheck === assignmentKey) return;
+
+    const checkInitialPitData = async () => {
+      const eventName = selectedEvent;
+      let hasUpdates = false;
+      
+      const updatedAssignments = await Promise.all(
+        assignments.map(async (assignment) => {
+          try {
+            const pitData = await loadPitScoutingEntry(assignment.teamNumber.toString(), eventName);
+            const shouldBeCompleted = !!pitData;
+            
+            if (assignment.completed !== shouldBeCompleted) {
+              hasUpdates = true;
+              return { ...assignment, completed: shouldBeCompleted };
+            }
+          } catch (error) {
+            console.warn(`Error checking pit data for team ${assignment.teamNumber}:`, error);
+          }
+          return assignment;
+        })
+      );
+      
+      if (hasUpdates) {
+        setAssignments(updatedAssignments);
+      }
+      
+      setHasRunInitialPitCheck(assignmentKey);
+    };
+
+    // Use a timeout to ensure this only runs once after assignments are loaded
+    const timeoutId = setTimeout(checkInitialPitData, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [selectedEvent, assignments, hasRunInitialPitCheck]);
 
   const hasValidData = currentTeams.length > 0 && scoutersList.length > 0;
   const hasAssignments = assignments.length > 0;

@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef } from "react";
 import fieldImage from "@/assets/field.png";
 
+// Global reference for background image to share with drawing hook
+let globalBackgroundImage: HTMLImageElement | null = null;
+
+export const getGlobalBackgroundImage = () => globalBackgroundImage;
+export const setGlobalBackgroundImage = (img: HTMLImageElement) => {
+  globalBackgroundImage = img;
+};
+
 interface UseCanvasSetupProps {
   currentStageId: string;
   isFullscreen: boolean;
@@ -41,6 +49,9 @@ export const useCanvasSetup = ({
       // Load and draw the field background
       const img = new Image();
       img.onload = () => {
+      // Store the background image globally for use in erasing
+      setGlobalBackgroundImage(img);
+      
       let containerWidth, containerHeight;
       
       if (isFullscreen) {

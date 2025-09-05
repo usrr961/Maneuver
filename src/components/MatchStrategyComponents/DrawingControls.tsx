@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EyeOff, Maximize2 } from "lucide-react";
 
 interface DrawingControlsProps {
@@ -53,16 +54,20 @@ export const DrawingControls = ({
           </Button>
           
           {/* Size selector */}
-          <select 
-            value={brushSize} 
-            onChange={(e) => onBrushSizeChange(Number(e.target.value))}
-            className="px-2 py-1 border rounded text-sm"
+          <Select 
+            value={brushSize.toString()} 
+            onValueChange={(value) => onBrushSizeChange(Number(value))}
           >
-            <option value={2}>Small</option>
-            <option value={5}>Medium</option>
-            <option value={10}>Large</option>
-            <option value={20}>X-Large</option>
-          </select>
+            <SelectTrigger className="w-fit">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2">Small</SelectItem>
+              <SelectItem value="5">Medium</SelectItem>
+              <SelectItem value="10">Large</SelectItem>
+              <SelectItem value="20">X-Large</SelectItem>
+            </SelectContent>
+          </Select>
           
           {/* Color selector */}
           <input
@@ -115,16 +120,20 @@ export const DrawingControls = ({
         </Button>
         
         {/* Size selector */}
-        <select 
-          value={brushSize} 
-          onChange={(e) => onBrushSizeChange(Number(e.target.value))}
-          className="px-2 py-1 border rounded text-sm"
+        <Select 
+          value={brushSize.toString()} 
+          onValueChange={(value) => onBrushSizeChange(Number(value))}
         >
-          <option value={2}>Small</option>
-          <option value={5}>Medium</option>
-          <option value={10}>Large</option>
-          <option value={20}>X-Large</option>
-        </select>
+          <SelectTrigger className="w-fit">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="2">Small</SelectItem>
+            <SelectItem value="5">Medium</SelectItem>
+            <SelectItem value="10">Large</SelectItem>
+            <SelectItem value="20">X-Large</SelectItem>
+          </SelectContent>
+        </Select>
         
         {/* Color selector */}
         <input
