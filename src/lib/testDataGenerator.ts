@@ -9,7 +9,7 @@ import matchScoutingData from './testData/matchScoutingData.json';
 import teamsData from './testData/teams.json';
 
 // Helper function to convert relative time to absolute timestamp
-const getTimestamp = (timeSpec: any): number => {
+const getTimestamp = (timeSpec: { daysAgo?: number; hoursAgo?: number; minutesAgo?: number }): number => {
   const now = Date.now();
   if (timeSpec.daysAgo) return now - (timeSpec.daysAgo * 24 * 60 * 60 * 1000);
   if (timeSpec.hoursAgo) return now - (timeSpec.hoursAgo * 60 * 60 * 1000);
@@ -188,14 +188,14 @@ export const clearTestData = async () => {
     try {
       const { saveScoutingData } = await import('./scoutingDataUtils');
       await saveScoutingData({ entries: [] });
-    } catch (error) {
+    } catch {
       console.log('Match data clearing failed, skipping...');
     }
     
     // Clear match schedule from localStorage
     try {
       localStorage.removeItem('matchData');
-    } catch (error) {
+    } catch {
       console.log('Match schedule clearing failed, skipping...');
     }
     
@@ -232,7 +232,7 @@ export const createTestEventTeams = () => {
     // Create single demo event with all teams (realistic scenario)
     const demoEvent = {
       eventKey: '2025mrcmp',
-      eventName: 'Mars Robotics Championship',
+      eventName: 'FMA District Championship',
       teams: teamsData,
       source: 'tba' as const
     };

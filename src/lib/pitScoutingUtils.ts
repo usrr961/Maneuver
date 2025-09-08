@@ -128,6 +128,76 @@ export const exportPitScoutingData = async (): Promise<PitScoutingData> => {
   return await loadPitScoutingData();
 };
 
+// Download pit scouting data with images as JSON file
+export const downloadPitScoutingDataWithImages = async (): Promise<void> => {
+  try {
+    const pitScoutingData = await loadPitScoutingData();
+    
+    if (pitScoutingData.entries.length === 0) {
+      throw new Error('No pit scouting data found');
+    }
+
+    const jsonString = JSON.stringify(pitScoutingData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `pit-scouting-with-images-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error downloading pit scouting data:', error);
+    throw error;
+  }
+};
+
+// Download only images from pit scouting data
+export const downloadPitScoutingImagesOnly = async (): Promise<void> => {
+  try {
+    const pitScoutingData = await loadPitScoutingData();
+    
+    if (pitScoutingData.entries.length === 0) {
+      throw new Error('No pit scouting data found');
+    }
+
+    // Filter entries to only include those with images and minimal identifying data
+    const imagesOnlyData = {
+      type: 'pit-scouting-images-only',
+      lastUpdated: pitScoutingData.lastUpdated,
+      entries: pitScoutingData.entries
+        .filter(entry => entry.robotPhoto) // Only entries with images
+        .map(entry => ({
+          teamNumber: entry.teamNumber,
+          eventName: entry.eventName,
+          robotPhoto: entry.robotPhoto,
+          timestamp: entry.timestamp // For conflict resolution
+        }))
+    };
+
+    if (imagesOnlyData.entries.length === 0) {
+      throw new Error('No images found in pit scouting data');
+    }
+
+    const jsonString = JSON.stringify(imagesOnlyData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `pit-scouting-images-only-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error downloading pit scouting images:', error);
+    throw error;
+  }
+};
+
 // Import pit scouting data
 export const importPitScoutingData = async (
   importData: PitScoutingData,
@@ -246,4 +316,60 @@ export const exportPitScoutingToCSV = async (): Promise<string> => {
   return [headers, ...rows].map(row => 
     row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
   ).join('\n');
+};
+
+// Import images-only data and merge with existing pit scouting entries
+export const importPitScoutingImagesOnly = async (
+  imagesData: {
+    type: string;
+    entries: Array<{
+      teamNumber: string;
+      eventName: string;
+      robotPhoto: string;
+      timestamp: number;
+    }>;
+  }
+): Promise<{ updated: number; notFound: number }> => {
+  try {
+    if (imagesData.type !== 'pit-scouting-images-only') {
+      throw new Error('Invalid images-only data format');
+    }
+
+    const existingEntries = await loadAllPitScoutingEntries();
+    let updated = 0;
+    let notFound = 0;
+
+    console.log('Images import debug:');
+    console.log('Existing entries:', existingEntries.map(e => `${e.teamNumber}@${e.eventName}`));
+    console.log('Image entries to match:', imagesData.entries.map(e => `${e.teamNumber}@${e.eventName}`));
+
+    for (const imageEntry of imagesData.entries) {
+      // Find existing entry by team and event
+      const existingEntry = existingEntries.find(
+        entry => entry.teamNumber === imageEntry.teamNumber && 
+                 entry.eventName === imageEntry.eventName
+      );
+
+      console.log(`Looking for ${imageEntry.teamNumber}@${imageEntry.eventName}: ${existingEntry ? 'FOUND' : 'NOT FOUND'}`);
+
+      if (existingEntry) {
+        // Update existing entry with the image
+        const updatedEntry = {
+          ...existingEntry,
+          robotPhoto: imageEntry.robotPhoto,
+          timestamp: Math.max(existingEntry.timestamp, imageEntry.timestamp) // Keep latest timestamp
+        };
+        
+        await dbSavePitScoutingEntry(updatedEntry);
+        updated++;
+      } else {
+        notFound++;
+      }
+    }
+
+    return { updated, notFound };
+  } catch (error) {
+    console.error('Error importing pit scouting images:', error);
+    throw error;
+  }
 };

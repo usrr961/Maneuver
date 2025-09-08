@@ -7,6 +7,7 @@ import { detectDataType } from "@/lib/uploadHandlers/dataTypeDetector";
 import { handleScoutingDataUpload, type UploadMode } from "@/lib/uploadHandlers/scoutingDataUploadHandler";
 import { handleScouterProfilesUpload } from "@/lib/uploadHandlers/scouterProfilesUploadHandler";
 import { handlePitScoutingUpload } from "@/lib/uploadHandlers/pitScoutingUploadHandler";
+import { handlePitScoutingImagesUpload } from "@/lib/uploadHandlers/pitScoutingImagesUploadHandler";
 
 type JSONUploaderProps = {
   onBack: () => void;
@@ -14,7 +15,7 @@ type JSONUploaderProps = {
 
 const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [detectedDataType, setDetectedDataType] = useState<'scouting' | 'scouterProfiles' | 'pitScouting' | null>(null);
+  const [detectedDataType, setDetectedDataType] = useState<'scouting' | 'scouterProfiles' | 'pitScouting' | 'pitScoutingImagesOnly' | null>(null);
 
   type FileSelectEvent = React.ChangeEvent<HTMLInputElement>
 
@@ -43,7 +44,8 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack }) => {
       const dataTypeNames = {
         scouting: 'Scouting Data',
         scouterProfiles: 'Scouter Profiles',
-        pitScouting: 'Pit Scouting Data'
+        pitScouting: 'Pit Scouting Data',
+        pitScoutingImagesOnly: 'Pit Scouting Images Only'
       };
       
       toast.info(`Selected: ${file.name} (${dataTypeNames[dataType]})`);
@@ -69,6 +71,8 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack }) => {
         await handleScouterProfilesUpload(jsonData, mode);
       } else if (detectedDataType === 'pitScouting') {
         await handlePitScoutingUpload(jsonData, mode);
+      } else if (detectedDataType === 'pitScoutingImagesOnly') {
+        await handlePitScoutingImagesUpload(jsonData);
       }
 
       setSelectedFile(null);
@@ -124,7 +128,7 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack }) => {
               className="w-full min-h-16 text-xl whitespace-normal text-wrap py-3 px-4"
             >
               {selectedFile 
-                ? `Selected: ${selectedFile.name}${detectedDataType ? ` (${detectedDataType === 'scouting' ? 'Scouting Data' : detectedDataType === 'scouterProfiles' ? 'Scouter Profiles' : 'Pit Scouting Data'})` : ''}`
+                ? `Selected: ${selectedFile.name}${detectedDataType ? ` (${detectedDataType === 'scouting' ? 'Scouting Data' : detectedDataType === 'scouterProfiles' ? 'Scouter Profiles' : detectedDataType === 'pitScouting' ? 'Pit Scouting Data' : 'Pit Scouting Images Only'})` : ''}`
                 : "Select JSON Data File"
               }
             </Button>
@@ -133,36 +137,52 @@ const JSONUploader: React.FC<JSONUploaderProps> = ({ onBack }) => {
             {selectedFile && (
               <>
                 <Separator />
-                <div className="space-y-3">
-                  <Button
-                    onClick={() => handleUpload("smart-merge")}
-                    className="w-full h-16 text-xl bg-green-500 hover:bg-green-600 text-white"
-                  >
-                    🧠 Smart Merge (Recommended)
-                  </Button>
-                   <p><strong>Smart Merge</strong>: Skip duplicates, add only new entries</p>
-                  <div className="flex items-center gap-4">
-                    <Separator className="flex-1" />
-                    <span className="text-sm text-muted-foreground">OR</span>
-                    <Separator className="flex-1" />
+                {detectedDataType === 'pitScoutingImagesOnly' ? (
+                  /* Images-only upload doesn't need mode selection */
+                  <div className="space-y-3">
+                    <Button
+                      onClick={() => handleUpload("smart-merge")}
+                      className="w-full h-16 text-xl bg-green-500 hover:bg-green-600 text-white"
+                    >
+                      📷 Update Existing Teams with Images
+                    </Button>
+                    <p><strong>Image Merge</strong>: Add images to existing pit scouting entries for matching teams and events</p>
+                    <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded border">
+                      <strong>Note:</strong> Images can only be added to teams that already have pit scouting entries. Import pit scouting text data first via QR codes or JSON, then add images.
+                    </div>
                   </div>
-                  
-                  <Button
-                    onClick={() => handleUpload("append")}
-                    className="w-full h-16 text-xl bg-blue-500 hover:bg-blue-600 text-white"
-                  >
-                    📤 Force Append
-                  </Button>
-                   <p className="pb-4"><strong>Force Append</strong>: Add all data (may create duplicates)</p>
-                  <Button
-                    onClick={() => handleUpload("overwrite")}
-                    variant="destructive"
-                    className="w-full h-16 text-xl text-white"
-                  >
-                    🔄 Replace All Data
-                  </Button>
-                  <p><strong>Replace All</strong>: Completely overwrite existing data</p>
-                </div>
+                ) : (
+                  <div className="space-y-3">
+                    <Button
+                      onClick={() => handleUpload("smart-merge")}
+                      className="w-full h-16 text-xl bg-green-500 hover:bg-green-600 text-white"
+                    >
+                      🧠 Smart Merge (Recommended)
+                    </Button>
+                     <p><strong>Smart Merge</strong>: Skip duplicates, add only new entries</p>
+                    <div className="flex items-center gap-4">
+                      <Separator className="flex-1" />
+                      <span className="text-sm text-muted-foreground">OR</span>
+                      <Separator className="flex-1" />
+                    </div>
+                    
+                    <Button
+                      onClick={() => handleUpload("append")}
+                      className="w-full h-16 text-xl bg-blue-500 hover:bg-blue-600 text-white"
+                    >
+                      📤 Force Append
+                    </Button>
+                     <p className="pb-4"><strong>Force Append</strong>: Add all data (may create duplicates)</p>
+                    <Button
+                      onClick={() => handleUpload("overwrite")}
+                      variant="destructive"
+                      className="w-full h-16 text-xl text-white"
+                    >
+                      🔄 Replace All Data
+                    </Button>
+                    <p><strong>Replace All</strong>: Completely overwrite existing data</p>
+                  </div>
+                )}
               </>
             )}
           </CardContent>

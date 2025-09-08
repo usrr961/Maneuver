@@ -11,8 +11,16 @@ const PitScoutingFountainGenerator = ({ onBack, onSwitchToScanner }: PitScouting
     const pitScoutingData = await loadPitScoutingData();
     
     if (pitScoutingData.entries.length > 0) {
-      // Send the full data with entries
-      return pitScoutingData;
+      // Strip out images for fountain codes to reduce size
+      const entriesWithoutImages = pitScoutingData.entries.map(entry => ({
+        ...entry,
+        robotPhoto: undefined
+      }));
+      
+      return {
+        ...pitScoutingData,
+        entries: entriesWithoutImages
+      };
     } else {
       console.log("No pit scouting data found");
       return null;
@@ -26,7 +34,7 @@ const PitScoutingFountainGenerator = ({ onBack, onSwitchToScanner }: PitScouting
       dataType="pit-scouting"
       loadData={loadPitScoutingDataForFountain}
       title="Generate Pit Scouting Codes"
-      description="Generate fountain codes from your pit scouting data. QR codes will automatically cycle for easy scanning."
+      description="Generate fountain codes from your pit scouting data (text only - images excluded for transfer efficiency). QR codes will automatically cycle for easy scanning."
       noDataMessage="No pit scouting data found in storage"
     />
   );

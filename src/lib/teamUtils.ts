@@ -28,7 +28,7 @@ export const getDemoTeams = (): TeamNumber[] => {
 export const getDemoEventTeams = (): EventTeamsData => {
   return {
     '2025mrcmp': {
-      eventName: 'Mars Robotics Championship',
+      eventName: 'FMA District Championship',
       teams: teamsData,
       source: 'tba'
     }
@@ -44,7 +44,7 @@ export const setupDemoEventTeams = (): void => {
   
   const demoEvent = {
     eventKey: '2025mrcmp',
-    eventName: 'Mars Robotics Championship',
+    eventName: 'FMA District Championship',
     teams: teamsData,
     source: 'tba' as const
   };

@@ -103,7 +103,7 @@ const QRDataTransferPage = () => {
       <div className="flex flex-col items-start gap-4 max-w-md w-full">
         <h1 className="text-2xl font-bold">QR Data Transfer</h1>
         <p className="text-muted-foreground">
-          Transfer large data files using fountain codes. Scan packets in any order until reconstruction is complete.
+          Transfer large data files using fountain codes. Scan packets in any order until reconstruction is complete. Note: Pit scouting transfers include text data only - use JSON transfer for images.
         </p>
 
         {/* Data Type Selection */}
@@ -122,7 +122,7 @@ const QRDataTransferPage = () => {
               <SelectContent>
                 <SelectItem value="combined">Combined (Scouting + Profiles)</SelectItem>
                 <SelectItem value="scouting">Scouting Data</SelectItem>
-                <SelectItem value="pit-scouting">Pit Scouting Data</SelectItem>
+                <SelectItem value="pit-scouting">Pit Scouting Data (no images)</SelectItem>
                 <SelectItem value="match">Match Schedule Data</SelectItem>
                 <SelectItem value="scouter">Scouter Profiles</SelectItem>
               </SelectContent>
@@ -157,6 +157,8 @@ const QRDataTransferPage = () => {
           <p>• Codes can be scanned in any order</p>
           <p>• No need to receive all codes</p>
           <p>• Automatic reconstruction when enough data is received</p>
+          <p>• Pit scouting transfers text only (team specs, capabilities, notes)</p>
+          <p>• Use JSON Data Transfer for robot photos</p>
         </div>
       </div>
     </div>

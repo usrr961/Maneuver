@@ -4,7 +4,7 @@ import Button from "@/components/ui/button";
 import JSONUploader from "@/components/DataTransferComponents/JSONUploader";
 import { convertArrayOfArraysToCSV, SCOUTING_DATA_HEADER } from "@/lib/utils";
 import { loadScoutingData } from "@/lib/scoutingDataUtils";
-import { loadPitScoutingData, exportPitScoutingToCSV } from "@/lib/pitScoutingUtils";
+import { loadPitScoutingData, exportPitScoutingToCSV, downloadPitScoutingImagesOnly } from "@/lib/pitScoutingUtils";
 import { gameDB } from "@/lib/dexieDB";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const JSONDataTransferPage = () => {
   const [mode, setMode] = useState<'select' | 'upload'>('select');
-  const [dataType, setDataType] = useState<'scouting' | 'scouterProfiles' | 'pitScouting'>('scouting');
+  const [dataType, setDataType] = useState<'scouting' | 'scouterProfiles' | 'pitScouting' | 'pitScoutingImagesOnly'>('scouting');
 
   if (mode === 'upload') {
     return (
@@ -61,6 +61,10 @@ const JSONDataTransferPage = () => {
           }
           filename = `ManeuverPitScoutingData-${new Date().toLocaleTimeString()}-local.csv`;
           break;
+        }
+        case 'pitScoutingImagesOnly': {
+          alert("CSV export not available for images-only data. Use JSON download instead.");
+          return;
         }
         case 'scouterProfiles': {
           // CSV export for scouter profiles
@@ -125,7 +129,7 @@ const JSONDataTransferPage = () => {
         <div className="flex flex-col gap-4 w-full">
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium">Data Type to Export:</label>
-            <Select value={dataType} onValueChange={(value: 'scouting' | 'scouterProfiles' | 'pitScouting') => setDataType(value)}>
+            <Select value={dataType} onValueChange={(value: 'scouting' | 'scouterProfiles' | 'pitScouting' | 'pitScoutingImagesOnly') => setDataType(value)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select data type" />
               </SelectTrigger>
@@ -133,6 +137,7 @@ const JSONDataTransferPage = () => {
                 <SelectItem value="scouting">Scouting Data</SelectItem>
                 <SelectItem value="scouterProfiles">Scouter Profiles</SelectItem>
                 <SelectItem value="pitScouting">Pit Scouting Data</SelectItem>
+                <SelectItem value="pitScoutingImagesOnly">Pit Scouting Images Only</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -167,6 +172,16 @@ const JSONDataTransferPage = () => {
                     dataToExport = pitData;
                     filename = `ManeuverPitScoutingData-${new Date().toLocaleTimeString()}.json`;
                     break;
+                  }
+                  case 'pitScoutingImagesOnly': {
+                    try {
+                      await downloadPitScoutingImagesOnly();
+                      return; // downloadPitScoutingImagesOnly handles its own download
+                    } catch (error) {
+                      console.error('Error downloading pit scouting images:', error);
+                      alert("Failed to download pit scouting images.");
+                      return;
+                    }
                   }
                   case 'scouterProfiles': {
                     const scoutersData = await gameDB.scouters.toArray();
@@ -208,7 +223,7 @@ const JSONDataTransferPage = () => {
             }}
             className="w-full h-16 text-xl"
           >
-            Download {dataType === 'scouting' ? 'Scouting Data' : dataType === 'pitScouting' ? 'Pit Scouting Data' : 'Scouter Profiles'} as JSON
+            Download {dataType === 'scouting' ? 'Scouting Data' : dataType === 'pitScouting' ? 'Pit Scouting Data' : dataType === 'pitScoutingImagesOnly' ? 'Pit Scouting Images' : 'Scouter Profiles'} as JSON
           </Button>
 
           <div className="flex items-center gap-4">
@@ -217,13 +232,24 @@ const JSONDataTransferPage = () => {
             <Separator className="flex-1" />
           </div>
 
-          <Button
-            onClick={handleDownloadCSV}
-            variant="secondary"
-            className="w-full h-16 text-xl"
-          >
-            Download {dataType === 'scouting' ? 'Scouting Data' : dataType === 'pitScouting' ? 'Pit Scouting Data' : 'Scouter Profiles'} as CSV
-          </Button>
+          <div className="w-full">
+            <Button
+              onClick={handleDownloadCSV}
+              variant="secondary"
+              disabled={dataType === 'pitScoutingImagesOnly'}
+              className="w-full h-16 text-xl"
+            >
+              {dataType === 'pitScoutingImagesOnly' 
+                ? 'Images Cannot Be Downloaded as CSV' 
+                : `Download ${dataType === 'scouting' ? 'Scouting Data' : dataType === 'pitScouting' ? 'Pit Scouting Data' : 'Scouter Profiles'} as CSV`
+              }
+            </Button>
+            {dataType === 'pitScouting' && (
+              <p className="text-xs text-muted-foreground mt-1 text-center">
+                CSV export includes team data and capabilities but excludes robot images
+              </p>
+            )}
+          </div>
 
           <div className="flex items-center gap-4">
             <Separator className="flex-1" />
@@ -246,6 +272,7 @@ const JSONDataTransferPage = () => {
           <p>• Scouting Data: Match performance data</p>
           <p>• Scouter Profiles: User achievements and predictions</p>
           <p>• Pit Scouting: Team technical specifications and capabilities</p>
+          <p>• Pit Scouting Images Only: Robot photos for merging with existing data (requires text data first)</p>
         </div>
       </div>
     </div>
