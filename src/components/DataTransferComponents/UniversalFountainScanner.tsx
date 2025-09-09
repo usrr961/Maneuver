@@ -236,16 +236,16 @@ const UniversalFountainScanner = ({
                     // Expand auto algae
                     if (Array.isArray(compressed.aa)) {
                       expanded.autoAlgaePlaceNetShot = compressed.aa[0] || 0;
-                      expanded.autoAlgaePlaceNetMiss = compressed.aa[1] || 0;
-                      expanded.autoAlgaePlaceProcessorShot = compressed.aa[2] || 0;
-                      expanded.autoAlgaePlaceProcessorMiss = compressed.aa[3] || 0;
-                      expanded.autoAlgaePickGroundCount = compressed.aa[4] || 0;
+                      expanded.autoAlgaePlaceProcessor = compressed.aa[1] || 0;
+                      expanded.autoAlgaePlaceDropMiss = compressed.aa[2] || 0;
+                      expanded.autoAlgaePlaceRemove = compressed.aa[3] || 0;
+                      expanded.autoAlgaePickReefCount = compressed.aa[4] || 0;
                     } else {
                       expanded.autoAlgaePlaceNetShot = 0;
-                      expanded.autoAlgaePlaceNetMiss = 0;
-                      expanded.autoAlgaePlaceProcessorShot = 0;
-                      expanded.autoAlgaePlaceProcessorMiss = 0;
-                      expanded.autoAlgaePickGroundCount = 0;
+                      expanded.autoAlgaePlaceProcessor = 0;
+                      expanded.autoAlgaePlaceDropMiss = 0;
+                      expanded.autoAlgaePlaceRemove = 0;
+                      expanded.autoAlgaePickReefCount = 0;
                     }
                     
                     // Expand teleop coral
@@ -256,7 +256,7 @@ const UniversalFountainScanner = ({
                       expanded.teleopCoralPlaceL4Count = compressed.tc[3] || 0;
                       expanded.teleopCoralPlaceDropMissCount = compressed.tc[4] || 0;
                       expanded.teleopCoralPickStationCount = compressed.tc[5] || 0;
-                      expanded.teleopCoralPickGroundCount = compressed.tc[6] || 0;
+                      expanded.teleopCoralPickCarpetCount = compressed.tc[6] || 0;
                     } else {
                       expanded.teleopCoralPlaceL1Count = 0;
                       expanded.teleopCoralPlaceL2Count = 0;
@@ -264,25 +264,23 @@ const UniversalFountainScanner = ({
                       expanded.teleopCoralPlaceL4Count = 0;
                       expanded.teleopCoralPlaceDropMissCount = 0;
                       expanded.teleopCoralPickStationCount = 0;
-                      expanded.teleopCoralPickGroundCount = 0;
+                      expanded.teleopCoralPickCarpetCount = 0;
                     }
                     
                     // Expand teleop algae
                     if (Array.isArray(compressed.ta)) {
                       expanded.teleopAlgaePlaceNetShot = compressed.ta[0] || 0;
-                      expanded.teleopAlgaePlaceNetMiss = compressed.ta[1] || 0;
-                      expanded.teleopAlgaePlaceProcessorShot = compressed.ta[2] || 0;
-                      expanded.teleopAlgaePlaceProcessorMiss = compressed.ta[3] || 0;
-                      expanded.teleopAlgaePickStationCount = compressed.ta[4] || 0;
-                      expanded.teleopAlgaePickGroundCount = compressed.ta[5] || 0;
-                      expanded.teleopAlgaePickCarpetCount = compressed.ta[6] || 0;
+                      expanded.teleopAlgaePlaceProcessor = compressed.ta[1] || 0;
+                      expanded.teleopAlgaePlaceDropMiss = compressed.ta[2] || 0;
+                      expanded.teleopAlgaePlaceRemove = compressed.ta[3] || 0;
+                      expanded.teleopAlgaePickReefCount = compressed.ta[4] || 0;
+                      expanded.teleopAlgaePickCarpetCount = compressed.ta[5] || 0;
                     } else {
                       expanded.teleopAlgaePlaceNetShot = 0;
-                      expanded.teleopAlgaePlaceNetMiss = 0;
-                      expanded.teleopAlgaePlaceProcessorShot = 0;
-                      expanded.teleopAlgaePlaceProcessorMiss = 0;
-                      expanded.teleopAlgaePickStationCount = 0;
-                      expanded.teleopAlgaePickGroundCount = 0;
+                      expanded.teleopAlgaePlaceProcessor = 0;
+                      expanded.teleopAlgaePlaceDropMiss = 0;
+                      expanded.teleopAlgaePlaceRemove = 0;
+                      expanded.teleopAlgaePickReefCount = 0;
                       expanded.teleopAlgaePickCarpetCount = 0;
                     }
                     

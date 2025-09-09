@@ -4,68 +4,12 @@
  */
 
 import * as pako from 'pako';
+import type { ScoutingEntry, ScoutingDataEntry, ScoutingDataCollection } from './scoutingTypes';
 
-// Type definitions
-interface ScoutingEntry {
-  matchNumber?: string;
-  alliance?: 'redAlliance' | 'blueAlliance';
-  scouterInitials?: string;
-  selectTeam?: string;
-  startPoses0?: boolean;
-  startPoses1?: boolean;
-  startPoses2?: boolean;
-  startPoses3?: boolean;
-  startPoses4?: boolean;
-  startPoses5?: boolean;
-  autoCoralPlaceL1Count?: number;
-  autoCoralPlaceL2Count?: number;
-  autoCoralPlaceL3Count?: number;
-  autoCoralPlaceL4Count?: number;
-  autoCoralPlaceDropMissCount?: number;
-  autoCoralPickPreloadCount?: number;
-  autoCoralPickStationCount?: number;
-  autoCoralPickMark1Count?: number;
-  autoCoralPickMark2Count?: number;
-  autoCoralPickMark3Count?: number;
-  autoAlgaePlaceNetShot?: number;
-  autoAlgaePlaceNetMiss?: number;
-  autoAlgaePlaceProcessorShot?: number;
-  autoAlgaePlaceProcessorMiss?: number;
-  autoAlgaePickGroundCount?: number;
-  autoPassedStartLine?: boolean;
-  teleopCoralPlaceL1Count?: number;
-  teleopCoralPlaceL2Count?: number;
-  teleopCoralPlaceL3Count?: number;
-  teleopCoralPlaceL4Count?: number;
-  teleopCoralPlaceDropMissCount?: number;
-  teleopCoralPickStationCount?: number;
-  teleopCoralPickGroundCount?: number;
-  teleopAlgaePlaceNetShot?: number;
-  teleopAlgaePlaceNetMiss?: number;
-  teleopAlgaePlaceProcessorShot?: number;
-  teleopAlgaePlaceProcessorMiss?: number;
-  teleopAlgaePickStationCount?: number;
-  teleopAlgaePickGroundCount?: number;
-  teleopAlgaePickCarpetCount?: number;
-  shallowClimbAttempted?: boolean;
-  deepClimbAttempted?: boolean;
-  parkAttempted?: boolean;
-  climbFailed?: boolean;
-  playedDefense?: boolean;
-  brokeDown?: boolean;
-  comment?: string;
-  eventName?: string;
-}
+// Re-export types for consumers of this module
+export type { ScoutingEntry, ScoutingDataEntry, ScoutingDataCollection };
 
-export interface ScoutingDataEntry {
-  id: string;
-  data: ScoutingEntry;
-  timestamp?: number;
-}
-
-export interface ScoutingDataCollection {
-  entries: ScoutingDataEntry[];
-}
+// Local interfaces for compression
 
 interface CompressedData {
   meta: {
@@ -216,9 +160,9 @@ export function compressScoutingData(data: ScoutingDataCollection): Uint8Array {
     
     // Pack auto algae counts
     const autoAlgae = [
-      scoutingData.autoAlgaePlaceNetShot || 0, scoutingData.autoAlgaePlaceNetMiss || 0,
-      scoutingData.autoAlgaePlaceProcessorShot || 0, scoutingData.autoAlgaePlaceProcessorMiss || 0,
-      scoutingData.autoAlgaePickGroundCount || 0
+      scoutingData.autoAlgaePlaceNetShot || 0, scoutingData.autoAlgaePlaceProcessor || 0,
+      scoutingData.autoAlgaePlaceDropMiss || 0, scoutingData.autoAlgaePlaceRemove || 0,
+      scoutingData.autoAlgaePickReefCount || 0
     ];
     if (autoAlgae.some(c => c > 0)) optimized.aa = autoAlgae;
     
@@ -227,16 +171,15 @@ export function compressScoutingData(data: ScoutingDataCollection): Uint8Array {
       scoutingData.teleopCoralPlaceL1Count || 0, scoutingData.teleopCoralPlaceL2Count || 0,
       scoutingData.teleopCoralPlaceL3Count || 0, scoutingData.teleopCoralPlaceL4Count || 0,
       scoutingData.teleopCoralPlaceDropMissCount || 0, scoutingData.teleopCoralPickStationCount || 0,
-      scoutingData.teleopCoralPickGroundCount || 0
+      scoutingData.teleopCoralPickCarpetCount || 0
     ];
     if (teleopCoral.some(c => c > 0)) optimized.tc = teleopCoral;
     
     // Pack teleop algae counts
     const teleopAlgae = [
-      scoutingData.teleopAlgaePlaceNetShot || 0, scoutingData.teleopAlgaePlaceNetMiss || 0,
-      scoutingData.teleopAlgaePlaceProcessorShot || 0, scoutingData.teleopAlgaePlaceProcessorMiss || 0,
-      scoutingData.teleopAlgaePickStationCount || 0, scoutingData.teleopAlgaePickGroundCount || 0,
-      scoutingData.teleopAlgaePickCarpetCount || 0
+      scoutingData.teleopAlgaePlaceNetShot || 0, scoutingData.teleopAlgaePlaceProcessor || 0,
+      scoutingData.teleopAlgaePlaceDropMiss || 0, scoutingData.teleopAlgaePlaceRemove || 0,
+      scoutingData.teleopAlgaePickReefCount || 0, scoutingData.teleopAlgaePickCarpetCount || 0
     ];
     if (teleopAlgae.some(c => c > 0)) optimized.ta = teleopAlgae;
     
@@ -309,7 +252,7 @@ export function decompressScoutingData(compressedData: Uint8Array): { entries: S
   }
   
   // Return entries (or empty array if not present)
-  return { entries: data.entries || [] };
+  return { entries: (data.entries || []) as unknown as ScoutingEntry[] };
 }
 
 
