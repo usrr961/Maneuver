@@ -51,7 +51,6 @@ export interface ScoutingEntry {
   teleopAlgaePlaceProcessor: number;
   teleopAlgaePlaceDropMiss: number;
   teleopAlgaePlaceRemove: number;
-  
   teleopAlgaePickReefCount: number;
   teleopAlgaePickCarpetCount: number;
 

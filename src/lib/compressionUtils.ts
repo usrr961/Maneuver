@@ -36,14 +36,16 @@ export const EVENT_DICT = {
   '2025ontor': 6
 } as const;
 
-// Dynamic scouter dictionary (built from data)
-let SCOUTER_DICT: { [key: string]: number } = {};
-let SCOUTER_REVERSE: string[] = [];
+// Dictionary interfaces for type safety
+interface ScouterDictionaries {
+  scouterDict: { [key: string]: number };
+  scouterReverse: string[];
+}
 
 /**
  * Build dynamic scouter dictionary from data
  */
-function buildScouterDict(data: ScoutingDataEntry[]): void {
+function buildScouterDict(data: ScoutingDataEntry[]): ScouterDictionaries {
   const scouters = new Set<string>();
   
   // Collect all unique scouter initials from entries
@@ -56,15 +58,17 @@ function buildScouterDict(data: ScoutingDataEntry[]): void {
   });
   
   // Build dictionary
-  SCOUTER_DICT = {};
-  SCOUTER_REVERSE = Array.from(scouters);
-  SCOUTER_REVERSE.forEach((scouter, index) => {
-    SCOUTER_DICT[scouter] = index;
+  const scouterDict: { [key: string]: number } = {};
+  const scouterReverse: string[] = Array.from(scouters);
+  scouterReverse.forEach((scouter, index) => {
+    scouterDict[scouter] = index;
   });
   
   if (import.meta.env.DEV) {
-    console.log(`📊 Built scouter dictionary: ${SCOUTER_REVERSE.length} unique scouters:`, SCOUTER_REVERSE);
+    console.log(`📊 Built scouter dictionary: ${scouterReverse.length} unique scouters:`, scouterReverse);
   }
+  
+  return { scouterDict, scouterReverse };
 }
 
 
@@ -96,7 +100,7 @@ export function compressScoutingData(data: ScoutingDataCollection | ScoutingData
   }
   
   // Build scouter dictionary from data
-  buildScouterDict(entries);
+  const { scouterDict, scouterReverse } = buildScouterDict(entries);
   
   // Compress entries using smart JSON optimization
   const compressedEntries = entries.map((entry: ScoutingDataEntry, index: number) => {
@@ -122,8 +126,8 @@ export function compressScoutingData(data: ScoutingDataCollection | ScoutingData
     
     // Use dictionary compression for categorical fields
     if (scoutingData.alliance) optimized.a = ALLIANCE_DICT[scoutingData.alliance as keyof typeof ALLIANCE_DICT];
-    if (scoutingData.scouterInitials && SCOUTER_DICT[scoutingData.scouterInitials] !== undefined) {
-      optimized.s = SCOUTER_DICT[scoutingData.scouterInitials];
+    if (scoutingData.scouterInitials && scouterDict[scoutingData.scouterInitials] !== undefined) {
+      optimized.s = scouterDict[scoutingData.scouterInitials];
     } else if (scoutingData.scouterInitials) {
       optimized.sf = scoutingData.scouterInitials; // fallback to full string
     }
@@ -205,7 +209,7 @@ export function compressScoutingData(data: ScoutingDataCollection | ScoutingData
     meta: {
       compressed: true,
       version: '1.0',
-      scouterDict: SCOUTER_REVERSE
+      scouterDict: scouterReverse
     },
     entries: compressedEntries
   };
@@ -231,6 +235,8 @@ export function compressScoutingData(data: ScoutingDataCollection | ScoutingData
 
 /**
  * Decompress scouting data
+ * Note: This function is provided for completeness but the actual decompression
+ * is handled in UniversalFountainScanner.tsx which performs full entry expansion
  */
 export function decompressScoutingData(compressedData: Uint8Array): { entries: ScoutingEntry[] } {
   if (import.meta.env.DEV) {
@@ -242,14 +248,8 @@ export function decompressScoutingData(compressedData: Uint8Array): { entries: S
   const jsonString = new TextDecoder().decode(binaryData);
   const data = JSON.parse(jsonString) as CompressedData;
   
-  // Restore scouter dictionary if present
-  if (data.meta && data.meta.scouterDict) {
-    SCOUTER_REVERSE = data.meta.scouterDict;
-    SCOUTER_DICT = {};
-    SCOUTER_REVERSE.forEach((scouter: string, index: number) => {
-      SCOUTER_DICT[scouter] = index;
-    });
-  }
+  // Note: Full decompression with dictionary expansion is handled in UniversalFountainScanner
+  // This function just returns the compressed entries as-is for basic use cases
   
   // Return entries (or empty array if not present)
   return { entries: (data.entries || []) as unknown as ScoutingEntry[] };

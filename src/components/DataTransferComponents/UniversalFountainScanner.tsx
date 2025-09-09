@@ -339,12 +339,11 @@ const UniversalFountainScanner = ({
                     // Use preserved original ID (should always exist since compression preserves it)
                     const originalId = compressed.id;
                     if (!originalId) {
-                      console.error('Missing ID in compressed entry:', compressed);
-                      addDebugMsg('❌ Missing ID in compressed entry - this should not happen');
+                      throw new Error('Missing ID in compressed entry; aborting expansion to prevent data integrity issues.');
                     }
                     
                     return {
-                      id: originalId || `entry_${index}`, // Emergency fallback only
+                      id: originalId,
                       data: expanded,
                       timestamp: Date.now()
                     };
