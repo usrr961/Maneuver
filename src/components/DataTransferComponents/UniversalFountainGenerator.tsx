@@ -11,7 +11,8 @@ import { Info } from "lucide-react";
 import { 
   compressScoutingData, 
   shouldUseCompression, 
-  getCompressionStats 
+  getCompressionStats,
+  type ScoutingDataCollection
 } from "@/lib/compressionUtils";
 
 interface FountainPacket {
@@ -91,9 +92,10 @@ const UniversalFountainGenerator = ({
     
     if (useCompression && data && typeof data === 'object' && 'entries' in data) {
       // Use advanced compression for scouting data
-      console.log('🗜️ Using Phase 3 advanced compression...');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      encodedData = compressScoutingData(data as { entries: any[] });
+      if (import.meta.env.DEV) {
+        console.log('🗜️ Using Phase 3 advanced compression...');
+      }
+      encodedData = compressScoutingData(data as ScoutingDataCollection);
       const stats = getCompressionStats(data, encodedData);
       currentCompressionInfo = `Advanced compression: ${stats.originalSize} → ${stats.compressedSize} bytes (${(100 - stats.compressionRatio * 100).toFixed(1)}% reduction, ${stats.estimatedQRReduction})`;
       toast.success(`Advanced compression: ${(100 - stats.compressionRatio * 100).toFixed(1)}% size reduction!`);
@@ -116,7 +118,9 @@ const UniversalFountainGenerator = ({
       return;
     }
     
-    console.log(`📊 ${currentCompressionInfo}`);
+    if (import.meta.env.DEV) {
+      console.log(`📊 ${currentCompressionInfo}`);
+    }
         
     const blockSize = 200;
     const ltEncoder = createEncoder(encodedData, blockSize);
@@ -207,13 +211,14 @@ const UniversalFountainGenerator = ({
     if (useCompression && data && typeof data === 'object' && 'entries' in data) {
       // Use actual compression to get accurate size estimate
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const compressed = compressScoutingData(data as { entries: any[] });
+        const compressed = compressScoutingData(data as ScoutingDataCollection);
         const compressedSize = compressed.length;
         return compressedSize >= minSize;
       } catch (error) {
         // Fallback to rough estimate if compression fails
-        console.warn('Compression size estimation failed, using fallback:', error);
+        if (import.meta.env.DEV) {
+          console.warn('Compression size estimation failed, using fallback:', error);
+        }
         const jsonString = JSON.stringify(data);
         const estimatedCompressedSize = Math.floor(jsonString.length * 0.1);
         return estimatedCompressedSize >= minSize;

@@ -57,6 +57,25 @@ interface ScoutingEntry {
   eventName?: string;
 }
 
+export interface ScoutingDataEntry {
+  id: string;
+  data: ScoutingEntry;
+  timestamp?: number;
+}
+
+export interface ScoutingDataCollection {
+  entries: ScoutingDataEntry[];
+}
+
+interface CompressedData {
+  meta: {
+    compressed: boolean;
+    version: string;
+    scouterDict: string[];
+  };
+  entries: Record<string, unknown>[];
+}
+
 // Compression dictionaries
 const ALLIANCE_DICT = {
   'redAlliance': 0,
@@ -80,8 +99,7 @@ let SCOUTER_REVERSE: string[] = [];
 /**
  * Build dynamic scouter dictionary from data
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildScouterDict(data: any[]): void {
+function buildScouterDict(data: ScoutingDataEntry[]): void {
   const scouters = new Set<string>();
   
   // Collect all unique scouter initials from entries
@@ -100,7 +118,9 @@ function buildScouterDict(data: any[]): void {
     SCOUTER_DICT[scouter] = index;
   });
   
-  console.log(`📊 Built scouter dictionary: ${SCOUTER_REVERSE.length} unique scouters:`, SCOUTER_REVERSE);
+  if (import.meta.env.DEV) {
+    console.log(`📊 Built scouter dictionary: ${SCOUTER_REVERSE.length} unique scouters:`, SCOUTER_REVERSE);
+  }
 }
 
 
@@ -111,19 +131,21 @@ function buildScouterDict(data: any[]): void {
  * Smart compression using JSON optimization + gzip
  * Preserves original IDs and provides excellent compression ratios
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function compressScoutingData(data: any): Uint8Array {
-  console.log('🔄 Starting smart compression...');
+export function compressScoutingData(data: ScoutingDataCollection): Uint8Array {
+  if (import.meta.env.DEV) {
+    console.log('🔄 Starting smart compression...');
+  }
   
   const startTime = performance.now();
   const originalSize = JSON.stringify(data).length;
   
   // Extract entries array from various possible formats
-  let entries: unknown[] = [];
+  let entries: ScoutingDataEntry[] = [];
   if (data.entries && Array.isArray(data.entries)) {
     entries = data.entries;
   } else if (Array.isArray(data)) {
-    entries = data;
+    // Handle case where data is directly an array
+    entries = data as ScoutingDataEntry[];
   } else {
     console.error('Invalid data format for compression');
     throw new Error('Invalid data format for compression');
@@ -133,12 +155,11 @@ export function compressScoutingData(data: any): Uint8Array {
   buildScouterDict(entries);
   
   // Compress entries using smart JSON optimization
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const compressedEntries = entries.map((entry: any, index: number) => {
+  const compressedEntries = entries.map((entry: ScoutingDataEntry, index: number) => {
     // Handle both flat entries and nested structure with data property
     const scoutingData = entry.data || entry;
     
-    if (index === 0) {
+    if (import.meta.env.DEV && index === 0) {
       console.log(`🔍 Sample entry structure:`, entry);
       console.log(`🔍 Sample scouting data keys:`, Object.keys(scoutingData || {}));
       console.log(`🔍 Sample scoring fields:`, {
@@ -255,10 +276,12 @@ export function compressScoutingData(data: any): Uint8Array {
   const totalReduction = ((1 - finalSize / originalSize) * 100).toFixed(1);
   const jsonReduction = ((1 - optimizedJson.length / originalSize) * 100).toFixed(1);
   
-  console.log(`✅ Smart compression: ${originalSize} → ${finalSize} bytes (${totalReduction}% total reduction)`);
-  console.log(`📊 JSON optimization: ${originalSize} → ${optimizedJson.length} bytes (${jsonReduction}% reduction)`);
-  console.log(`🗜️ Gzip final: ${optimizedJson.length} → ${finalSize} bytes`);
-  console.log(`⏱️ Compression time: ${compressionTime.toFixed(1)}ms`);
+  if (import.meta.env.DEV) {
+    console.log(`✅ Smart compression: ${originalSize} → ${finalSize} bytes (${totalReduction}% total reduction)`);
+    console.log(`📊 JSON optimization: ${originalSize} → ${optimizedJson.length} bytes (${jsonReduction}% reduction)`);
+    console.log(`🗜️ Gzip final: ${optimizedJson.length} → ${finalSize} bytes`);
+    console.log(`⏱️ Compression time: ${compressionTime.toFixed(1)}ms`);
+  }
 
   return gzipCompressed;
 }
@@ -267,12 +290,14 @@ export function compressScoutingData(data: any): Uint8Array {
  * Decompress scouting data
  */
 export function decompressScoutingData(compressedData: Uint8Array): { entries: ScoutingEntry[] } {
-  console.log('🔄 Decompressing data...');
+  if (import.meta.env.DEV) {
+    console.log('🔄 Decompressing data...');
+  }
   
   // Decompress gzip and parse JSON directly
   const binaryData = pako.ungzip(compressedData);
   const jsonString = new TextDecoder().decode(binaryData);
-  const data = JSON.parse(jsonString);
+  const data = JSON.parse(jsonString) as CompressedData;
   
   // Restore scouter dictionary if present
   if (data.meta && data.meta.scouterDict) {

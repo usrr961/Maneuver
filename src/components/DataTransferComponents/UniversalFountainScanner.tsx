@@ -63,9 +63,11 @@ const UniversalFountainScanner = ({
   const packetsRef = useRef<Map<number, FountainPacket>>(new Map());
   const sessionRef = useRef<string | null>(null);
 
-  // Helper function to add debug messages
+  // Helper function to add debug messages (dev-only)
   const addDebugMsg = (message: string) => {
-    setDebugLog(prev => [...prev.slice(-20), `${new Date().toLocaleTimeString()}: ${message}`]);
+    if (import.meta.env.DEV) {
+      setDebugLog(prev => [...prev.slice(-20), `${new Date().toLocaleTimeString()}: ${message}`]);
+    }
   };
 
   const handleQRScan = (result: { rawValue: string; }[]) => {
