@@ -46,7 +46,7 @@ const ALLIANCE_DICT = {
   'blueAlliance': 1
 } as const;
 
-export const EVENT_DICT = {
+export const EVENT_DICT = Object.freeze({
   '2025pawar': 0,
   '2025mrcmp': 1,
   '2025txhou': 2,
@@ -54,12 +54,22 @@ export const EVENT_DICT = {
   '2025idbo': 4,
   '2025njfla': 5,
   '2025ontor': 6
-} as const;
+} as const);
 
 // Dictionary interfaces for type safety
 interface ScouterDictionaries {
   scouterDict: { [key: string]: number };
   scouterReverse: string[];
+}
+
+/**
+ * Type guard to check if data is a scouting data collection
+ */
+export function isScoutingDataCollection(data: unknown): data is ScoutingDataCollection {
+  return data !== null && 
+         typeof data === 'object' && 
+         'entries' in data && 
+         Array.isArray((data as ScoutingDataCollection).entries);
 }
 
 /**
@@ -105,13 +115,15 @@ function buildScouterDict(data: ScoutingDataEntry[]): ScouterDictionaries {
  * Smart compression using JSON optimization + gzip
  * Preserves original IDs and provides excellent compression ratios
  */
-export function compressScoutingData(data: ScoutingDataCollection | ScoutingDataEntry[]): Uint8Array {
+export function compressScoutingData(data: ScoutingDataCollection | ScoutingDataEntry[], originalJson?: string): Uint8Array {
   if (import.meta.env.DEV) {
     console.log('🔄 Starting smart compression...');
   }
   
   const startTime = performance.now();
-  const originalSize = JSON.stringify(data).length;
+  // Cache JSON string to avoid duplicate serialization
+  const jsonString = originalJson || JSON.stringify(data);
+  const originalSize = jsonString.length;
   
   // Extract entries array from various possible formats
   let entries: ScoutingDataEntry[] = [];
@@ -286,23 +298,32 @@ export function decompressScoutingData(compressedData: Uint8Array): { entries: C
 
 /**
  * Check if data should use compression based on size
+ * @param data - Data to check for compression eligibility
+ * @param jsonString - Optional pre-computed JSON string to avoid duplicate serialization
  */
-export function shouldUseCompression(data: unknown): boolean {
-  const jsonSize = JSON.stringify(data).length;
+export function shouldUseCompression(data: unknown, jsonString?: string): boolean {
+  const jsonSize = jsonString ? jsonString.length : JSON.stringify(data).length;
   // Use compression for datasets > 10KB to get meaningful size reductions
   return jsonSize > 10000;
 }
 
 /**
  * Get compression statistics for display
+ * @param originalData - Original data object
+ * @param compressedData - Compressed data
+ * @param originalJson - Optional pre-computed JSON string to avoid duplicate serialization
  */
-export function getCompressionStats(originalData: unknown, compressedData: Uint8Array): {
+export function getCompressionStats(
+  originalData: unknown, 
+  compressedData: Uint8Array, 
+  originalJson?: string
+): {
   originalSize: number;
   compressedSize: number;
   compressionRatio: number;
   estimatedQRReduction: string;
 } {
-  const originalSize = JSON.stringify(originalData).length;
+  const originalSize = originalJson ? originalJson.length : JSON.stringify(originalData).length;
   const compressedSize = compressedData.length;
   const compressionRatio = compressedSize / originalSize;
   

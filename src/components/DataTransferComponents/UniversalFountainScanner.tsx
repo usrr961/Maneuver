@@ -11,27 +11,7 @@ import { toUint8Array } from "js-base64";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as pako from 'pako';
-import { EVENT_DICT } from '@/lib/compressionUtils';
-
-// Type definitions for compressed data structures
-interface CompressedEntry {
-  id?: string;
-  a?: number; // alliance
-  s?: number; // scouter (dictionary index)
-  sf?: string; // scouter (fallback full string)
-  e?: number; // event (dictionary index)
-  ef?: string; // event (fallback full string)
-  m?: string; // matchNumber
-  t?: string; // selectTeam
-  p?: number; // start positions (bit packed)
-  ac?: number[]; // auto coral counts
-  ao?: number[]; // auto other counts
-  aa?: number[]; // auto algae counts
-  tc?: number[]; // teleop coral counts
-  ta?: number[]; // teleop algae counts
-  g?: number; // endgame booleans (bit packed)
-  c?: string; // comment
-}
+import { EVENT_DICT, type CompressedEntry } from '@/lib/compressionUtils';
 
 interface FountainPacket {
   type: string;
@@ -339,7 +319,7 @@ const UniversalFountainScanner = ({
                     // Use preserved original ID (should always exist since compression preserves it)
                     const originalId = compressed.id;
                     if (!originalId) {
-                      throw new Error('Missing ID in compressed entry; aborting expansion to prevent data integrity issues.');
+                      throw new Error(`Missing ID in compressed entry at index ${index}. This may indicate corrupted data or an incompatible compression format.`);
                     }
                     
                     return {
