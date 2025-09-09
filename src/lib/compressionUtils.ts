@@ -9,6 +9,26 @@ import type { ScoutingEntry, ScoutingDataEntry, ScoutingDataCollection } from '.
 // Re-export types for consumers of this module
 export type { ScoutingEntry, ScoutingDataEntry, ScoutingDataCollection };
 
+// Export local interfaces for external type safety
+export interface CompressedEntry {
+  id?: string;
+  a?: number; // alliance
+  s?: number; // scouter (dictionary index)
+  sf?: string; // scouter (fallback full string)
+  e?: number; // event (dictionary index)
+  ef?: string; // event (fallback full string)
+  m?: string; // matchNumber
+  t?: string; // selectTeam
+  p?: number; // start positions (bit packed)
+  ac?: number[]; // auto coral counts
+  ao?: number[]; // auto other counts
+  aa?: number[]; // auto algae counts
+  tc?: number[]; // teleop coral counts
+  ta?: number[]; // teleop algae counts
+  g?: number; // endgame booleans (bit packed)
+  c?: string; // comment
+}
+
 // Local interfaces for compression
 
 interface CompressedData {
@@ -17,7 +37,7 @@ interface CompressedData {
     version: string;
     scouterDict: string[];
   };
-  entries: Record<string, unknown>[];
+  entries: CompressedEntry[];
 }
 
 // Compression dictionaries
@@ -65,7 +85,13 @@ function buildScouterDict(data: ScoutingDataEntry[]): ScouterDictionaries {
   });
   
   if (import.meta.env.DEV) {
-    console.log(`📊 Built scouter dictionary: ${scouterReverse.length} unique scouters:`, scouterReverse);
+    const previewCount = 5;
+    const preview = scouterReverse.slice(0, previewCount);
+    console.log(
+      `📊 Built scouter dictionary: ${scouterReverse.length} unique scouters. First ${preview.length}:`,
+      preview,
+      scouterReverse.length > previewCount ? '...' : ''
+    );
   }
   
   return { scouterDict, scouterReverse };
@@ -234,11 +260,12 @@ export function compressScoutingData(data: ScoutingDataCollection | ScoutingData
 }
 
 /**
- * Decompress scouting data
- * Note: This function is provided for completeness but the actual decompression
- * is handled in UniversalFountainScanner.tsx which performs full entry expansion
+ * Decompress scouting data (partial decompression only)
+ * Note: This function only performs gzip decompression and returns compressed entries.
+ * For full expansion to ScoutingEntry format, use UniversalFountainScanner.tsx which 
+ * handles dictionary expansion and field reconstruction.
  */
-export function decompressScoutingData(compressedData: Uint8Array): { entries: ScoutingEntry[] } {
+export function decompressScoutingData(compressedData: Uint8Array): { entries: CompressedEntry[] } {
   if (import.meta.env.DEV) {
     console.log('🔄 Decompressing data...');
   }
@@ -248,11 +275,11 @@ export function decompressScoutingData(compressedData: Uint8Array): { entries: S
   const jsonString = new TextDecoder().decode(binaryData);
   const data = JSON.parse(jsonString) as CompressedData;
   
-  // Note: Full decompression with dictionary expansion is handled in UniversalFountainScanner
-  // This function just returns the compressed entries as-is for basic use cases
+  // Note: This returns compressed entries, not fully expanded ScoutingEntry objects
+  // Full decompression with dictionary expansion is handled in UniversalFountainScanner
   
-  // Return entries (or empty array if not present)
-  return { entries: (data.entries || []) as unknown as ScoutingEntry[] };
+  // Return compressed entries (or empty array if not present)
+  return { entries: data.entries || [] };
 }
 
 
