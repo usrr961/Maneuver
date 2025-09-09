@@ -29,6 +29,12 @@ export interface CompressedEntry {
   c?: string; // comment
 }
 
+// Constants for size thresholds and compression parameters
+export const COMPRESSION_THRESHOLD = 10000; // Minimum bytes to trigger compression
+export const MIN_FOUNTAIN_SIZE_COMPRESSED = 50; // Minimum bytes for compressed fountain codes
+export const MIN_FOUNTAIN_SIZE_UNCOMPRESSED = 100; // Minimum bytes for uncompressed fountain codes
+export const QR_CODE_SIZE_BYTES = 2000; // Estimated bytes per QR code
+
 // Local interfaces for compression
 
 interface CompressedData {
@@ -46,20 +52,26 @@ const ALLIANCE_DICT = {
   'blueAlliance': 1
 } as const;
 
-export const EVENT_DICT = Object.freeze({
-  '2025pawar': 0,
-  '2025mrcmp': 1,
-  '2025txhou': 2,
-  '2025casd': 3,
-  '2025idbo': 4,
-  '2025njfla': 5,
-  '2025ontor': 6
-} as const);
+// Remove static event dictionary - use dynamic compression instead
+// This scales to hundreds of events without maintenance burden
 
 // Dictionary interfaces for type safety
 interface ScouterDictionaries {
   scouterDict: { [key: string]: number };
   scouterReverse: string[];
+}
+
+interface EventDictionaries {
+  eventDict: { [key: string]: number };
+  eventReverse: string[];
+}
+
+/**
+ * Helper function to safely extract scouting data from entry
+ * Handles both flat entries and nested structure with data property
+ */
+export function extractScoutingData(entry: ScoutingDataEntry): Partial<ScoutingEntry> {
+  return entry.data || (entry as unknown as ScoutingEntry);
 }
 
 /**
@@ -80,8 +92,7 @@ function buildScouterDict(data: ScoutingDataEntry[]): ScouterDictionaries {
   
   // Collect all unique scouter initials from entries
   data.forEach(entry => {
-    // Handle both flat entries and nested structure with data property
-    const scoutingData: Partial<ScoutingEntry> = entry.data || (entry as unknown as ScoutingEntry);
+    const scoutingData = extractScoutingData(entry);
     if (scoutingData.scouterInitials && typeof scoutingData.scouterInitials === 'string') {
       scouters.add(scoutingData.scouterInitials);
     }
@@ -105,6 +116,47 @@ function buildScouterDict(data: ScoutingDataEntry[]): ScouterDictionaries {
   }
   
   return { scouterDict, scouterReverse };
+}
+
+/**
+ * Build dynamic event dictionary from data
+ * Scales to hundreds of events without maintenance burden
+ */
+function buildEventDict(data: ScoutingDataEntry[]): EventDictionaries {
+  const eventCounts = new Map<string, number>();
+  
+  // Count occurrences of each event to prioritize frequent ones
+  data.forEach(entry => {
+    const scoutingData = extractScoutingData(entry);
+    if (scoutingData.eventName && typeof scoutingData.eventName === 'string') {
+      eventCounts.set(scoutingData.eventName, (eventCounts.get(scoutingData.eventName) || 0) + 1);
+    }
+  });
+  
+  // Sort events by frequency (most frequent first for better compression)
+  const sortedEvents = Array.from(eventCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([eventName]) => eventName);
+  
+  // Build dictionary (only compress if we have multiple events)
+  const eventDict: { [key: string]: number } = {};
+  const eventReverse: string[] = [];
+  
+  if (sortedEvents.length > 1) {
+    sortedEvents.forEach((event, index) => {
+      eventDict[event] = index;
+      eventReverse.push(event);
+    });
+  }
+  
+  if (import.meta.env.DEV) {
+    console.log(
+      `📊 Built event dictionary: ${eventReverse.length} unique events`,
+      eventReverse.length > 0 ? eventReverse : '(using fallback strings)'
+    );
+  }
+  
+  return { eventDict, eventReverse };
 }
 
 
@@ -137,13 +189,13 @@ export function compressScoutingData(data: ScoutingDataCollection | ScoutingData
     throw new Error('Invalid data format for compression');
   }
   
-  // Build scouter dictionary from data
+  // Build dynamic dictionaries from data
   const { scouterDict, scouterReverse } = buildScouterDict(entries);
+  const { eventDict, eventReverse } = buildEventDict(entries);
   
   // Compress entries using smart JSON optimization
   const compressedEntries = entries.map((entry: ScoutingDataEntry, index: number) => {
-    // Handle both flat entries and nested structure with data property
-    const scoutingData: Partial<ScoutingEntry> = entry.data || (entry as unknown as ScoutingEntry);
+    const scoutingData = extractScoutingData(entry);
     
     if (import.meta.env.DEV && index === 0) {
       console.log(`🔍 Sample entry structure:`, entry);
@@ -169,10 +221,13 @@ export function compressScoutingData(data: ScoutingDataCollection | ScoutingData
     } else if (scoutingData.scouterInitials) {
       optimized.sf = scoutingData.scouterInitials; // fallback to full string
     }
-    if (scoutingData.eventName && EVENT_DICT[scoutingData.eventName as keyof typeof EVENT_DICT] !== undefined) {
-      optimized.e = EVENT_DICT[scoutingData.eventName as keyof typeof EVENT_DICT];
-    } else if (scoutingData.eventName) {
-      optimized.ef = scoutingData.eventName; // fallback
+    // Use dynamic event dictionary (scales to hundreds of events)
+    if (scoutingData.eventName) {
+      if (eventDict[scoutingData.eventName] !== undefined) {
+        optimized.e = eventDict[scoutingData.eventName];
+      } else {
+        optimized.ef = scoutingData.eventName; // fallback to full string
+      }
     }
     
     // Compress field names and pack counts efficiently
@@ -247,7 +302,8 @@ export function compressScoutingData(data: ScoutingDataCollection | ScoutingData
     meta: {
       compressed: true,
       version: '1.0',
-      scouterDict: scouterReverse
+      scouterDict: scouterReverse,
+      eventDict: eventReverse // Include dynamic event dictionary
     },
     entries: compressedEntries
   };
@@ -303,8 +359,7 @@ export function decompressScoutingData(compressedData: Uint8Array): { entries: C
  */
 export function shouldUseCompression(data: unknown, jsonString?: string): boolean {
   const jsonSize = jsonString ? jsonString.length : JSON.stringify(data).length;
-  // Use compression for datasets > 10KB to get meaningful size reductions
-  return jsonSize > 10000;
+  return jsonSize > COMPRESSION_THRESHOLD;
 }
 
 /**
@@ -327,9 +382,9 @@ export function getCompressionStats(
   const compressedSize = compressedData.length;
   const compressionRatio = compressedSize / originalSize;
   
-  // Estimate QR code count reduction (rough calculation based on 2KB per QR code)
-  const originalQRs = Math.ceil(originalSize / 2000);
-  const compressedQRs = Math.ceil(compressedSize / 2000);
+  // Estimate QR code count reduction using the defined constant
+  const originalQRs = Math.ceil(originalSize / QR_CODE_SIZE_BYTES);
+  const compressedQRs = Math.ceil(compressedSize / QR_CODE_SIZE_BYTES);
   const estimatedQRReduction = `~${originalQRs} → ${compressedQRs} codes`;
   
   return {

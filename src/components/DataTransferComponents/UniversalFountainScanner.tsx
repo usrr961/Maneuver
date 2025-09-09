@@ -11,7 +11,7 @@ import { toUint8Array } from "js-base64";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as pako from 'pako';
-import { EVENT_DICT, type CompressedEntry } from '@/lib/compressionUtils';
+import { type CompressedEntry } from '@/lib/compressionUtils';
 
 interface FountainPacket {
   type: string;
@@ -157,16 +157,12 @@ const UniversalFountainScanner = ({
                   addDebugMsg(`🔍 Compressed entries count: ${decompressedData.entries?.length || 0}`);
                   addDebugMsg(`🔍 First compressed entry keys: ${decompressedData.entries?.[0] ? Object.keys(decompressedData.entries[0]).join(', ') : 'none'}`);
                   
-                  // Rebuild scouter dictionary for expansion
+                  // Rebuild dictionaries for expansion
                   const scouterDict = decompressedData.meta.scouterDict || [];
+                  const eventDict = decompressedData.meta.eventDict || [];
                   const allianceReverse = ['redAlliance', 'blueAlliance'] as const;
                   addDebugMsg(`🔍 Scouter dictionary: ${scouterDict.length} entries`);
-                  
-                  // Create event reverse dictionary for decompression
-                  const eventReverse = Object.entries(EVENT_DICT).reduce((acc, [key, val]) => {
-                    acc[val as number] = key;
-                    return acc;
-                  }, {} as Record<number, string>);
+                  addDebugMsg(`🔍 Event dictionary: ${eventDict.length} entries`);
                   
                   // Expand compressed entries back to full format
                   const expandedEntries = decompressedData.entries.map((compressed: CompressedEntry, index: number) => {
@@ -177,7 +173,7 @@ const UniversalFountainScanner = ({
                     if (typeof compressed.a === 'number') expanded.alliance = allianceReverse[compressed.a];
                     if (typeof compressed.s === 'number') expanded.scouterInitials = scouterDict[compressed.s];
                     if (typeof compressed.sf === 'string') expanded.scouterInitials = compressed.sf;
-                    if (typeof compressed.e === 'number') expanded.eventName = eventReverse[compressed.e];
+                    if (typeof compressed.e === 'number') expanded.eventName = eventDict[compressed.e];
                     if (typeof compressed.ef === 'string') expanded.eventName = compressed.ef;
                     
                     // Expand basic fields
@@ -319,7 +315,7 @@ const UniversalFountainScanner = ({
                     // Use preserved original ID (should always exist since compression preserves it)
                     const originalId = compressed.id;
                     if (!originalId) {
-                      throw new Error(`Missing ID in compressed entry at index ${index}. This may indicate corrupted data or an incompatible compression format.`);
+                      throw new Error(`Missing ID in compressed entry at index ${index}. This may indicate corrupted data or an incompatible compression format. Please regenerate the QR codes or contact support if this persists.`);
                     }
                     
                     return {

@@ -13,6 +13,9 @@ import {
   shouldUseCompression, 
   getCompressionStats,
   isScoutingDataCollection,
+  MIN_FOUNTAIN_SIZE_COMPRESSED,
+  MIN_FOUNTAIN_SIZE_UNCOMPRESSED,
+  QR_CODE_SIZE_BYTES,
   type ScoutingDataCollection
 } from "@/lib/compressionUtils";
 import {
@@ -116,9 +119,8 @@ const UniversalFountainGenerator = ({
 
   // Apply filters to data
   const handleApplyFilters = () => {
-    if (data && typeof data === 'object' && 'entries' in data) {
-      const originalData = data as ScoutingDataCollection;
-      const filtered = applyFilters(originalData, filters);
+    if (isScoutingDataCollection(data)) {
+      const filtered = applyFilters(data, filters);
       setFilteredData(filtered);
       toast.success(`Filtered to ${filtered.entries.length} entries`);
     }
@@ -168,7 +170,7 @@ const UniversalFountainGenerator = ({
     
     // Validate data size - need sufficient data for meaningful fountain codes
     // Lower threshold for compressed data since compression can be very effective
-    const minDataSize = useCompression ? 50 : 100; // Minimum bytes for fountain code generation
+    const minDataSize = useCompression ? MIN_FOUNTAIN_SIZE_COMPRESSED : MIN_FOUNTAIN_SIZE_UNCOMPRESSED;
     if (encodedData.length < minDataSize) {
       toast.error(`${dataType} data is too small (${encodedData.length} bytes). Need at least ${minDataSize} bytes for fountain code generation.`);
       console.warn(`Data too small for fountain codes: ${encodedData.length} bytes (min: ${minDataSize})`);
@@ -225,7 +227,7 @@ const UniversalFountainGenerator = ({
 
         const packetJson = JSON.stringify(packet);
 
-        if (packetJson.length > 1800) {
+        if (packetJson.length > (QR_CODE_SIZE_BYTES * 0.9)) { // 90% of QR capacity to leave room for encoding overhead
           console.warn(`Packet ${packetId} too large (${packetJson.length} chars), skipping`);
           continue;
         }
@@ -273,7 +275,7 @@ const UniversalFountainGenerator = ({
     
     // Check if compression would be used
     const useCompression = shouldUseCompression(dataToCheck, jsonString) && dataType === 'scouting';
-    const minSize = useCompression ? 50 : 100;
+    const minSize = useCompression ? MIN_FOUNTAIN_SIZE_COMPRESSED : MIN_FOUNTAIN_SIZE_UNCOMPRESSED;
     
     if (useCompression && isScoutingDataCollection(dataToCheck)) {
       // Use actual compression to get accurate size estimate
@@ -286,7 +288,7 @@ const UniversalFountainGenerator = ({
         if (import.meta.env.DEV) {
           console.warn('Compression size estimation failed, using fallback:', error);
         }
-        // More conservative compression ratio estimate (10% of original)
+        // Conservative compression ratio estimate for fallback
         const CONSERVATIVE_COMPRESSION_RATIO = 0.1;
         const estimatedCompressedSize = Math.floor(jsonString.length * CONSERVATIVE_COMPRESSION_RATIO);
         return estimatedCompressedSize >= minSize;
@@ -305,7 +307,7 @@ const UniversalFountainGenerator = ({
     // Cache JSON string to avoid duplicate serialization
     const jsonString = JSON.stringify(dataToCheck);
     const useCompression = shouldUseCompression(dataToCheck, jsonString) && dataType === 'scouting';
-    const minSize = useCompression ? 50 : 100;
+    const minSize = useCompression ? MIN_FOUNTAIN_SIZE_COMPRESSED : MIN_FOUNTAIN_SIZE_UNCOMPRESSED;
     
     const encodedData = new TextEncoder().encode(jsonString);
     
@@ -411,7 +413,7 @@ const UniversalFountainGenerator = ({
                 <Alert variant="destructive">
                   <AlertDescription>
                     {dataType} data is too small ({dataSizeInfo?.size || 0} bytes). 
-                    Need at least {dataSizeInfo?.compressed ? '50' : '100'} bytes for fountain code generation.
+                    Need at least {dataSizeInfo?.compressed ? MIN_FOUNTAIN_SIZE_COMPRESSED : MIN_FOUNTAIN_SIZE_UNCOMPRESSED} bytes for fountain code generation.
                     {dataSizeInfo?.compressed && ' (Compressed data threshold)'}
                   </AlertDescription>
                 </Alert>
