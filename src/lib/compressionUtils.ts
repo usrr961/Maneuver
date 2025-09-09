@@ -49,7 +49,7 @@ function buildScouterDict(data: ScoutingDataEntry[]): void {
   // Collect all unique scouter initials from entries
   data.forEach(entry => {
     // Handle both flat entries and nested structure with data property
-    const scoutingData = entry.data || entry;
+    const scoutingData: Partial<ScoutingEntry> = entry.data || (entry as unknown as ScoutingEntry);
     if (scoutingData.scouterInitials && typeof scoutingData.scouterInitials === 'string') {
       scouters.add(scoutingData.scouterInitials);
     }
@@ -75,7 +75,7 @@ function buildScouterDict(data: ScoutingDataEntry[]): void {
  * Smart compression using JSON optimization + gzip
  * Preserves original IDs and provides excellent compression ratios
  */
-export function compressScoutingData(data: ScoutingDataCollection): Uint8Array {
+export function compressScoutingData(data: ScoutingDataCollection | ScoutingDataEntry[]): Uint8Array {
   if (import.meta.env.DEV) {
     console.log('🔄 Starting smart compression...');
   }
@@ -85,11 +85,11 @@ export function compressScoutingData(data: ScoutingDataCollection): Uint8Array {
   
   // Extract entries array from various possible formats
   let entries: ScoutingDataEntry[] = [];
-  if (data.entries && Array.isArray(data.entries)) {
-    entries = data.entries;
-  } else if (Array.isArray(data)) {
+  if (Array.isArray(data)) {
     // Handle case where data is directly an array
-    entries = data as ScoutingDataEntry[];
+    entries = data;
+  } else if (data && typeof data === 'object' && 'entries' in data && Array.isArray(data.entries)) {
+    entries = data.entries;
   } else {
     console.error('Invalid data format for compression');
     throw new Error('Invalid data format for compression');
@@ -101,7 +101,7 @@ export function compressScoutingData(data: ScoutingDataCollection): Uint8Array {
   // Compress entries using smart JSON optimization
   const compressedEntries = entries.map((entry: ScoutingDataEntry, index: number) => {
     // Handle both flat entries and nested structure with data property
-    const scoutingData = entry.data || entry;
+    const scoutingData: Partial<ScoutingEntry> = entry.data || (entry as unknown as ScoutingEntry);
     
     if (import.meta.env.DEV && index === 0) {
       console.log(`🔍 Sample entry structure:`, entry);

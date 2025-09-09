@@ -13,6 +13,26 @@ import { useNavigate } from "react-router-dom";
 import * as pako from 'pako';
 import { EVENT_DICT } from '@/lib/compressionUtils';
 
+// Type definitions for compressed data structures
+interface CompressedEntry {
+  id?: string;
+  a?: number; // alliance
+  s?: number; // scouter (dictionary index)
+  sf?: string; // scouter (fallback full string)
+  e?: number; // event (dictionary index)
+  ef?: string; // event (fallback full string)
+  m?: string; // matchNumber
+  t?: string; // selectTeam
+  p?: number; // start positions (bit packed)
+  ac?: number[]; // auto coral counts
+  ao?: number[]; // auto other counts
+  aa?: number[]; // auto algae counts
+  tc?: number[]; // teleop coral counts
+  ta?: number[]; // teleop algae counts
+  g?: number; // endgame booleans (bit packed)
+  c?: string; // comment
+}
+
 interface FountainPacket {
   type: string;
   sessionId: string;
@@ -169,8 +189,7 @@ const UniversalFountainScanner = ({
                   }, {} as Record<number, string>);
                   
                   // Expand compressed entries back to full format
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const expandedEntries = decompressedData.entries.map((compressed: any, index: number) => {
+                  const expandedEntries = decompressedData.entries.map((compressed: CompressedEntry, index: number) => {
                     addDebugMsg(`🔍 Expanding entry ${index}: ${JSON.stringify(compressed).substring(0, 100)}...`);
                     const expanded: Record<string, unknown> = {};
                     
