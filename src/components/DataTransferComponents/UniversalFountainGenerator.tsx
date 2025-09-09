@@ -14,6 +14,16 @@ import {
   getCompressionStats,
   type ScoutingDataCollection
 } from "@/lib/compressionUtils";
+import {
+  type DataFilters,
+  createDefaultFilters,
+  applyFilters,
+  setLastExportedMatch,
+  extractMatchRange
+} from "@/lib/dataFiltering";
+import { 
+  DataFilteringControls
+} from "./DataFilteringControls";
 
 interface FountainPacket {
   type: string;
@@ -51,6 +61,11 @@ const UniversalFountainGenerator = ({
   const [cycleSpeed, setCycleSpeed] = useState(500);
   const [compressionInfo, setCompressionInfo] = useState<string>('');
 
+  // Data Filtering State
+  const [filters, setFilters] = useState<DataFilters>(createDefaultFilters());
+  const [filteredData, setFilteredData] = useState<ScoutingDataCollection | null>(null);
+  const [showFiltering, setShowFiltering] = useState(false);
+
   // Speed presets
   const speedPresets = [
     { label: "Default (2/sec)", value: 500 },
@@ -78,30 +93,72 @@ const UniversalFountainGenerator = ({
     loadDataAsync();
   }, [loadData, dataType]);
 
+  // Initialize filtering when data loads
+  useEffect(() => {
+    const shouldShow = dataType === 'scouting' && 
+                      data && 
+                      typeof data === 'object' && 
+                      'entries' in data && 
+                      Array.isArray((data as ScoutingDataCollection).entries) &&
+                      (data as ScoutingDataCollection).entries.length > 50;
+    
+    if (shouldShow) {
+      setShowFiltering(true);
+      setFilteredData(data as ScoutingDataCollection);
+    } else {
+      setShowFiltering(false);
+      setFilteredData(null);
+    }
+  }, [data, dataType]);
+
+  // Handle filter changes
+  const handleFiltersChange = (newFilters: DataFilters) => {
+    setFilters(newFilters);
+  };
+
+  // Apply filters to data
+  const handleApplyFilters = () => {
+    if (data && typeof data === 'object' && 'entries' in data) {
+      const originalData = data as ScoutingDataCollection;
+      const filtered = applyFilters(originalData, filters);
+      setFilteredData(filtered);
+      toast.success(`Filtered to ${filtered.entries.length} entries`);
+    }
+  };
+
+  // Get the data to use for QR generation (filtered or original)
+  const getDataForGeneration = (): unknown => {
+    if (showFiltering && filteredData) {
+      return filteredData;
+    }
+    return data;
+  };
+
   const generateFountainPackets = () => {
-    if (!data) {
+    const dataToUse = getDataForGeneration();
+    if (!dataToUse) {
       toast.error(`No ${dataType} data available`);
       return;
     }
 
     // Determine if we should use advanced compression
-    const useCompression = shouldUseCompression(data) && dataType === 'scouting';
+    const useCompression = shouldUseCompression(dataToUse) && dataType === 'scouting';
     
     let encodedData: Uint8Array;
     let currentCompressionInfo = '';
     
-    if (useCompression && data && typeof data === 'object' && 'entries' in data) {
+    if (useCompression && dataToUse && typeof dataToUse === 'object' && 'entries' in dataToUse) {
       // Use advanced compression for scouting data
       if (import.meta.env.DEV) {
         console.log('🗜️ Using Phase 3 advanced compression...');
       }
-      encodedData = compressScoutingData(data as ScoutingDataCollection);
-      const stats = getCompressionStats(data, encodedData);
+      encodedData = compressScoutingData(dataToUse as ScoutingDataCollection);
+      const stats = getCompressionStats(dataToUse, encodedData);
       currentCompressionInfo = `Advanced compression: ${stats.originalSize} → ${stats.compressedSize} bytes (${(100 - stats.compressionRatio * 100).toFixed(1)}% reduction, ${stats.estimatedQRReduction})`;
       toast.success(`Advanced compression: ${(100 - stats.compressionRatio * 100).toFixed(1)}% size reduction!`);
     } else {
       // Use standard JSON encoding
-      const jsonString = JSON.stringify(data);
+      const jsonString = JSON.stringify(dataToUse);
       encodedData = new TextEncoder().encode(jsonString);
       currentCompressionInfo = `Standard JSON: ${encodedData.length} bytes`;
     }
@@ -184,6 +241,13 @@ const UniversalFountainGenerator = ({
     setPackets(generatedPackets);
     setCurrentPacketIndex(0);
     
+    // Track the last exported match for "from last export" filtering
+    if (dataToUse && typeof dataToUse === 'object' && 'entries' in dataToUse && dataType === 'scouting') {
+      const scoutingData = dataToUse as ScoutingDataCollection;
+      const matchRange = extractMatchRange(scoutingData);
+      setLastExportedMatch(matchRange.max);
+    }
+    
     const selectedSpeed = speedPresets.find(s => s.value === cycleSpeed);
     const estimatedTime = Math.round((generatedPackets.length * cycleSpeed) / 1000);
     toast.success(`Generated ${generatedPackets.length} packets - cycling at ${selectedSpeed?.label}! (~${estimatedTime}s per cycle)`);
@@ -202,16 +266,17 @@ const UniversalFountainGenerator = ({
 
   // Helper function to check if data is sufficient for fountain code generation
   const isDataSufficient = () => {
-    if (!data) return false;
+    const dataToCheck = getDataForGeneration();
+    if (!dataToCheck) return false;
     
     // Check if compression would be used
-    const useCompression = shouldUseCompression(data) && dataType === 'scouting';
+    const useCompression = shouldUseCompression(dataToCheck) && dataType === 'scouting';
     const minSize = useCompression ? 50 : 100;
     
-    if (useCompression && data && typeof data === 'object' && 'entries' in data) {
+    if (useCompression && dataToCheck && typeof dataToCheck === 'object' && 'entries' in dataToCheck) {
       // Use actual compression to get accurate size estimate
       try {
-        const compressed = compressScoutingData(data as ScoutingDataCollection);
+        const compressed = compressScoutingData(dataToCheck as ScoutingDataCollection);
         const compressedSize = compressed.length;
         return compressedSize >= minSize;
       } catch (error) {
@@ -219,25 +284,26 @@ const UniversalFountainGenerator = ({
         if (import.meta.env.DEV) {
           console.warn('Compression size estimation failed, using fallback:', error);
         }
-        const jsonString = JSON.stringify(data);
+        const jsonString = JSON.stringify(dataToCheck);
         const estimatedCompressedSize = Math.floor(jsonString.length * 0.1);
         return estimatedCompressedSize >= minSize;
       }
     } else {
       // Standard JSON size check
-      const jsonString = JSON.stringify(data);
+      const jsonString = JSON.stringify(dataToCheck);
       const encodedData = new TextEncoder().encode(jsonString);
       return encodedData.length >= minSize;
     }
   };
 
   const getDataSizeInfo = () => {
-    if (!data) return null;
+    const dataToCheck = getDataForGeneration();
+    if (!dataToCheck) return null;
     
-    const useCompression = shouldUseCompression(data) && dataType === 'scouting';
+    const useCompression = shouldUseCompression(dataToCheck) && dataType === 'scouting';
     const minSize = useCompression ? 50 : 100;
     
-    const jsonString = JSON.stringify(data);
+    const jsonString = JSON.stringify(dataToCheck);
     const encodedData = new TextEncoder().encode(jsonString);
     
     return {
@@ -274,6 +340,28 @@ const UniversalFountainGenerator = ({
             </Button>
           )}
         </div>
+
+        {/* Data Filtering - Only show for large scouting datasets */}
+        {showFiltering && data && !packets.length ? (
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle className="text-center">Data Filtering</CardTitle>
+              <CardDescription className="text-center">
+                Reduce QR codes by filtering to specific teams or matches
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataFilteringControls
+                data={data as ScoutingDataCollection}
+                filters={filters}
+                onFiltersChange={handleFiltersChange}
+                onApplyFilters={handleApplyFilters}
+                useCompression={shouldUseCompression(data) && dataType === 'scouting'}
+                filteredData={filteredData}
+              />
+            </CardContent>
+          </Card>
+        ) : null}
 
         {!packets.length ? (
           <Card className="w-full">
