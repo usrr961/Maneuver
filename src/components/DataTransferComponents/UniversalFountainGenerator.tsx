@@ -8,6 +8,11 @@ import { toast } from "sonner";
 import { createEncoder, blockToBinary } from "luby-transform";
 import { fromUint8Array } from "js-base64";
 import { Info } from "lucide-react";
+import { 
+  compressScoutingData, 
+  shouldUseCompression, 
+  getCompressionStats 
+} from "@/lib/compressionUtils";
 
 interface FountainPacket {
   type: string;
@@ -23,7 +28,7 @@ interface FountainPacket {
 interface UniversalFountainGeneratorProps {
   onBack: () => void;
   onSwitchToScanner?: () => void;
-  dataType: 'scouting' | 'match' | 'scouter' | 'combined' | 'pit-scouting';
+  dataType: 'scouting' | 'match' | 'scouter' | 'combined' | 'pit-scouting' | 'pit-images';
   loadData: () => Promise<unknown> | unknown;
   title: string;
   description: string;
@@ -43,6 +48,7 @@ const UniversalFountainGenerator = ({
   const [currentPacketIndex, setCurrentPacketIndex] = useState(0);
   const [data, setData] = useState<unknown>(null);
   const [cycleSpeed, setCycleSpeed] = useState(500);
+  const [compressionInfo, setCompressionInfo] = useState<string>('');
 
   // Speed presets
   const speedPresets = [
@@ -77,16 +83,40 @@ const UniversalFountainGenerator = ({
       return;
     }
 
-    const jsonString = JSON.stringify(data);
-    const encodedData = new TextEncoder().encode(jsonString);
+    // Determine if we should use advanced compression
+    const useCompression = shouldUseCompression(data) && dataType === 'scouting';
+    
+    let encodedData: Uint8Array;
+    let currentCompressionInfo = '';
+    
+    if (useCompression && data && typeof data === 'object' && 'entries' in data) {
+      // Use advanced compression for scouting data
+      console.log('🗜️ Using Phase 3 advanced compression...');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      encodedData = compressScoutingData(data as { entries: any[] });
+      const stats = getCompressionStats(data, encodedData);
+      currentCompressionInfo = `Advanced compression: ${stats.originalSize} → ${stats.compressedSize} bytes (${(100 - stats.compressionRatio * 100).toFixed(1)}% reduction, ${stats.estimatedQRReduction})`;
+      toast.success(`Advanced compression: ${(100 - stats.compressionRatio * 100).toFixed(1)}% size reduction!`);
+    } else {
+      // Use standard JSON encoding
+      const jsonString = JSON.stringify(data);
+      encodedData = new TextEncoder().encode(jsonString);
+      currentCompressionInfo = `Standard JSON: ${encodedData.length} bytes`;
+    }
+    
+    // Store compression info for display
+    setCompressionInfo(currentCompressionInfo);
     
     // Validate data size - need sufficient data for meaningful fountain codes
-    const minDataSize = 100; // Minimum 100 bytes for meaningful fountain codes
+    // Lower threshold for compressed data since compression can be very effective
+    const minDataSize = useCompression ? 50 : 100; // Minimum bytes for fountain code generation
     if (encodedData.length < minDataSize) {
       toast.error(`${dataType} data is too small (${encodedData.length} bytes). Need at least ${minDataSize} bytes for fountain code generation.`);
       console.warn(`Data too small for fountain codes: ${encodedData.length} bytes (min: ${minDataSize})`);
       return;
     }
+    
+    console.log(`📊 ${currentCompressionInfo}`);
         
     const blockSize = 200;
     const ltEncoder = createEncoder(encodedData, blockSize);
@@ -169,18 +199,37 @@ const UniversalFountainGenerator = ({
   // Helper function to check if data is sufficient for fountain code generation
   const isDataSufficient = () => {
     if (!data) return false;
-    const jsonString = JSON.stringify(data);
-    const encodedData = new TextEncoder().encode(jsonString);
-    return encodedData.length >= 100; // Minimum 100 bytes
+    
+    // Check if compression would be used
+    const useCompression = shouldUseCompression(data) && dataType === 'scouting';
+    const minSize = useCompression ? 50 : 100;
+    
+    if (useCompression && data && typeof data === 'object' && 'entries' in data) {
+      // Estimate compressed size (rough calculation)
+      const jsonString = JSON.stringify(data);
+      const estimatedCompressedSize = Math.floor(jsonString.length * 0.1); // Very rough estimate
+      return estimatedCompressedSize >= minSize;
+    } else {
+      // Standard JSON size check
+      const jsonString = JSON.stringify(data);
+      const encodedData = new TextEncoder().encode(jsonString);
+      return encodedData.length >= minSize;
+    }
   };
 
   const getDataSizeInfo = () => {
     if (!data) return null;
+    
+    const useCompression = shouldUseCompression(data) && dataType === 'scouting';
+    const minSize = useCompression ? 50 : 100;
+    
     const jsonString = JSON.stringify(data);
     const encodedData = new TextEncoder().encode(jsonString);
+    
     return {
       size: encodedData.length,
-      sufficient: encodedData.length >= 100
+      sufficient: encodedData.length >= minSize,
+      compressed: useCompression
     };
   };
 
@@ -257,7 +306,8 @@ const UniversalFountainGenerator = ({
                 <Alert variant="destructive">
                   <AlertDescription>
                     {dataType} data is too small ({dataSizeInfo?.size || 0} bytes). 
-                    Need at least 100 bytes for fountain code generation.
+                    Need at least {dataSizeInfo?.compressed ? '50' : '100'} bytes for fountain code generation.
+                    {dataSizeInfo?.compressed && ' (Compressed data threshold)'}
                   </AlertDescription>
                 </Alert>
               ) : null}
@@ -330,6 +380,11 @@ const UniversalFountainGenerator = ({
                 </div>
                 <CardDescription>
                   Broadcasting {packets.length} fountain packets
+                  {compressionInfo && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {compressionInfo}
+                    </div>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
