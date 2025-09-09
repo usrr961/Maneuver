@@ -11,6 +11,7 @@ import { toUint8Array } from "js-base64";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as pako from 'pako';
+import { EVENT_DICT, generateEntryId } from '@/lib/compressionUtils';
 
 interface FountainPacket {
   type: string;
@@ -159,10 +160,7 @@ const UniversalFountainScanner = ({
                   const allianceReverse = ['redAlliance', 'blueAlliance'] as const;
                   addDebugMsg(`🔍 Scouter dictionary: ${scouterDict.length} entries`);
                   
-                  // Create event dictionary for decompression
-                  const EVENT_DICT: { [key: string]: number } = {
-                    '2025pawar': 0, '2025mrcmp': 1, '2025txhou': 2, '2025casd': 3, '2025idbo': 4,
-                  };
+                  // Create event reverse dictionary for decompression
                   const eventReverse = Object.entries(EVENT_DICT).reduce((acc, [key, val]) => {
                     acc[val as number] = key;
                     return acc;
@@ -327,27 +325,7 @@ const UniversalFountainScanner = ({
                       finalId = originalId;
                       addDebugMsg(`🔍 Using preserved original ID: ${originalId}`);
                     } else {
-                      // Generate ID from the expanded data as fallback
-                      const generateEntryId = (entryData: Record<string, unknown>): string => {
-                        const dataString = JSON.stringify(entryData);
-                        
-                        let hash1 = 0;
-                        let hash2 = 0;
-                        
-                        for (let i = 0; i < dataString.length; i++) {
-                          const char = dataString.charCodeAt(i);
-                          hash1 = ((hash1 << 5) - hash1) + char;
-                          hash1 = hash1 & hash1;
-                          hash2 = ((hash2 << 3) + hash2) + char;
-                          hash2 = hash2 & hash2;
-                        }
-                        
-                        const part1 = Math.abs(hash1).toString(16).padStart(8, '0').substring(0, 8);
-                        const part2 = Math.abs(hash2).toString(16).padStart(8, '0').substring(0, 8);
-                        
-                        return part1 + part2;
-                      };
-                      
+                      // Generate ID from the expanded data as fallback using shared utility
                       finalId = generateEntryId(expanded);
                       addDebugMsg(`🔍 Generated fallback ID: ${finalId}`);
                     }

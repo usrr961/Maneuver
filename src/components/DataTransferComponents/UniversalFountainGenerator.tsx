@@ -205,10 +205,19 @@ const UniversalFountainGenerator = ({
     const minSize = useCompression ? 50 : 100;
     
     if (useCompression && data && typeof data === 'object' && 'entries' in data) {
-      // Estimate compressed size (rough calculation)
-      const jsonString = JSON.stringify(data);
-      const estimatedCompressedSize = Math.floor(jsonString.length * 0.1); // Very rough estimate
-      return estimatedCompressedSize >= minSize;
+      // Use actual compression to get accurate size estimate
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const compressed = compressScoutingData(data as { entries: any[] });
+        const compressedSize = compressed.length;
+        return compressedSize >= minSize;
+      } catch (error) {
+        // Fallback to rough estimate if compression fails
+        console.warn('Compression size estimation failed, using fallback:', error);
+        const jsonString = JSON.stringify(data);
+        const estimatedCompressedSize = Math.floor(jsonString.length * 0.1);
+        return estimatedCompressedSize >= minSize;
+      }
     } else {
       // Standard JSON size check
       const jsonString = JSON.stringify(data);

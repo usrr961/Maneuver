@@ -63,7 +63,7 @@ const ALLIANCE_DICT = {
   'blueAlliance': 1
 } as const;
 
-const EVENT_DICT = {
+export const EVENT_DICT = {
   '2025pawar': 0,
   '2025mrcmp': 1,
   '2025txhou': 2,
@@ -103,121 +103,9 @@ function buildScouterDict(data: any[]): void {
   console.log(`📊 Built scouter dictionary: ${SCOUTER_REVERSE.length} unique scouters:`, SCOUTER_REVERSE);
 }
 
-/**
- * Pack boolean flags into a single byte
- * Up to 8 boolean values can be packed into 1 byte
- */
-function packBooleans(booleans: boolean[]): number {
-  let packed = 0;
-  for (let i = 0; i < Math.min(booleans.length, 8); i++) {
-    if (booleans[i]) {
-      packed |= (1 << i);
-    }
-  }
-  return packed;
-}
 
-/**
- * Advanced binary compression for scouting entries
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function compressEntry(entry: any): Uint8Array {
-  const data = entry.data || entry;
-  const buffer = new ArrayBuffer(200); // Conservative estimate
-  const view = new DataView(buffer);
-  let offset = 0;
-  
-  const writeString = (str: string) => {
-    const encoder = new TextEncoder();
-    const encoded = encoder.encode(str);
-    view.setUint16(offset, encoded.length, true);
-    offset += 2;
-    new Uint8Array(buffer, offset, encoded.length).set(encoded);
-    offset += encoded.length;
-  };
-  
-  // Write match number as string (variable length)
-  writeString(entry.matchNumber || '');
 
-  // Write alliance as compressed value (1 byte)
-  const allianceCode = entry.alliance ? ALLIANCE_DICT[entry.alliance as keyof typeof ALLIANCE_DICT] ?? 255 : 255;
-  view.setUint8(offset++, allianceCode);
 
-  // Write scouter initials as dictionary index (1 byte if < 256 scouters)
-  const scouterCode = entry.scouterInitials ? SCOUTER_DICT[entry.scouterInitials] ?? 255 : 255;
-  view.setUint8(offset++, scouterCode);
-  if (scouterCode === 255) {
-    writeString(entry.scouterInitials || ''); // Fallback to full string
-  }
-
-  // Write team number as string
-  writeString(entry.selectTeam || '');
-
-  // Pack starting position booleans (6 booleans -> 1 byte)
-  const startPoses = [
-    entry.startPoses0, entry.startPoses1, entry.startPoses2,
-    entry.startPoses3, entry.startPoses4, entry.startPoses5
-  ].map(Boolean);
-  view.setUint8(offset++, packBooleans(startPoses));
-
-  // Write auto coral place counts (4 bytes for 4 counts, each 0-255)
-  view.setUint8(offset++, Math.min(entry.autoCoralPlaceL1Count || 0, 255));
-  view.setUint8(offset++, Math.min(entry.autoCoralPlaceL2Count || 0, 255));
-  view.setUint8(offset++, Math.min(entry.autoCoralPlaceL3Count || 0, 255));
-  view.setUint8(offset++, Math.min(entry.autoCoralPlaceL4Count || 0, 255));
-
-  // Write other auto counts
-  view.setUint8(offset++, Math.min(entry.autoCoralPlaceDropMissCount || 0, 255));
-  view.setUint8(offset++, Math.min(entry.autoCoralPickPreloadCount || 0, 255));
-  view.setUint8(offset++, Math.min(entry.autoCoralPickStationCount || 0, 255));
-  view.setUint8(offset++, Math.min(entry.autoCoralPickMark1Count || 0, 255));
-  view.setUint8(offset++, Math.min(entry.autoCoralPickMark2Count || 0, 255));
-  view.setUint8(offset++, Math.min(entry.autoCoralPickMark3Count || 0, 255));
-
-  // Write auto algae data
-  view.setUint8(offset++, Math.min(entry.autoAlgaePlaceNetShot || 0, 255));
-  view.setUint8(offset++, Math.min(entry.autoAlgaePlaceNetMiss || 0, 255));
-  view.setUint8(offset++, Math.min(entry.autoAlgaePlaceProcessorShot || 0, 255));
-  view.setUint8(offset++, Math.min(entry.autoAlgaePlaceProcessorMiss || 0, 255));
-  view.setUint8(offset++, Math.min(entry.autoAlgaePickGroundCount || 0, 255));
-
-  // Write teleop coral counts
-  view.setUint8(offset++, Math.min(entry.teleopCoralPlaceL1Count || 0, 255));
-  view.setUint8(offset++, Math.min(entry.teleopCoralPlaceL2Count || 0, 255));
-  view.setUint8(offset++, Math.min(entry.teleopCoralPlaceL3Count || 0, 255));
-  view.setUint8(offset++, Math.min(entry.teleopCoralPlaceL4Count || 0, 255));
-  view.setUint8(offset++, Math.min(entry.teleopCoralPlaceDropMissCount || 0, 255));
-  view.setUint8(offset++, Math.min(entry.teleopCoralPickStationCount || 0, 255));
-  view.setUint8(offset++, Math.min(entry.teleopCoralPickGroundCount || 0, 255));
-
-  // Write teleop algae data
-  view.setUint8(offset++, Math.min(entry.teleopAlgaePlaceNetShot || 0, 255));
-  view.setUint8(offset++, Math.min(entry.teleopAlgaePlaceNetMiss || 0, 255));
-  view.setUint8(offset++, Math.min(entry.teleopAlgaePlaceProcessorShot || 0, 255));
-  view.setUint8(offset++, Math.min(entry.teleopAlgaePlaceProcessorMiss || 0, 255));
-  view.setUint8(offset++, Math.min(entry.teleopAlgaePickStationCount || 0, 255));
-  view.setUint8(offset++, Math.min(entry.teleopAlgaePickGroundCount || 0, 255));
-  view.setUint8(offset++, Math.min(entry.teleopAlgaePickCarpetCount || 0, 255));
-
-  // Pack endgame booleans (7 booleans + autoPassedStartLine -> 1 byte)
-  const endgameBools = [
-    entry.shallowClimbAttempted, entry.deepClimbAttempted, entry.parkAttempted,
-    entry.climbFailed, entry.playedDefense, entry.brokeDown, entry.autoPassedStartLine
-  ].map(Boolean);
-  view.setUint8(offset++, packBooleans(endgameBools));
-
-  // Write comment as string
-  writeString(entry.comment || '');
-
-  // Write event name as compressed value
-  const eventCode = entry.eventName ? EVENT_DICT[entry.eventName as keyof typeof EVENT_DICT] ?? 255 : 255;
-  view.setUint8(offset++, eventCode);
-  if (eventCode === 255) {
-    writeString(entry.eventName || ''); // Fallback to full string
-  }
-
-  return new Uint8Array(buffer, 0, offset);
-}
 
 /**
  * Smart compression using JSON optimization + gzip
@@ -274,8 +162,8 @@ export function compressScoutingData(data: any): Uint8Array {
     } else if (scoutingData.scouterInitials) {
       optimized.sf = scoutingData.scouterInitials; // fallback to full string
     }
-    if (scoutingData.eventName && EVENT_DICT[scoutingData.eventName] !== undefined) {
-      optimized.e = EVENT_DICT[scoutingData.eventName];
+    if (scoutingData.eventName && EVENT_DICT[scoutingData.eventName as keyof typeof EVENT_DICT] !== undefined) {
+      optimized.e = EVENT_DICT[scoutingData.eventName as keyof typeof EVENT_DICT];
     } else if (scoutingData.eventName) {
       optimized.ef = scoutingData.eventName; // fallback
     }
@@ -381,34 +269,45 @@ export function compressScoutingData(data: any): Uint8Array {
 export function decompressScoutingData(compressedData: Uint8Array): { entries: ScoutingEntry[] } {
   console.log('🔄 Decompressing data...');
   
-  // Decompress gzip
+  // Decompress gzip and parse JSON directly
   const binaryData = pako.ungzip(compressedData);
+  const jsonString = new TextDecoder().decode(binaryData);
+  const data = JSON.parse(jsonString);
   
-  // Read header length
-  const headerLength = new DataView(binaryData.buffer, binaryData.byteOffset).getUint32(0, true);
-  let offset = 4;
+  // Restore scouter dictionary if present
+  if (data.meta && data.meta.scouterDict) {
+    SCOUTER_REVERSE = data.meta.scouterDict;
+    SCOUTER_DICT = {};
+    SCOUTER_REVERSE.forEach((scouter: string, index: number) => {
+      SCOUTER_DICT[scouter] = index;
+    });
+  }
   
-  // Read and parse header
-  const headerBytes = new Uint8Array(binaryData.buffer, binaryData.byteOffset + offset, headerLength);
-  offset += headerLength;
-  const header = JSON.parse(new TextDecoder().decode(headerBytes));
+  // Return entries (or empty array if not present)
+  return { entries: data.entries || [] };
+}
+
+/**
+ * Generate a unique ID for entry data using dual hash algorithm
+ */
+export function generateEntryId(entryData: Record<string, unknown>): string {
+  const dataString = JSON.stringify(entryData);
   
-  // Restore scouter dictionary
-  SCOUTER_REVERSE = header.scouterDict || [];
-  SCOUTER_DICT = {};
-  SCOUTER_REVERSE.forEach((scouter, index) => {
-    SCOUTER_DICT[scouter] = index;
-  });
+  let hash1 = 0;
+  let hash2 = 0;
   
-  // Decompress entries (this is simplified - in reality we'd need to store entry lengths)
-  // For now, we'll use a different approach or store length prefixes
-  const entries: ScoutingEntry[] = [];
+  for (let i = 0; i < dataString.length; i++) {
+    const char = dataString.charCodeAt(i);
+    hash1 = ((hash1 << 5) - hash1) + char;
+    hash1 = hash1 & hash1;
+    hash2 = ((hash2 << 3) + hash2) + char;
+    hash2 = hash2 & hash2;
+  }
   
-  // Note: This is a simplified version. In production, we'd need to store entry lengths
-  // or use a different serialization approach for variable-length entries
-  console.warn('⚠️ Decompression not fully implemented - this is a POC');
+  const part1 = Math.abs(hash1).toString(16).padStart(8, '0').substring(0, 8);
+  const part2 = Math.abs(hash2).toString(16).padStart(8, '0').substring(0, 8);
   
-  return { entries };
+  return part1 + part2;
 }
 
 /**
