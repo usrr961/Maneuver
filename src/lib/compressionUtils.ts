@@ -152,7 +152,7 @@ export function compressScoutingData(data: any): Uint8Array {
     
     const optimized: Record<string, unknown> = {};
     
-    // Preserve original ID if present
+    // Preserve original ID - this ensures decompression can restore exact same IDs
     if (entry.id) optimized.id = entry.id;
     
     // Use dictionary compression for categorical fields
@@ -287,28 +287,7 @@ export function decompressScoutingData(compressedData: Uint8Array): { entries: S
   return { entries: data.entries || [] };
 }
 
-/**
- * Generate a unique ID for entry data using dual hash algorithm
- */
-export function generateEntryId(entryData: Record<string, unknown>): string {
-  const dataString = JSON.stringify(entryData);
-  
-  let hash1 = 0;
-  let hash2 = 0;
-  
-  for (let i = 0; i < dataString.length; i++) {
-    const char = dataString.charCodeAt(i);
-    hash1 = ((hash1 << 5) - hash1) + char;
-    hash1 = hash1 & hash1;
-    hash2 = ((hash2 << 3) + hash2) + char;
-    hash2 = hash2 & hash2;
-  }
-  
-  const part1 = Math.abs(hash1).toString(16).padStart(8, '0').substring(0, 8);
-  const part2 = Math.abs(hash2).toString(16).padStart(8, '0').substring(0, 8);
-  
-  return part1 + part2;
-}
+
 
 /**
  * Check if data should use compression based on size

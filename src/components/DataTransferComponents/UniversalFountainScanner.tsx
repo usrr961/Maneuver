@@ -11,7 +11,7 @@ import { toUint8Array } from "js-base64";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as pako from 'pako';
-import { EVENT_DICT, generateEntryId } from '@/lib/compressionUtils';
+import { EVENT_DICT } from '@/lib/compressionUtils';
 
 interface FountainPacket {
   type: string;
@@ -317,21 +317,15 @@ const UniversalFountainScanner = ({
                       })}`);
                     }
                     
-                    // Use original ID if preserved, otherwise generate one
+                    // Use preserved original ID (should always exist since compression preserves it)
                     const originalId = compressed.id;
-                    let finalId: string;
-                    
-                    if (originalId) {
-                      finalId = originalId;
-                      addDebugMsg(`🔍 Using preserved original ID: ${originalId}`);
-                    } else {
-                      // Generate ID from the expanded data as fallback using shared utility
-                      finalId = generateEntryId(expanded);
-                      addDebugMsg(`🔍 Generated fallback ID: ${finalId}`);
+                    if (!originalId) {
+                      console.error('Missing ID in compressed entry:', compressed);
+                      addDebugMsg('❌ Missing ID in compressed entry - this should not happen');
                     }
                     
                     return {
-                      id: finalId,
+                      id: originalId || `entry_${index}`, // Emergency fallback only
                       data: expanded,
                       timestamp: Date.now()
                     };
