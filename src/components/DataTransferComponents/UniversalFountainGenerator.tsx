@@ -187,21 +187,36 @@ const UniversalFountainGenerator = ({
 
     const generatedPackets: FountainPacket[] = [];
     let packetId = 0;
-    const maxPackets = 30;
     const seenIndicesCombinations = new Set();
     let iterationCount = 0;
-    const maxIterations = maxPackets * 10; // Safety limit to prevent infinite loops
+    
+    // Calculate how many blocks we have for intelligent packet generation
+    const estimatedBlocks = Math.ceil(encodedData.length / blockSize);
+    // Generate enough packets for successful decoding: k blocks + 20% overhead for redundancy
+    const targetPackets = Math.ceil(estimatedBlocks * 1.2);
+    // Cap maximum iterations to prevent infinite loops (generous safety limit)
+    const maxIterations = targetPackets * 5;
+
+    if (import.meta.env.DEV) {
+      console.log(`📊 Fountain code generation: ${estimatedBlocks} blocks, targeting ${targetPackets} packets`);
+    }
 
     for (const block of ltEncoder.fountain()) {
       iterationCount++;
       
       // Safety check to prevent infinite loops
       if (iterationCount > maxIterations) {
-        console.warn(`Reached maximum iterations (${maxIterations}), stopping generation`);
+        console.warn(`Reached maximum iterations (${maxIterations}), stopping generation with ${generatedPackets.length} packets`);
         break;
       }
       
-      if (packetId >= maxPackets) break;
+      // Stop when we have enough packets for reliable decoding
+      if (generatedPackets.length >= targetPackets) {
+        if (import.meta.env.DEV) {
+          console.log(`✅ Generated target ${targetPackets} packets, stopping`);
+        }
+        break;
+      }
       
       try {
         const indicesKey = block.indices.sort().join(',');
