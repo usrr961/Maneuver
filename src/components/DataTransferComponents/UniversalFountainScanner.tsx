@@ -57,17 +57,48 @@ const UniversalFountainScanner = ({
   const [debugLog, setDebugLog] = useState<string[]>([]);
   const [allowDuplicates, setAllowDuplicates] = useState(false);
   const [compressionDetected, setCompressionDetected] = useState<boolean | null>(null);
+  const [missingPackets, setMissingPackets] = useState<number[]>([]);
+  const [totalPackets, setTotalPackets] = useState<number | null>(null);
   
   // Use refs for immediate access without React state delays
   const decoderRef = useRef<unknown>(null);
   const packetsRef = useRef<Map<number, FountainPacket>>(new Map());
   const sessionRef = useRef<string | null>(null);
+  const totalPacketsRef = useRef<number | null>(null);
 
   // Helper function to add debug messages (dev-only)
   const addDebugMsg = (message: string) => {
     if (import.meta.env.DEV) {
       setDebugLog(prev => [...prev.slice(-20), `${new Date().toLocaleTimeString()}: ${message}`]);
     }
+  };
+
+  // Calculate missing packets based on seen packet IDs
+  const calculateMissingPackets = () => {
+    const packetIds = Array.from(packetsRef.current.keys()).sort((a, b) => a - b);
+    
+    if (packetIds.length === 0) return [];
+    
+    const missing: number[] = [];
+    const minId = packetIds[0];
+    const maxId = packetIds[packetIds.length - 1];
+    
+    // Check for gaps in the sequence
+    for (let i = minId; i <= maxId; i++) {
+      if (!packetsRef.current.has(i)) {
+        missing.push(i);
+      }
+    }
+    
+    // Update total packets estimate if we have a reasonable range
+    const estimatedTotal = maxId;
+    if (estimatedTotal !== totalPacketsRef.current) {
+      totalPacketsRef.current = estimatedTotal;
+      setTotalPackets(estimatedTotal);
+      addDebugMsg(`📊 Estimated total packets: ${estimatedTotal} (based on max packet ID: ${maxId})`);
+    }
+    
+    return missing;
   };
 
   const handleQRScan = (result: { rawValue: string; }[]) => {
@@ -376,10 +407,21 @@ const UniversalFountainScanner = ({
         }
       }
 
-      // Update progress estimate
+      // Update progress estimate (IMPROVED: No artificial 95% cap)
       const received = packetsRef.current.size;
-      const estimatedNeeded = Math.max(packet.k + 3, 10);
-      const progressPercentage = Math.min((received / estimatedNeeded) * 100, 95);
+      let estimatedNeeded = Math.max(packet.k + 5, 10); // Slightly more conservative estimate
+      let progressPercentage = (received / estimatedNeeded) * 100;
+      
+      // If we're beyond the initial estimate, use a more dynamic approach
+      if (received > estimatedNeeded) {
+        // Once we exceed the estimate, assume we need ~20% more than current
+        estimatedNeeded = Math.ceil(received * 1.2);
+        progressPercentage = (received / estimatedNeeded) * 100;
+        addDebugMsg(`🔄 Adjusted estimate: now need ~${estimatedNeeded} packets`);
+      }
+      
+      // Cap at 99% instead of 95% to show we're still working
+      progressPercentage = Math.min(progressPercentage, 99);
       
       setProgress({ 
         received, 
@@ -387,7 +429,31 @@ const UniversalFountainScanner = ({
         percentage: progressPercentage 
       });
       
+      // Calculate and update missing packets
+      const missing = calculateMissingPackets();
+      setMissingPackets(missing);
+      
       addDebugMsg(`📈 Progress: ${received}/${estimatedNeeded} (${progressPercentage.toFixed(1)}%)`);
+      
+      // Log missing packets info
+      if (missing.length > 0 && missing.length <= 20) {
+        addDebugMsg(`🔍 Missing packets: [${missing.join(', ')}]`);
+      } else if (missing.length > 20) {
+        addDebugMsg(`🔍 Missing ${missing.length} packets: [${missing.slice(0, 5).join(', ')}, ..., ${missing.slice(-5).join(', ')}]`);
+      } else {
+        addDebugMsg(`✅ No missing packets in current range!`);
+      }
+      // Add debugging when we're getting close to completion but decoder isn't ready
+      if (received > packet.k && progressPercentage > 90) {
+        addDebugMsg(`🔍 High packet count but no completion yet: k=${packet.k}, received=${received}`);
+        addDebugMsg(`🔍 Decoder state check needed - may need more packets than theoretical minimum`);
+        
+        // Alert user if we've scanned significantly more than expected
+        if (received > estimatedNeeded * 1.5) {
+          addDebugMsg(`⚠️ SCANNING MAY BE STUCK: ${received} packets >> ${estimatedNeeded} estimated`);
+          addDebugMsg(`💡 Consider checking the generator for packet navigation controls`);
+        }
+      }
 
     } catch (error) {
       addDebugMsg(`❌ QR scan error: ${error instanceof Error ? error.message : String(error)}`);
@@ -399,16 +465,17 @@ const UniversalFountainScanner = ({
   const resetScanner = () => {
     sessionRef.current = null;
     setCurrentSession(null);
-    setIsComplete(false);
-    setReconstructedData(null);
-    setProgress({ received: 0, needed: 0, percentage: 0 });
-    setDebugLog([]);
-    setAllowDuplicates(false);
-    setCompressionDetected(null);
     decoderRef.current = null;
     packetsRef.current.clear();
+    totalPacketsRef.current = null;
+    setProgress({ received: 0, needed: 0, percentage: 0 });
+    setIsComplete(false);
+    setReconstructedData(null);
+    setDebugLog([]);
+    setCompressionDetected(null);
+    setMissingPackets([]);
+    setTotalPackets(null);
     addDebugMsg("🔄 Scanner reset");
-    toast.info("Scanner reset");
   };
 
   const handleComplete = () => {
@@ -502,6 +569,16 @@ const UniversalFountainScanner = ({
           )}
         </div>
 
+        {/* Scanning Instructions */}
+        {currentSession && (
+          <Alert>
+            <AlertTitle>📱 Scanning Instructions</AlertTitle>
+            <AlertDescription>
+              Scan fountain code packets in any order. Reconstruction will complete automatically when enough data is received.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Card className="w-full">
           <CardHeader className="text-center">
             <CardTitle>{title}</CardTitle>
@@ -562,24 +639,57 @@ const UniversalFountainScanner = ({
                   value={Math.min(progress.percentage, 100)}
                   className="w-full"
                 />
+                
+                {/* Missing packets indicator */}
+                {missingPackets.length > 0 && totalPackets && (
+                  <div className="mt-2 text-sm">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-muted-foreground">Missing Packets</span>
+                      <Badge variant="outline" className="text-xs">
+                        {missingPackets.length} missing
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground p-2 bg-muted rounded max-h-16 overflow-y-auto">
+                      {missingPackets.length <= 30 ? (
+                        <span>#{missingPackets.join(', #')}</span>
+                      ) : (
+                        <span>
+                          #{missingPackets.slice(0, 10).join(', #')} 
+                          <span className="text-orange-500"> ... and {missingPackets.length - 10} more</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Complete packets indicator when no missing */}
+                {missingPackets.length === 0 && totalPackets && progress.received > 5 && (
+                  <div className="mt-2 text-sm">
+                    <div className="flex items-center gap-1 text-green-600">
+                      <CheckCircle className="h-3 w-3" />
+                      <span className="text-xs">All packets in range #{1} - #{totalPackets}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            <div className="flex gap-2 w-full">
+            <div className="flex gap-2 w-full flex-wrap">
               {currentSession && (
                 <Button
                   onClick={resetScanner}
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 min-w-0"
                 >
                   Reset Scanner
                 </Button>
               )}
+              
               {process.env.NODE_ENV === 'development' && (
                 <Button
                   onClick={() => setAllowDuplicates(!allowDuplicates)}
                   variant={allowDuplicates ? "default" : "outline"}
-                  className="flex-1"
+                  className="flex-1 min-w-0"
                   size="sm"
                 >
                   {allowDuplicates ? "Allow Dupes ✓" : "Skip Dupes"}
@@ -605,13 +715,6 @@ const UniversalFountainScanner = ({
             </CardContent>
           </Card>
         )}
-
-        <Alert>
-          <AlertTitle>📱 Scanning Instructions</AlertTitle>
-          <AlertDescription>
-            Scan fountain code packets in any order. No need to scan all packets - reconstruction will complete automatically when enough data is received.
-          </AlertDescription>
-        </Alert>
       </div>
     </div>
   );

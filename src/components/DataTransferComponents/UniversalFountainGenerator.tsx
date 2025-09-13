@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { createEncoder, blockToBinary } from "luby-transform";
 import { fromUint8Array } from "js-base64";
-import { Info } from "lucide-react";
+import { Info, Play, Pause, SkipForward, SkipBack, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { 
   compressScoutingData, 
   shouldUseCompression, 
@@ -64,6 +65,8 @@ const UniversalFountainGenerator = ({
   const [data, setData] = useState<unknown>(null);
   const [cycleSpeed, setCycleSpeed] = useState(500);
   const [compressionInfo, setCompressionInfo] = useState<string>('');
+  const [isPaused, setIsPaused] = useState(false);
+  const [jumpToPacket, setJumpToPacket] = useState<string>('');
 
   // Data Filtering State
   const [filters, setFilters] = useState<DataFilters>(createDefaultFilters());
@@ -257,6 +260,8 @@ const UniversalFountainGenerator = ({
     
     setPackets(generatedPackets);
     setCurrentPacketIndex(0);
+    setIsPaused(false); // Start playing automatically
+    setJumpToPacket(''); // Clear jump input
     
     // Track the last exported match for "from last export" filtering
     if (isScoutingDataCollection(dataToUse) && dataType === 'scouting') {
@@ -269,16 +274,48 @@ const UniversalFountainGenerator = ({
     toast.success(`Generated ${generatedPackets.length} packets - cycling at ${selectedSpeed?.label}! (~${estimatedTime}s per cycle)`);
   };
 
-  // Auto-cycle packets based on selected speed
+  // Auto-cycle packets based on selected speed (respects pause state)
   useEffect(() => {
-    if (packets.length > 0) {
+    if (packets.length > 0 && !isPaused) {
       const interval = setInterval(() => {
         setCurrentPacketIndex(prev => (prev + 1) % packets.length);
       }, cycleSpeed);
 
       return () => clearInterval(interval);
     }
-  }, [packets.length, cycleSpeed]);
+  }, [packets.length, cycleSpeed, isPaused]);
+
+  // Navigation helper functions
+  const togglePlayPause = () => {
+    setIsPaused(!isPaused);
+  };
+
+  const goToNextPacket = () => {
+    setCurrentPacketIndex(prev => (prev + 1) % packets.length);
+  };
+
+  const goToPrevPacket = () => {
+    setCurrentPacketIndex(prev => (prev - 1 + packets.length) % packets.length);
+  };
+
+  const jumpToSpecificPacket = () => {
+    const packetNum = parseInt(jumpToPacket);
+    if (packetNum >= 1 && packetNum <= packets.length) {
+      setCurrentPacketIndex(packetNum - 1); // Convert to 0-based index
+      setJumpToPacket('');
+      toast.success(`Jumped to packet ${packetNum}`);
+    } else {
+      toast.error(`Invalid packet number. Must be between 1 and ${packets.length}`);
+    }
+  };
+
+  const goToFirstPacket = () => {
+    setCurrentPacketIndex(0);
+  };
+
+  const goToLastPacket = () => {
+    setCurrentPacketIndex(packets.length - 1);
+  };
 
   // Helper function to check if data is sufficient for fountain code generation
   const isDataSufficient = () => {
@@ -437,6 +474,15 @@ const UniversalFountainGenerator = ({
           </Card>
         ) : (
           <div className="flex flex-col items-center gap-4 w-full">
+            {/* Scanning Instructions */}
+            <Alert>
+              <AlertTitle>📱 Scanning Instructions</AlertTitle>
+              <AlertDescription>
+                Point your scanner at the QR code. Use playback controls to pause, navigate, or jump to specific packets. 
+                Estimated time per cycle: {Math.round((packets.length * cycleSpeed) / 1000)}s
+              </AlertDescription>
+            </Alert>
+
             {/* QR Code Display */}
             <Card className="w-full">
               <CardContent className="p-4 flex justify-center">
@@ -453,38 +499,115 @@ const UniversalFountainGenerator = ({
               </CardContent>
             </Card>
 
-             {/* Instructions */}
-            <Alert>
-              <AlertTitle>📱 Scanning Instructions</AlertTitle>
-              <AlertDescription>
-                Point your scanner at the QR code. Estimated time per cycle: {Math.round((packets.length * cycleSpeed) / 1000)}s
-              </AlertDescription>
-            </Alert>
-
-            {/* Speed Control */}
+            {/* Speed & Playback Controls */}
             <Card className="w-full">
               <CardHeader>
-                <CardTitle className="text-sm">Adjust Speed</CardTitle>
+                <CardTitle className="text-sm">Speed & Playback Controls</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  {speedPresets.map((preset) => (
-                    <Button
-                      key={preset.value}
-                      variant={cycleSpeed === preset.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCycleSpeed(preset.value)}
-                      className="text-xs"
-                    >
-                      {preset.label}
-                    </Button>
-                  ))}
-                  <div className="col-span-2 flex items-start">
-                    <Info className="inline mr-2 mt-1.5 text-muted-foreground" size={16}/>
-                    <p className="text-sm text-muted-foreground col-span-2 pt-1">
-                      If unable to get final packets, try slowing down the cycle speed.
-                    </p>
+              <CardContent className="space-y-4">
+                {/* Speed Selection */}
+                <div className="w-full">
+                  <p className="text-sm font-medium mb-2">Cycle Speed:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {speedPresets.map((preset) => (
+                      <Button
+                        key={preset.value}
+                        variant={cycleSpeed === preset.value ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCycleSpeed(preset.value)}
+                        className="text-xs"
+                      >
+                        {preset.label}
+                      </Button>
+                    ))}
                   </div>
+                </div>
+
+                {/* Play/Pause and Step Controls */}
+                <div className="w-full">
+                  <p className="text-sm font-medium mb-2">Navigation:</p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={goToFirstPacket}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      <ChevronsLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      onClick={goToPrevPacket}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      <SkipBack className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      onClick={togglePlayPause}
+                      variant={isPaused ? "default" : "secondary"}
+                      size="sm"
+                      className="flex-2"
+                    >
+                      {isPaused ? <Play className="h-4 w-4 mr-1" /> : <Pause className="h-4 w-4 mr-1" />}
+                      {isPaused ? "Play" : "Pause"}
+                    </Button>
+                    <Button
+                      onClick={goToNextPacket}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      <SkipForward className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      onClick={goToLastPacket}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      <ChevronsRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Jump to Packet */}
+                <div className="w-full">
+                  <p className="text-sm font-medium mb-2">Jump to Packet:</p>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="Packet #"
+                      value={jumpToPacket}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Only allow numeric input
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setJumpToPacket(value);
+                        }
+                      }}
+                      min="1"
+                      max={packets.length}
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={jumpToSpecificPacket}
+                      variant="outline"
+                      size="sm"
+                      disabled={!jumpToPacket || parseInt(jumpToPacket) < 1 || parseInt(jumpToPacket) > packets.length}
+                    >
+                      Jump
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <Info className="inline mt-0.5 text-muted-foreground flex-shrink-0" size={16}/>
+                  <p className="text-xs text-muted-foreground">
+                    If unable to get final packets, try slowing down the cycle speed or use manual navigation.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -511,7 +634,15 @@ const UniversalFountainGenerator = ({
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="text-sm space-y-1">
-                  <p><span className="font-medium">Indices:</span> [{currentPacket.indices.join(',')}]</p>
+                  <div>
+                    <span className="font-medium">Indices:</span> 
+                    <span className="ml-1 break-all">
+                      {currentPacket.indices.length > 20 
+                        ? `[${currentPacket.indices.slice(0, 20).join(',')}...+${currentPacket.indices.length - 20} more]`
+                        : `[${currentPacket.indices.join(',')}]`
+                      }
+                    </span>
+                  </div>
                   <p><span className="font-medium">K:</span> {currentPacket.k} | <span className="font-medium">Bytes:</span> {currentPacket.bytes}</p>
                   <p><span className="font-medium">Checksum:</span> {String(currentPacket.checksum).slice(0, 8)}...</p>
                 </div>
@@ -540,6 +671,8 @@ const UniversalFountainGenerator = ({
               onClick={() => {
                 setPackets([]);
                 setCurrentPacketIndex(0);
+                setIsPaused(false);
+                setJumpToPacket('');
               }}
               variant="secondary"
               className="w-full"
