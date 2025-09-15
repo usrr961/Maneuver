@@ -54,7 +54,7 @@ export const EventConfigurationCard: React.FC<EventConfigurationCardProps> = ({
             <Input
               id="eventKey"
               placeholder="e.g., 2024chcmp, 2024week0"
-              value={eventKey}
+              value={eventKey||localStorage.eventName||''}
               onChange={(e) => setEventKey(e.target.value)}
               className="w-full"
             />

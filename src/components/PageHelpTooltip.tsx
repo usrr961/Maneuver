@@ -20,6 +20,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getPageHelp } from "@/lib/pageHelpConfig";
 
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
+import rehypeSanitize from 'rehype-sanitize'
+
+
 interface PageHelpTooltipProps {
   title?: string;
   content?: string | string[];
@@ -75,7 +81,6 @@ export const PageHelpTooltip = ({ title, content, useDialog = false }: PageHelpT
             {contentArray.map((paragraph, index) => {
               // Check if content contains image/GIF references
               if (paragraph.includes('![') && paragraph.includes('](')) {
-                // Parse markdown-style image syntax: ![alt](src)
                 const match = paragraph.match(/!\[([^\]]*)\]\(([^)]*)\)/);
                 if (match) {
                   const [, alt, src] = match;
@@ -111,31 +116,36 @@ export const PageHelpTooltip = ({ title, content, useDialog = false }: PageHelpT
                   );
                 }
               }
-              
+
               // Check if it's a step (starts with number or bullet)
               const isStep = /^\d+\.|•|-/.test(paragraph.trim());
-              
-              // Extract the actual step number from the content
               let stepNumber = '';
               if (isStep) {
                 const match = paragraph.trim().match(/^(\d+)\./);
                 stepNumber = match ? match[1] : '•';
               }
-              
+
+              // Render the paragraph using markdown, but preserve steps
               return (
-                <div key={index} className={isStep ? "flex gap-3" : ""}>
+                <div key={index} className={isStep ? 'flex gap-3' : ''}>
                   {isStep && (
                     <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center mt-0.5 flex-shrink-0">
                       {stepNumber}
                     </div>
                   )}
-                  <p className={`text-sm ${isStep ? 'flex-1' : ''} ${isStep ? 'text-foreground' : 'text-muted-foreground'}`}>
-                    {paragraph.replace(/^\d+\.|•|-\s*/, '')}
-                  </p>
+                  <div className={`text-sm ${isStep ? 'flex-1 flex items-center' : ''}`}>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                    >
+                      {paragraph.replace(/^\d+\.|•|-\s*/, '')}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               );
             })}
           </div>
+
         </DialogContent>
       </Dialog>
     );
