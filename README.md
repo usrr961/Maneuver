@@ -41,7 +41,7 @@ A comprehensive, mobile-first scouting application for FIRST Robotics Competitio
 - **PWA**: vite-plugin-pwa with service worker runtime caching
 - **Analytics**: Google Analytics 4 (lightweight wrapper at `src/lib/analytics`)
 
-```
+
 
 ## 🚀 Getting Started
 
