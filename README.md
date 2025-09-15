@@ -41,7 +41,7 @@ A comprehensive, mobile-first scouting application for FIRST Robotics Competitio
 - **PWA**: vite-plugin-pwa with service worker runtime caching
 - **Analytics**: Google Analytics 4 (lightweight wrapper at `src/lib/analytics`)
 
-```
+
 
 ## 🚀 Getting Started
 
@@ -74,16 +74,16 @@ A comprehensive, mobile-first scouting application for FIRST Robotics Competitio
 ```
 src/
 ├── components/          # Reusable UI components
-│   ├── AutoComponents/     # Autonomous phase components
-│   ├── DashboardComponents/ # Main dashboard elements
-│   ├── DataTransferComponents/ # Import/export functionality
-│   ├── TeamStatsComponents/ # Team analysis tools
-│   ├── StrategyComponents/ # Strategy overview and analysis
-│   ├── PickListComponents/ # Alliance selection tools
-│   ├── MatchStrategyComponents/ # Match planning tools
-│   ├── PitScoutingComponents/ # Pit scouting forms and displays
-│   ├── PitAssignmentComponents/ # Pit assignment and mapping
-│   └── ui/                # Base UI components (shadcn/ui)
+│   ├── AutoComponents/           # Autonomous phase components
+│   ├── DashboardComponents/      # Main dashboard elements
+│   ├── DataTransferComponents/   # Import/export functionality
+│   ├── TeamStatsComponents/      # Team analysis tools
+│   ├── StrategyComponents/       # Strategy overview and analysis
+│   ├── PickListComponents/       # Alliance selection tools
+│   ├── MatchStrategyComponents/  # Match planning tools
+│   ├── PitScoutingComponents/    # Pit scouting forms and displays
+│   ├── PitAssignmentComponents/  # Pit assignment and mapping
+│   └── ui/                       # Base UI components (shadcn/ui)
 ├── pages/              # Application pages/routes
 ├── lib/                # Utility functions and helpers
 ├── hooks/              # Custom React hooks
