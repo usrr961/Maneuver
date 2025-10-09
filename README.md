@@ -63,10 +63,13 @@ A comprehensive, mobile-first scouting application for FIRST Robotics Competitio
 **Match Scouting**: Game Start → Auto Phase → Teleop → Endgame → Submit
 
 **Team Analysis**: Select team → View multi-tab statistics → Compare with others → Analyze positions
+
 **Strategy Planning**: Dashboard overview → Interactive charts → Column configuration → Event filtering
 
 **Alliance Selection**: Create pick lists → Research teams → Drag-and-drop ordering → Export/share
+
 **Pit Scouting**: Assign scouters → Fill out pit forms → Visualize pit map → Export pit data
+
 **Achievements**: Track scouter progress, unlock badges, and view leaderboard
 
 ## 🏗️ Project Structure
